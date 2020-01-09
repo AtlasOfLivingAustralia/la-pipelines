@@ -196,7 +196,7 @@
     <hamcrest-java.version>2.0.0.0</hamcrest-java.version>
     <embedded.elasticsearch.version>2.10.0</embedded.elasticsearch.version>
     <log4j-over-slf4j.version>1.7.16</log4j-over-slf4j.version>
-    <zookeeper-version>3.4.5</zookeeper-version>
+    <zookeeper-version>3.4.14</zookeeper-version>
 
     <!-- Maven plugin -->
     <maven-plugin-api.version>3.5.4</maven-plugin-api.version>
