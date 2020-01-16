@@ -19,7 +19,7 @@ GBIF already supports a number of core transforms for handling biodiversity occu
 
 This list of transforms will need to be added to backfill some of the ingress requirements of the ALA. These transforms will make use of existing ALA services:
 
-* ALA Taxonomy transform - will make use of the existing [ala-name-matching](https://github.com/AtlasOfLivingAustralia/ala-name-matching) library**
+* ALA Taxonomy transform - will make use of the existing **[ala-name-matching](https://github.com/AtlasOfLivingAustralia/ala-name-matching) library**
 * Sensitive data - will make use of existing services in https://lists.ala.org.au to retrieve sensitive species rules.
 * Spatial layers - will make use of existing services in https://spatial.ala.org.au/ws/ to retrieve sampled environmental and contextual values for geospatial points
 * Species lists - will make use of existing services in https://lists.ala.org.au to retrieve species lists.
