@@ -1,4 +1,13 @@
-# Models
+# Living Atlas Models
+
+This module will contact AVRO schemas for the following extensions:
+
+* ALA taxonomy, including nested set values
+* Sensitive data
+* Species lists
+* Sampling information
+
+These models are in addition to models in the GBIF pipelines already. See [current GBIF AVRO schemas](https://github.com/gbif/pipelines/tree/master/sdks/models/src/main/avro)
 
 Data models represented in [Apache Avro](https://avro.apache.org/docs/current/) binary format, generated from Avro schemas.
 
