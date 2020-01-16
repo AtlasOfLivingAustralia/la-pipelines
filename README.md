@@ -1,11 +1,11 @@
 # Living Atlas Pipelines extensions
 
-This project is proof of concept quality code aimed at identifying work required
+This project is *proof of concept quality code* aimed at identifying work required
  to use of pipelines as a replacement to [biocache-store](https://github.com/AtlasOfLivingAustralia/biocache-store)
  for data ingress. 
 
 
-## Done so far:
+## Prototyped so far:
 
 1. Extension with ALA taxonomy
 2. Extension with Sampling information (Environmental & Contextual)
@@ -26,6 +26,7 @@ This project is proof of concept quality code aimed at identifying work required
 
 ### biocache-service
 biocache-service - [experimental/pipelines branch](https://github.com/AtlasOfLivingAustralia/biocache-service/tree/experimental/pipelines) 
+The aim for this proof of concept is to make very minimal changes to biocache-service, maintain the existing API and have no impact on existing services and applications.
 
 ### ala-namematching-service
 So far a simple drop wizard wrapper around ala-namematching library has been prototyped to support integration with pipelines.
