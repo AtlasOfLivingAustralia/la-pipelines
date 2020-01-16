@@ -11,6 +11,18 @@ This project is focussed on extension to that architecture to support use by the
 
 ![Pipelines](https://docs.google.com/drawings/d/e/2PACX-1vQhQSg5VFo2xRZfDhmvhKuNLUpyTOlW-t-m1fesJ2RElWorVPAEbnsZg_StJKh22mEcS4D28j_nPoTV/pub?w=960&h=720 "Pipelines") 
 
+Above is a representation of the data flow from source data in Darwin core archives supplied by data providers, to the API access to these data via the biocache-service component.
+
+Within the "Interpreted AVRO" box is a list of "transforms" each of which take the source data and produce an isolated output in a AVRO formatted file.
+
+GBIF already supports a number of core transforms for handling biodiversity occurrence data. The intention is to make us of these transforms "as-is" which effectively perform the very similar functionality to what is supported by the biocache-store project (ALA's current ingress library for occurrence data). 
+
+This list of transforms will need to be added to backfill some of the ingress requirements of the ALA. These transforms will make use of existing ALA services:
+
+* ALA Taxonomy transform - will make use of the existing [ala-name-matching](https://github.com/AtlasOfLivingAustralia/ala-name-matching) library**
+* Sensitive data - will make use of existing services in https://lists.ala.org.au to retrieve sensitive species rules.
+* Spatial layers - will make use of existing services in https://spatial.ala.org.au/ws/ to retrieve sampled environmental and contextual values for geospatial points
+* Species lists - will make use of existing services in https://lists.ala.org.au to retrieve species lists.
 
 ## Prototyped so far:
 
