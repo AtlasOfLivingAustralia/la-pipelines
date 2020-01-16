@@ -29,5 +29,5 @@ biocache-service - [experimental/pipelines branch](https://github.com/AtlasOfLiv
 The aim for this proof of concept is to make very minimal changes to biocache-service, maintain the existing API and have no impact on existing services and applications.
 
 ### ala-namematching-service
-So far a simple **drop wizard wrapper around the[ala-name-matching](https://github.com/AtlasOfLivingAustralia/ala-name-matching) library** has been prototyped to support integration with pipelines.
+So far a simple **drop wizard wrapper around the [ala-name-matching](https://github.com/AtlasOfLivingAustralia/ala-name-matching) library** has been prototyped to support integration with pipelines.
  
