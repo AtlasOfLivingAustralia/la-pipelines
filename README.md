@@ -4,6 +4,13 @@ This project is **proof of concept quality code** aimed at identifying work requ
  to use of pipelines as a replacement to [biocache-store](https://github.com/AtlasOfLivingAustralia/biocache-store)
  for data ingress. 
 
+## Architecture
+
+For details on the GBIF implementation, see the [pipelines github repository](https://github.ocom/gbif/pipelines).
+This project is focussed on extension to that architecture to support use by the living atlases.
+
+![Pipelines](https://docs.google.com/drawings/d/e/2PACX-1vQhQSg5VFo2xRZfDhmvhKuNLUpyTOlW-t-m1fesJ2RElWorVPAEbnsZg_StJKh22mEcS4D28j_nPoTV/pub?w=960&h=720 "Pipelines") 
+
 
 ## Prototyped so far:
 
