@@ -1,5 +1,10 @@
 package au.org.ala.pipelines.transforms;
 
+import au.org.ala.kvs.ALAKvConfig;
+import au.org.ala.kvs.ALAKvConfigFactory;
+import au.org.ala.kvs.cache.ALANameMatchKVStoreFactory;
+import au.org.ala.kvs.client.ALANameUsageMatch;
+import au.org.ala.kvs.client.ALASpeciesMatchRequest;
 import au.org.ala.pipelines.interpreters.ALATaxonomyInterpreter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -7,7 +12,6 @@ import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.species.SpeciesMatchRequest;
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.TaxonomyInterpreter;
 import org.gbif.pipelines.io.avro.ALATaxonRecord;
@@ -17,13 +21,13 @@ import org.gbif.pipelines.parsers.config.KvConfig;
 import org.gbif.pipelines.parsers.config.KvConfigFactory;
 import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
-import org.gbif.rest.client.species.NameUsageMatch;
+import org.gbif.rest.client.configuration.ClientConfiguration;
 
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.Properties;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALA_TAXONOMY;
+import static au.org.ala.pipelines.common.ALARecordTypes.ALA_TAXONOMY;
 
 
 /**
@@ -38,10 +42,10 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 @Slf4j
 public class ALATaxonomyTransform extends Transform<ExtendedRecord, ALATaxonRecord> {
 
-  private final KvConfig kvConfig;
-  private KeyValueStore<SpeciesMatchRequest, NameUsageMatch> kvStore;
+  private final ALAKvConfig kvConfig;
+  private KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch> kvStore;
 
-  private ALATaxonomyTransform(KeyValueStore<SpeciesMatchRequest, NameUsageMatch> kvStore, KvConfig kvConfig) {
+  private ALATaxonomyTransform(KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch> kvStore, ALAKvConfig kvConfig) {
     super(ALATaxonRecord.class, ALA_TAXONOMY, ALATaxonomyTransform.class.getName(), "alaTaxonRecordsCount");
     this.kvStore = kvStore;
     this.kvConfig = kvConfig;
@@ -51,20 +55,20 @@ public class ALATaxonomyTransform extends Transform<ExtendedRecord, ALATaxonReco
     return new ALATaxonomyTransform(null, null);
   }
 
-  public static ALATaxonomyTransform create(KvConfig kvConfig) {
+  public static ALATaxonomyTransform create(ALAKvConfig kvConfig) {
     return new ALATaxonomyTransform(null, kvConfig);
   }
 
-  public static ALATaxonomyTransform create(KeyValueStore<SpeciesMatchRequest, NameUsageMatch> kvStore) {
+  public static ALATaxonomyTransform create(KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch> kvStore) {
     return new ALATaxonomyTransform(kvStore, null);
   }
 
-  public static ALATaxonomyTransform create(String propertiesPath) {
-    return new ALATaxonomyTransform(null, KvConfigFactory.create(Paths.get(propertiesPath), KvConfigFactory.TAXONOMY_PREFIX));
-  }
+//  public static ALATaxonomyTransform create(String propertiesPath) {
+//    return new ALATaxonomyTransform(null, ALAKvConfigFactory.create(Paths.get(propertiesPath), ALAKvConfigFactory.ALA_TAXONOMY_PREFIX));
+//  }
 
-  public static ALATaxonomyTransform create(Properties propertiesPath) {
-    return new ALATaxonomyTransform(null, KvConfigFactory.create(propertiesPath, KvConfigFactory.TAXONOMY_PREFIX));
+  public static ALATaxonomyTransform create(Properties properties) {
+    return new ALATaxonomyTransform(null, ALAKvConfigFactory.create(properties, ALAKvConfigFactory.ALA_TAXONOMY_PREFIX));
   }
 
   /** Maps {@link ALATaxonRecord} to key value, where key is {@link TaxonRecord#getId} */
@@ -85,7 +89,39 @@ public class ALATaxonomyTransform extends Transform<ExtendedRecord, ALATaxonReco
 
   @SneakyThrows
   @Setup
-  public void setup() {}
+  public void setup() {
+
+    if (kvConfig != null) {
+
+      ClientConfiguration clientConfiguration = ClientConfiguration.builder()
+              .withBaseApiUrl(kvConfig.getTaxonomyBasePath()) //GBIF base API url
+              .withTimeOut(kvConfig.getTimeout()) //Geocode service connection time-out
+              .build();
+
+      kvStore = ALANameMatchKVStoreFactory.alaNameMatchKVStore(clientConfiguration);
+    }
+
+//      if (kvConfig.getZookeeperUrl() != null && !kvConfig.isRestOnly()) {
+//
+//        CachedHBaseKVStoreConfiguration matchConfig = CachedHBaseKVStoreConfiguration.builder()
+//                .withValueColumnQualifier("j") //stores JSON data
+//                .withHBaseKVStoreConfiguration(HBaseKVStoreConfiguration.builder()
+//                        .withTableName(kvConfig.getTableName()) //Geocode KV HBase table
+//                        .withColumnFamily("v") //Column in which qualifiers are stored
+//                        .withNumOfKeyBuckets(kvConfig.getNumOfKeyBuckets()) //Buckets for salted key generations
+//                        .withHBaseZk(kvConfig.getZookeeperUrl()) //HBase Zookeeper ensemble
+//                        .build())
+//                .withCacheCapacity(15_000L)
+//                .build();
+//
+//        kvStore = NameUsageMatchKVStoreFactory.nameUsageMatchKVStore(matchConfig, clientConfiguration);
+//      } else {
+//        kvStore = NameUsageMatchKVStoreFactory.nameUsageMatchKVStore(clientConfiguration);
+//      }
+//    }
+
+
+  }
 
   @Teardown
   public void tearDown() {}

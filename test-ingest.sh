@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-java -cp pipelines/target/la-pipelines-1.0-SNAPSHOT-shaded.jar org.gbif.pipelines.ingest.pipelines.DwcaToVerbatimPipeline \
+java -cp pipelines/target/pipelines-1.0-SNAPSHOT-shaded.jar org.gbif.pipelines.ingest.pipelines.DwcaToVerbatimPipeline \
   --datasetId=dr1411 \
   --attempt=1 \
   --runner=SparkRunner \

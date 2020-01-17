@@ -126,7 +126,7 @@ public class ALAVerbatimToInterpretedPipeline {
         String targetPath = options.getTargetPath();
         String endPointType = options.getEndPointType();
         String hdfsSiteConfig = options.getHdfsSiteConfig();
-        Properties properties = PropertiesFactory.getInstance(hdfsSiteConfig, options.getProperties()).get();
+        Properties properties = PropertiesFactory.create(hdfsSiteConfig, options.getProperties());
 
         FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, types);
 
@@ -140,65 +140,44 @@ public class ALAVerbatimToInterpretedPipeline {
         IngestMetrics metrics = IngestMetricsBuilder.createVerbatimToInterpretedMetrics();
         SerializableConsumer<String> incMetricFn = metrics::incMetric;
 
+
         log.info("Creating pipelines transforms");
         // Core
-        MetadataTransform metadataTransform = MetadataTransform.create(properties, endPointType, attempt, skipRegistryCalls)
-                .counterFn(incMetricFn).init();
-        BasicTransform basicTransform = BasicTransform.create(properties, datasetId, tripletValid, occIdValid, useErdId)
-                .counterFn(incMetricFn).init();
-        TaxonomyTransform taxonomyTransform = TaxonomyTransform.create(properties)
-                .counterFn(incMetricFn).init();
-        ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.create(properties)
-                .counterFn(incMetricFn).init();
-        LocationTransform locationTransform = LocationTransform.create(properties)
-                .counterFn(incMetricFn).init();
-        VerbatimTransform verbatimTransform = VerbatimTransform.create()
-                .counterFn(incMetricFn);
-        TemporalTransform temporalTransform = TemporalTransform.create()
-                .counterFn(incMetricFn);
+        MetadataTransform metadataTransform = MetadataTransform.create(properties, endPointType, attempt, skipRegistryCalls).counterFn(incMetricFn).init();
+        BasicTransform basicTransform = BasicTransform.create(properties, datasetId, tripletValid, occIdValid, useErdId).counterFn(incMetricFn).init();
+//        TaxonomyTransform taxonomyTransform = TaxonomyTransform.create(properties).counterFn(incMetricFn).init();
+        ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.create(properties).counterFn(incMetricFn).init();
+        LocationTransform locationTransform = LocationTransform.create(properties).counterFn(incMetricFn).init();
+        VerbatimTransform verbatimTransform = VerbatimTransform.create().counterFn(incMetricFn);
+        TemporalTransform temporalTransform = TemporalTransform.create().counterFn(incMetricFn);
+
         // Extension
-        MeasurementOrFactTransform measurementTransform = MeasurementOrFactTransform.create()
-                .counterFn(incMetricFn);
-        MultimediaTransform multimediaTransform = MultimediaTransform.create()
-                .counterFn(incMetricFn);
-        AudubonTransform audubonTransform = AudubonTransform.create()
-                .counterFn(incMetricFn);
-        ImageTransform imageTransform = ImageTransform.create()
-                .counterFn(incMetricFn);
-        // Extra
+        MeasurementOrFactTransform measurementTransform = MeasurementOrFactTransform.create().counterFn(incMetricFn);
+//        MultimediaTransform multimediaTransform = MultimediaTransform.create().counterFn(incMetricFn);
+//        AudubonTransform audubonTransform = AudubonTransform.create().counterFn(incMetricFn);
+//        ImageTransform imageTransform = ImageTransform.create().counterFn(incMetricFn);
+//
+//         Extra
         OccurrenceExtensionTransform occExtensionTransform = OccurrenceExtensionTransform.create().counterFn(incMetricFn);
         DefaultValuesTransform defaultValuesTransform = DefaultValuesTransform.create(properties, datasetId, skipRegistryCalls);
 
         try (
-                SyncDataFileWriter<ExtendedRecord> verbatimWriter =
-                        createWriter(options, ExtendedRecord.getClassSchema(), verbatimTransform, id, false);
-                SyncDataFileWriter<MetadataRecord> metadataWriter =
-                        createWriter(options, MetadataRecord.getClassSchema(), metadataTransform, id, false);
-                SyncDataFileWriter<BasicRecord> basicWriter =
-                        createWriter(options, BasicRecord.getClassSchema(), basicTransform, id, false);
-                SyncDataFileWriter<BasicRecord> basicInvalidWriter =
-                        createWriter(options, BasicRecord.getClassSchema(), basicTransform, id, true);
-                SyncDataFileWriter<TemporalRecord> temporalWriter =
-                        createWriter(options, TemporalRecord.getClassSchema(), temporalTransform, id, false);
-                SyncDataFileWriter<MultimediaRecord> multimediaWriter =
-                        createWriter(options, MultimediaRecord.getClassSchema(), multimediaTransform, id, false);
-                SyncDataFileWriter<ImageRecord> imageWriter =
-                        createWriter(options, ImageRecord.getClassSchema(), imageTransform, id, false);
-                SyncDataFileWriter<AudubonRecord> audubonWriter =
-                        createWriter(options, AudubonRecord.getClassSchema(), audubonTransform, id, false);
-                SyncDataFileWriter<MeasurementOrFactRecord> measurementWriter =
-                        createWriter(options, MeasurementOrFactRecord.getClassSchema(), measurementTransform, id, false);
-                SyncDataFileWriter<TaxonRecord> taxonWriter =
-                        createWriter(options, TaxonRecord.getClassSchema(), taxonomyTransform, id, false);
-                SyncDataFileWriter<ALATaxonRecord> alaTaxonWriter =
-                        createWriter(options, ALATaxonRecord.getClassSchema(), alaTaxonomyTransform, id, false);
-                SyncDataFileWriter<LocationRecord> locationWriter =
-                        createWriter(options, LocationRecord.getClassSchema(), locationTransform, id, false)
+                SyncDataFileWriter<ExtendedRecord> verbatimWriter = createWriter(options, ExtendedRecord.getClassSchema(), verbatimTransform, id, false);
+                SyncDataFileWriter<MetadataRecord> metadataWriter = createWriter(options, MetadataRecord.getClassSchema(), metadataTransform, id, false);
+                SyncDataFileWriter<BasicRecord> basicWriter = createWriter(options, BasicRecord.getClassSchema(), basicTransform, id, false);
+                SyncDataFileWriter<BasicRecord> basicInvalidWriter = createWriter(options, BasicRecord.getClassSchema(), basicTransform, id, true);
+                SyncDataFileWriter<TemporalRecord> temporalWriter = createWriter(options, TemporalRecord.getClassSchema(), temporalTransform, id, false);
+//                SyncDataFileWriter<MultimediaRecord> multimediaWriter = createWriter(options, MultimediaRecord.getClassSchema(), multimediaTransform, id, false);
+//                SyncDataFileWriter<ImageRecord> imageWriter = createWriter(options, ImageRecord.getClassSchema(), imageTransform, id, false);
+//                SyncDataFileWriter<AudubonRecord> audubonWriter = createWriter(options, AudubonRecord.getClassSchema(), audubonTransform, id, false);
+                SyncDataFileWriter<MeasurementOrFactRecord> measurementWriter = createWriter(options, MeasurementOrFactRecord.getClassSchema(), measurementTransform, id, false);
+//                SyncDataFileWriter<TaxonRecord> taxonWriter = createWriter(options, TaxonRecord.getClassSchema(), taxonomyTransform, id, false);
+                SyncDataFileWriter<ALATaxonRecord> alaTaxonWriter = createWriter(options, ALATaxonRecord.getClassSchema(), alaTaxonomyTransform, id, false);
+                SyncDataFileWriter<LocationRecord> locationWriter = createWriter(options, LocationRecord.getClassSchema(), locationTransform, id, false)
         ) {
 
             // Create MetadataRecord
-            MetadataRecord mdr = metadataTransform.processElement(options.getDatasetId())
-                    .orElseThrow(() -> new IllegalArgumentException("MetadataRecord can't be null"));
+            MetadataRecord mdr = metadataTransform.processElement(options.getDatasetId()).orElseThrow(() -> new IllegalArgumentException("MetadataRecord can't be null"));
             metadataWriter.append(mdr);
 
             // Read DWCA and replace default values
@@ -225,11 +204,11 @@ public class ALAVerbatimToInterpretedPipeline {
                 if (br == null) {
                     verbatimWriter.append(er);
                     temporalTransform.processElement(er).ifPresent(temporalWriter::append);
-                    multimediaTransform.processElement(er).ifPresent(multimediaWriter::append);
-                    imageTransform.processElement(er).ifPresent(imageWriter::append);
-                    audubonTransform.processElement(er).ifPresent(audubonWriter::append);
+//                    multimediaTransform.processElement(er).ifPresent(multimediaWriter::append);
+//                    imageTransform.processElement(er).ifPresent(imageWriter::append);
+//                    audubonTransform.processElement(er).ifPresent(audubonWriter::append);
                     measurementTransform.processElement(er).ifPresent(measurementWriter::append);
-                    taxonomyTransform.processElement(er).ifPresent(taxonWriter::append);
+//                    taxonomyTransform.processElement(er).ifPresent(taxonWriter::append);
                     locationTransform.processElement(er, mdr).ifPresent(locationWriter::append);
                     alaTaxonomyTransform.processElement(er).ifPresent(alaTaxonWriter::append);
                 } else {
@@ -264,7 +243,7 @@ public class ALAVerbatimToInterpretedPipeline {
             throw new IllegalStateException("Failed performing conversion on ", e);
         } finally {
             basicTransform.tearDown();
-            taxonomyTransform.tearDown();
+//            taxonomyTransform.tearDown();
             locationTransform.tearDown();
         }
 
@@ -288,5 +267,4 @@ public class ALAVerbatimToInterpretedPipeline {
                 .build()
                 .createSyncDataFileWriter();
     }
-
 }
