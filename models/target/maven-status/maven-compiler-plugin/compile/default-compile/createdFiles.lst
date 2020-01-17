@@ -1,0 +1,17 @@
+org/gbif/pipelines/io/avro/ALATaxonRecord.class
+org/gbif/pipelines/io/avro/MatchType.class
+org/gbif/pipelines/io/avro/Diagnostic.class
+org/gbif/pipelines/io/avro/Diagnostic$Builder.class
+org/gbif/pipelines/io/avro/Issues.class
+org/gbif/pipelines/io/avro/Nomenclature.class
+org/gbif/pipelines/io/avro/IssueRecord$1.class
+org/gbif/pipelines/io/avro/Nomenclature$Builder.class
+org/gbif/pipelines/io/avro/IssueRecord.class
+org/gbif/pipelines/io/avro/Nomenclature$1.class
+org/gbif/pipelines/io/avro/Record.class
+org/gbif/pipelines/io/avro/Rank.class
+org/gbif/pipelines/io/avro/Diagnostic$1.class
+org/gbif/pipelines/io/avro/ALATaxonRecord$1.class
+org/gbif/pipelines/io/avro/IssueRecord$Builder.class
+org/gbif/pipelines/io/avro/ALATaxonRecord$Builder.class
+org/gbif/pipelines/io/avro/Status.class
