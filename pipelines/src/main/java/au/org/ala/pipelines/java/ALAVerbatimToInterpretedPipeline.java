@@ -126,7 +126,7 @@ public class ALAVerbatimToInterpretedPipeline {
         String targetPath = options.getTargetPath();
         String endPointType = options.getEndPointType();
         String hdfsSiteConfig = options.getHdfsSiteConfig();
-        Properties properties = PropertiesFactory.create(hdfsSiteConfig, options.getProperties());
+        Properties properties = PropertiesFactory.getInstance(hdfsSiteConfig, options.getProperties()).get();
 
         FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, types);
 

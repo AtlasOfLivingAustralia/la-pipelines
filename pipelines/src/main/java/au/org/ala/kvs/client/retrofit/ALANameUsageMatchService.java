@@ -11,7 +11,6 @@ import java.util.Collection;
 
 /**
  * ALA name matching Retrofit Service client.
- *
  */
 interface ALANameUsageMatchService {
 

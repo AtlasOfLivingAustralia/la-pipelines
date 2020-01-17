@@ -7,8 +7,6 @@ import okhttp3.OkHttpClient;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.gbif.rest.client.retrofit.RetrofitClientFactory;
 import org.gbif.rest.client.species.NameMatchService;
-import org.gbif.rest.client.species.NameUsageMatch;
-import org.gbif.rest.client.species.retrofit.NameMatchRetrofitService;
 
 import java.io.File;
 import java.io.IOException;
@@ -48,12 +46,10 @@ public class ALANameUsageMatchServiceClient implements ALANameMatchService {
 
     @Override
     public void close() throws IOException {
-        if (Objects.nonNull(okHttpClient) && Objects.nonNull(okHttpClient.cache())
-//                && Objects.nonNull(okHttpClient.cache().directory())
-                ) {
+        if (Objects.nonNull(okHttpClient) && Objects.nonNull(okHttpClient.cache())) {
             File cacheDirectory = okHttpClient.cache().directory();
             if (cacheDirectory.exists()) {
-                try(Stream<File> files = Files.walk(cacheDirectory.toPath())
+                try (Stream<File> files = Files.walk(cacheDirectory.toPath())
                         .sorted(Comparator.reverseOrder())
                         .map(Path::toFile)) {
                     files.forEach(File::delete);

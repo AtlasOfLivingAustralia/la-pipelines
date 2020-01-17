@@ -8,20 +8,18 @@ import java.util.Optional;
 import java.util.Properties;
 
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration;
-import org.gbif.kvs.geocode.GeocodeKVStoreFactory;
 import org.gbif.kvs.geocode.LatLng;
-import org.gbif.kvs.hbase.HBaseKVStoreConfiguration;
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.LocationInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.parsers.config.KvConfig;
-import org.gbif.pipelines.parsers.config.KvConfigFactory;
+import org.gbif.pipelines.kv.GeocodeStore;
+import org.gbif.pipelines.kv.GeocodeStoreFactory;
+import org.gbif.pipelines.parsers.config.model.KvConfig;
+import org.gbif.pipelines.parsers.config.factory.KvConfigFactory;
 import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
-import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 
 import org.apache.beam.sdk.transforms.MapElements;
@@ -31,7 +29,6 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TypeDescriptor;
 
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.LOCATION_RECORDS_COUNT;
@@ -97,48 +94,21 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
         return this;
     }
 
+    /** Initializes resources using singleton factory can be useful in case of non-Beam pipeline */
     public LocationTransform init() {
-        setup();
+        kvStore = GeocodeStoreFactory.getInstance(kvConfig).getStore();
         return this;
     }
 
-    @SneakyThrows
+    /** Beam @Setup initializes resources */
     @Setup
     public void setup() {
-
-
-        kvStore = GeocodeKVStoreFactory.dummyGeocodeKVStore();
-
-
-//        if (kvConfig != null) {
-//
-//            ClientConfiguration clientConfig = ClientConfiguration.builder()
-//                    .withBaseApiUrl(kvConfig.getBasePath()) //GBIF base API url
-//                    .withFileCacheMaxSizeMb(kvConfig.getCacheSizeMb()) //Max file cache size
-//                    .withTimeOut(kvConfig.getTimeout()) //Geocode service connection time-out
-//                    .build();
-//
-//            if (kvConfig.getZookeeperUrl() != null && !kvConfig.isRestOnly()) {
-//
-//                CachedHBaseKVStoreConfiguration geocodeKvStoreConfig = CachedHBaseKVStoreConfiguration.builder()
-//                        .withValueColumnQualifier("j") //stores JSON data
-//                        .withHBaseKVStoreConfiguration(HBaseKVStoreConfiguration.builder()
-//                                .withTableName(kvConfig.getTableName()) //Geocode KV HBase table
-//                                .withColumnFamily("v") //Column in which qualifiers are stored
-//                                .withNumOfKeyBuckets(kvConfig.getNumOfKeyBuckets()) //Buckets for salted key generations == to # of region servers
-//                                .withHBaseZk(kvConfig.getZookeeperUrl()) //HBase Zookeeper ensemble
-//                                .build())
-//                        .withCacheCapacity(15_000L)
-//                        .build();
-//
-//                kvStore = GeocodeKVStoreFactory.simpleGeocodeKVStore(geocodeKvStoreConfig, clientConfig);
-//            } else {
-//                kvStore = GeocodeKVStoreFactory.simpleGeocodeKVStore(clientConfig);
-//            }
-//
-//        }
+        if (kvStore == null) {
+            kvStore = GeocodeStore.create(kvConfig);
+        }
     }
 
+    /** Beam @Teardown closes initialized resources */
     @Teardown
     public void tearDown() {
         if (Objects.nonNull(kvStore)) {
