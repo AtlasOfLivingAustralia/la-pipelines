@@ -3,6 +3,7 @@ package au.org.ala.kvs.client;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import lombok.Builder;
+import lombok.ToString;
 import lombok.Value;
 import org.gbif.kvs.species.SpeciesMatchRequest;
 
@@ -15,6 +16,7 @@ import org.gbif.kvs.species.SpeciesMatchRequest;
 @JsonDeserialize(builder = ALASpeciesMatchRequest.ALASpeciesMatchRequestBuilder.class)
 @Value
 @Builder
+@ToString
 public class ALASpeciesMatchRequest {
 
     private final String kingdom;
@@ -35,4 +37,5 @@ public class ALASpeciesMatchRequest {
 
     @JsonPOJOBuilder(withPrefix = "")
     public static class ALASpeciesMatchRequestBuilder {}
+
 }

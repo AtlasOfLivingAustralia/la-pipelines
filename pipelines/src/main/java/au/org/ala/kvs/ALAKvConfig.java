@@ -4,10 +4,12 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Value;
 
+import java.io.Serializable;
+
 @Value
 @Builder
 @AllArgsConstructor
-public class ALAKvConfig {
+public class ALAKvConfig implements Serializable {
 
     String taxonomyBasePath;
     String spatialBasePath;
