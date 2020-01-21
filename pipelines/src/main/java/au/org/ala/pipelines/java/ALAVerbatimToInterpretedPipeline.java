@@ -49,6 +49,8 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSI
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALL;
 
 /**
+ * WARNING - this is not suitable for use for archives over 50k records due to in-memory cache use.
+ *
  * Pipeline sequence:
  *
  * <pre>

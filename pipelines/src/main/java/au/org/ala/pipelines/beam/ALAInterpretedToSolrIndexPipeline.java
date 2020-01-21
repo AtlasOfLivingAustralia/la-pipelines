@@ -176,7 +176,7 @@ public class ALAInterpretedToSolrIndexPipeline {
 
         log.info("Adding step 4: SOLR indexing");
         SolrIO.ConnectionConfiguration conn = SolrIO.ConnectionConfiguration.create(
-                options.getZkHost() //"localhost:9983"
+                options.getZkHost()
         );
 
         jsonCollection.apply(

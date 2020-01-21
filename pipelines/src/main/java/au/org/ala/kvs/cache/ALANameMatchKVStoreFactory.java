@@ -16,6 +16,8 @@ public class ALANameMatchKVStoreFactory {
 
     private static final Logger LOG = LoggerFactory.getLogger(ALANameMatchKVStoreFactory.class);
 
+    private static  KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch> mapDBCache = null;
+
     public static KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch> alaNameMatchKVStore(ClientConfiguration clientConfiguration) throws IOException {
 
         ALANameUsageMatchServiceClient wsClient = new ALANameUsageMatchServiceClient(clientConfiguration);
@@ -26,14 +28,16 @@ public class ALANameMatchKVStoreFactory {
                     logAndThrow(e, "Unable to close");
                 }
         };
-        KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch>  kvs = restKVStore(wsClient, closeHandler);
+        KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch>  kvs = mapDBBackedKVStore(wsClient, closeHandler);
         return kvs;
     }
 
     /**
      * Builds a KV Store backed by the rest client.
      */
-    private static KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch> restKVStore(ALANameMatchService nameMatchService, Command closeHandler) {
+    private static KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch> cache2kBackedKVStore(ALANameMatchService nameMatchService, Command closeHandler) {
+
+
         KeyValueStore kvs = new KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch>() {
             @Override
             public ALANameUsageMatch get(ALASpeciesMatchRequest key) {
@@ -48,8 +52,36 @@ public class ALANameMatchKVStoreFactory {
                 closeHandler.execute();
             }
         };
-        return KeyValueCache.cache(kvs, 1000l, ALASpeciesMatchRequest.class, ALANameUsageMatch.class);
+        return KeyValueCache.cache(kvs, 100000l, ALASpeciesMatchRequest.class, ALANameUsageMatch.class);
     }
+
+    /**
+     * Builds a KV Store backed by the rest client.
+     */
+    private synchronized static KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch> mapDBBackedKVStore(ALANameMatchService nameMatchService, Command closeHandler) {
+
+        if (mapDBCache == null) {
+            KeyValueStore kvs = new KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch>() {
+                @Override
+                public ALANameUsageMatch get(ALASpeciesMatchRequest key) {
+                    try {
+                        return nameMatchService.match(key);
+                    } catch (Exception ex) {
+                        throw logAndThrow(ex, "Error contacting the species match service");
+                    }
+                }
+
+                @Override
+                public void close() throws IOException {
+                    closeHandler.execute();
+                }
+            };
+            mapDBCache = MapDBKeyValueStore.cache(kvs, 100000l, ALASpeciesMatchRequest.class, ALANameUsageMatch.class);
+        }
+
+        return mapDBCache;
+    }
+
 
     /**
      * Wraps an exception into a {@link RuntimeException}.
