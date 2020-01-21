@@ -16,7 +16,7 @@ public class ALANameMatchKVStoreFactory {
 
     private static final Logger LOG = LoggerFactory.getLogger(ALANameMatchKVStoreFactory.class);
 
-    private static  KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch> mapDBCache = null;
+    private static KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch> mapDBCache = null;
 
     public static KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch> alaNameMatchKVStore(ClientConfiguration clientConfiguration) throws IOException {
 

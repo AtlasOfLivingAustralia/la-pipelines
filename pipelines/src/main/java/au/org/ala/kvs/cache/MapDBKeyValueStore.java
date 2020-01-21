@@ -41,19 +41,17 @@ public class MapDBKeyValueStore<K,V> implements KeyValueStore<K,V> {
                 .make();
 
         cache = db.hashMap(keyClass.getName() + "-" + valueClass.getName())
-            .valueSerializer(
-                    new Serializer<V>() {
-                        ObjectMapper objectMapper = new ObjectMapper();
-                        @Override
-                        public void serialize(@NotNull DataOutput2 dataOutput2, @NotNull V alaNameUsageMatch) throws IOException {
-                            objectMapper.writeValue((DataOutput) dataOutput2, alaNameUsageMatch);
-                        }
-                        @Override
-                        public V deserialize(@NotNull DataInput2 dataInput2, int i) throws IOException {
-                            return objectMapper.readValue((DataInput) dataInput2, valueClass);
-                        }
-                    }
-            ).keySerializer(new Serializer<K>() {
+            .valueSerializer(new Serializer<V>() {
+                ObjectMapper objectMapper = new ObjectMapper();
+                @Override
+                public void serialize(@NotNull DataOutput2 dataOutput2, @NotNull V alaNameUsageMatch) throws IOException {
+                    objectMapper.writeValue((DataOutput) dataOutput2, alaNameUsageMatch);
+                }
+                @Override
+                public V deserialize(@NotNull DataInput2 dataInput2, int i) throws IOException {
+                    return objectMapper.readValue((DataInput) dataInput2, valueClass);
+                }
+            }).keySerializer(new Serializer<K>() {
                 ObjectMapper objectMapper = new ObjectMapper();
                 @Override
                 public void serialize(@NotNull DataOutput2 dataOutput2, @NotNull K alaSpeciesMatchRequest) throws IOException {
