@@ -14,8 +14,8 @@ import org.gbif.kvs.geocode.*;
 import java.util.concurrent.ConcurrentMap;
 
 /**
- * MapDB implementation of key value store.
- *
+ * MapDB implementation of geocode key value store. This type specific version is
+ * required due to lack of default constructor on LatLng class.
  */
 public class GeocodeMapDBKeyValueStore implements KeyValueStore<LatLng, GeocodeResponse> {
 
@@ -85,10 +85,15 @@ public class GeocodeMapDBKeyValueStore implements KeyValueStore<LatLng, GeocodeR
     public GeocodeResponse get(LatLng key) {
         GeocodeResponse value = cache.get(key);
         if (value == null){
-            System.out.println("############## CACHE MISS  - " + key.toString());
-            value = keyValueStore.get(key);
-            cache.put(key, value);
-            db.commit();
+            synchronized (key){
+                value = cache.get(key);
+                if  (value == null) {
+//                    System.out.println("############## CACHE MISS  - " + key.toString());
+                    value = keyValueStore.get(key);
+                    cache.put(key, value);
+                    db.commit();
+                }
+            }
         }
 
         return value;
@@ -96,7 +101,6 @@ public class GeocodeMapDBKeyValueStore implements KeyValueStore<LatLng, GeocodeR
 
     @Override
     public void close() throws IOException {
-        db.close();
         keyValueStore.close();
     }
 }

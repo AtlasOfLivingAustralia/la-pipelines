@@ -62,7 +62,8 @@ public class MapDBKeyValueStore<K,V> implements KeyValueStore<K,V> {
                 public K deserialize(@NotNull DataInput2 dataInput2, int i) throws IOException {
                     return objectMapper.readValue((DataInput) dataInput2, keyClass);
                 }
-            }).createOrOpen();
+            })
+            .createOrOpen();
 
         this.db.getStore().fileLoad();
     }
@@ -86,12 +87,15 @@ public class MapDBKeyValueStore<K,V> implements KeyValueStore<K,V> {
     public V get(K key) {
         V value = cache.get(key);
         if (value == null){
-            System.out.println("############## CACHE MISS  - " + key.toString());
-            value = keyValueStore.get(key);
-            cache.put(key, value);
-            db.commit();
+            synchronized (key) {
+                value = cache.get(key);
+                if(value == null) {
+                    value = keyValueStore.get(key);
+                    cache.put(key, value);
+                    db.commit();
+                }
+            }
         }
-
         return value;
     }
 
