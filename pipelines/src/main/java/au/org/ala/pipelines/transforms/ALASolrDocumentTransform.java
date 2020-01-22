@@ -116,6 +116,7 @@ public class ALASolrDocumentTransform implements Serializable {
                 skipKeys.add("crawlId");
                 skipKeys.add("networkKeys");
                 skipKeys.add("protocol");
+                skipKeys.add("machineTags"); //TODO review content
 
                 SolrInputDocument doc = new SolrInputDocument();
                 doc.setField("id", er.getId());
