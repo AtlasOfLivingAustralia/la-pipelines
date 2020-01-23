@@ -73,7 +73,7 @@ public class ALAInterpretedToLatLongCSVPipeline {
                         .apply("Grouping objects", CoGroupByKey.create())
                         .apply("Merging to CSV doc", alaCSVrDoFn);
 
-        csvCollection.apply(TextIO.write().to("/data/biocache-load/latlong.csv"));
+        csvCollection.apply(TextIO.write().to(options.getTargetPath() +"/latlong.csv"));
 
         log.info("Running the pipeline");
         PipelineResult result = p.run();
@@ -81,6 +81,6 @@ public class ALAInterpretedToLatLongCSVPipeline {
 
         MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
 
-        log.info("Pipeline has been finished");
+        log.info("Pipeline has been finished. Output written to " + options.getTargetPath() + "/latlong.csv");
     }
 }

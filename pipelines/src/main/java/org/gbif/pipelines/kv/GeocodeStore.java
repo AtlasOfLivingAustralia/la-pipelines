@@ -34,6 +34,8 @@ import java.util.Objects;
 
 /**
  * Create KV store for geocode lookup using KV store {@link KvConfig}
+ *
+ * TODO factor this out so that external config can specify the KV storage.
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class GeocodeStore {
@@ -67,7 +69,7 @@ public class GeocodeStore {
 
                 return GeocodeKVStoreFactory.simpleGeocodeKVStore(geocodeKvStoreConfig, clientConfig);
             } else {
-                GeocodeServiceSyncClient geocodeService =  new GeocodeServiceSyncClient(clientConfig);
+                GeocodeServiceSyncClient geocodeService = new GeocodeServiceSyncClient(clientConfig);
                 return mapDBGeocodeKVStore(geocodeService, () -> {
                     try {
                         geocodeService.close();

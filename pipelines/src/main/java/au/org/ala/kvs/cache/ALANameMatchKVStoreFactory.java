@@ -18,6 +18,12 @@ public class ALANameMatchKVStoreFactory {
 
     private static KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch> mapDBCache = null;
 
+    /**
+     *
+     * @param clientConfiguration
+     * @return
+     * @throws IOException
+     */
     public static KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch> alaNameMatchKVStore(ClientConfiguration clientConfiguration) throws IOException {
 
         ALANameUsageMatchServiceClient wsClient = new ALANameUsageMatchServiceClient(clientConfiguration);
@@ -81,7 +87,6 @@ public class ALANameMatchKVStoreFactory {
 
         return mapDBCache;
     }
-
 
     /**
      * Wraps an exception into a {@link RuntimeException}.

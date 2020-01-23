@@ -89,7 +89,6 @@ public class ALATaxonomyTransform extends Transform<ExtendedRecord, ALATaxonReco
   public void setup() {
 
     if (kvConfig != null) {
-
       ClientConfiguration clientConfiguration = ClientConfiguration.builder()
               .withBaseApiUrl(kvConfig.getTaxonomyBasePath()) //GBIF base API url
               .withTimeOut(kvConfig.getTimeout()) //Geocode service connection time-out
@@ -97,27 +96,6 @@ public class ALATaxonomyTransform extends Transform<ExtendedRecord, ALATaxonReco
 
       kvStore = ALANameMatchKVStoreFactory.alaNameMatchKVStore(clientConfiguration);
     }
-
-//      if (kvConfig.getZookeeperUrl() != null && !kvConfig.isRestOnly()) {
-//
-//        CachedHBaseKVStoreConfiguration matchConfig = CachedHBaseKVStoreConfiguration.builder()
-//                .withValueColumnQualifier("j") //stores JSON data
-//                .withHBaseKVStoreConfiguration(HBaseKVStoreConfiguration.builder()
-//                        .withTableName(kvConfig.getTableName()) //Geocode KV HBase table
-//                        .withColumnFamily("v") //Column in which qualifiers are stored
-//                        .withNumOfKeyBuckets(kvConfig.getNumOfKeyBuckets()) //Buckets for salted key generations
-//                        .withHBaseZk(kvConfig.getZookeeperUrl()) //HBase Zookeeper ensemble
-//                        .build())
-//                .withCacheCapacity(15_000L)
-//                .build();
-//
-//        kvStore = NameUsageMatchKVStoreFactory.nameUsageMatchKVStore(matchConfig, clientConfiguration);
-//      } else {
-//        kvStore = NameUsageMatchKVStoreFactory.nameUsageMatchKVStore(clientConfiguration);
-//      }
-//    }
-
-
   }
 
   @Teardown

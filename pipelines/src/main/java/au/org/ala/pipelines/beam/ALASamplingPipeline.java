@@ -1,5 +1,6 @@
 package au.org.ala.pipelines.beam;
 
+import au.org.ala.pipelines.transforms.ALASamplingTransform;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,7 +12,6 @@ import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.transforms.core.LocationTransform;
-import org.gbif.pipelines.transforms.specific.AustraliaSpatialTransform;
 import org.slf4j.MDC;
 
 import java.time.LocalDateTime;
@@ -92,7 +92,7 @@ public class ALASamplingPipeline {
 
     log.info("Creating transformations");
     LocationTransform locationTransform = LocationTransform.create();
-    AustraliaSpatialTransform alaSamplingTransform = AustraliaSpatialTransform.create(properties);
+    ALASamplingTransform alaSamplingTransform = ALASamplingTransform.create(properties);
 
     log.info("Adding pipeline transforms");
     p.apply("Read Location", locationTransform.read(pathLocationFn))

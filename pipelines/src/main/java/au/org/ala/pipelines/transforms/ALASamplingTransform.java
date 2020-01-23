@@ -1,33 +1,30 @@
 package au.org.ala.pipelines.transforms;
 
 
+import au.org.ala.kvs.ALAKvConfig;
+import au.org.ala.kvs.ALAKvConfigFactory;
+import au.org.ala.kvs.cache.ALSamplingKVStoreFactory;
+import au.org.ala.kvs.client.ALASamplingRequest;
+import au.org.ala.pipelines.interpreters.ALASamplingInterpreter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.transforms.MapElements;
-import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
-import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TypeDescriptor;
-import org.apache.hadoop.hbase.util.Bytes;
-import org.gbif.api.vocabulary.Country;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration;
 import org.gbif.kvs.geocode.LatLng;
-import org.gbif.kvs.hbase.HBaseKVStoreConfiguration;
-import org.gbif.kvs.hbase.ReadOnlyHBaseStore;
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.specific.AustraliaSpatialInterpreter;
 import org.gbif.pipelines.io.avro.AustraliaSpatialRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.parsers.config.factory.KvConfigFactory;
-import org.gbif.pipelines.parsers.config.model.KvConfig;
 import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 import org.gbif.pipelines.transforms.specific.AustraliaSpatialTransform;
+import org.gbif.rest.client.configuration.ClientConfiguration;
 
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
@@ -45,11 +42,10 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 @Slf4j
 public class ALASamplingTransform extends Transform<LocationRecord, AustraliaSpatialRecord> {
 
-    private final KvConfig kvConfig;
-    private KeyValueStore<LatLng, String> kvStore;
-    private PCollectionView<LocationRecord> locationView;
+    private final ALAKvConfig kvConfig;
+    private KeyValueStore<ALASamplingRequest, Map<String,String>> kvStore;
 
-    private ALASamplingTransform(KeyValueStore<LatLng, String> kvStore, KvConfig kvConfig) {
+    private ALASamplingTransform(KeyValueStore<ALASamplingRequest, Map<String,String>> kvStore, ALAKvConfig kvConfig) {
         super(AustraliaSpatialRecord.class, AUSTRALIA_SPATIAL, AustraliaSpatialTransform.class.getName(), AUSTRALIA_SPATIAL_RECORDS_COUNT);
         this.kvStore = kvStore;
         this.kvConfig = kvConfig;
@@ -59,21 +55,12 @@ public class ALASamplingTransform extends Transform<LocationRecord, AustraliaSpa
         return new ALASamplingTransform(null, null);
     }
 
-    public static ALASamplingTransform create(KvConfig kvConfig) {
-        return new ALASamplingTransform(null, kvConfig);
-    }
-
-    public static ALASamplingTransform create(KeyValueStore<LatLng, String> kvStore) {
+    public static ALASamplingTransform create(KeyValueStore<ALASamplingRequest, Map<String,String>> kvStore) {
         return new ALASamplingTransform(kvStore, null);
     }
 
-    public static ALASamplingTransform create(String propertiesPath) {
-        KvConfig config = KvConfigFactory.create(Paths.get(propertiesPath), KvConfigFactory.AUSTRALIA_PREFIX);
-        return new ALASamplingTransform(null, config);
-    }
-
     public static ALASamplingTransform create(Properties properties) {
-        KvConfig config = KvConfigFactory.create(properties, KvConfigFactory.AUSTRALIA_PREFIX);
+        ALAKvConfig config = ALAKvConfigFactory.create(properties, ALAKvConfigFactory.ALA_SPATIAL_PREFIX);
         return new ALASamplingTransform(null, config);
     }
 
@@ -97,23 +84,12 @@ public class ALASamplingTransform extends Transform<LocationRecord, AustraliaSpa
     @Setup
     public void setup() {
         if (kvConfig != null) {
-
-            CachedHBaseKVStoreConfiguration hBaseKVStoreConfiguration = CachedHBaseKVStoreConfiguration.builder()
-                    .withValueColumnQualifier("json") //stores JSON data
-                    .withHBaseKVStoreConfiguration(HBaseKVStoreConfiguration.builder()
-                            .withTableName(kvConfig.getTableName()) //Geocode KV HBase table
-                            .withColumnFamily("v") //Column in which qualifiers are stored
-                            .withNumOfKeyBuckets(kvConfig.getNumOfKeyBuckets()) //Buckets for salted key generations == to # of region servers
-                            .withHBaseZk(kvConfig.getZookeeperUrl()) //HBase Zookeeper ensemble
-                            .build())
-                    .withCacheCapacity(15_000L)
+            ClientConfiguration clientConfiguration = ClientConfiguration.builder()
+                    .withBaseApiUrl(kvConfig.getSpatialBasePath()) //GBIF base API url
+                    .withTimeOut(kvConfig.getTimeout()) //Geocode service connection time-out
                     .build();
 
-            kvStore = ReadOnlyHBaseStore.<LatLng, String>builder()
-                    .withHBaseStoreConfiguration(hBaseKVStoreConfiguration.getHBaseKVStoreConfiguration())
-                    .withResultMapper(result -> Bytes.toString(result.getValue(Bytes.toBytes("v"), Bytes.toBytes("json"))))
-                    .build();
-
+            kvStore = ALSamplingKVStoreFactory.alaNameMatchKVStore(clientConfiguration);
         }
     }
 
@@ -136,15 +112,9 @@ public class ALASamplingTransform extends Transform<LocationRecord, AustraliaSpa
                         .setCreated(Instant.now().toEpochMilli())
                         .build())
                 .when(lr -> Optional.ofNullable(lr.getCountryCode())
-                        .filter(c -> c.equals(Country.AUSTRALIA.getIso2LetterCode()))
                         .filter(c -> new LatLng(lr.getDecimalLatitude(), lr.getDecimalLongitude()).isValid())
                         .isPresent())
-                .via(AustraliaSpatialInterpreter.interpret(kvStore))
+                .via(ALASamplingInterpreter.interpret(kvStore))
                 .get();
-    }
-
-    public ParDo.SingleOutput<LocationRecord, AustraliaSpatialRecord> interpret(PCollectionView<LocationRecord> locationView) {
-        this.locationView = locationView;
-        return ParDo.of(this).withSideInputs(locationView);
     }
 }

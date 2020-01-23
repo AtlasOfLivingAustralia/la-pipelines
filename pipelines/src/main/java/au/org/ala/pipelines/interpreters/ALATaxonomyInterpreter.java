@@ -23,12 +23,6 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.TAXON_MATCH_NONE;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ALATaxonomyInterpreter {
 
-    private static final RankedName INCERTAE_SEDIS = RankedName.newBuilder()
-            .setRank(Rank.KINGDOM)
-            .setName(Kingdom.INCERTAE_SEDIS.scientificName())
-            .setKey(Kingdom.INCERTAE_SEDIS.nubUsageKey())
-            .build();
-
     /**
      * Interprets a utils from the taxonomic fields specified in the {@link ExtendedRecord} received.
      */

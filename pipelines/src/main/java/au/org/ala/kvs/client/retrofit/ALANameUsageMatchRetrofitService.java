@@ -12,7 +12,7 @@ import java.util.Collection;
 /**
  * ALA name matching Retrofit Service client.
  */
-interface ALANameUsageMatchService {
+interface ALANameUsageMatchRetrofitService {
 
     @POST("/api/searchByClassification")
     @Headers({"Content-Type: application/json"})
