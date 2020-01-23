@@ -43,6 +43,8 @@ This list of transforms will need to be added to backfill some of the ingress re
 
 ## Dependent projects
 
+The pipelines work will necessitate some minor additional API additions and change to the following components:
+
 ### biocache-service
 [experimental/pipelines branch](https://github.com/AtlasOfLivingAustralia/biocache-service/tree/experimental/pipelines) 
 The aim for this proof of concept is to make very minimal changes to biocache-service, maintain the existing API and have no impact on existing services and applications.
