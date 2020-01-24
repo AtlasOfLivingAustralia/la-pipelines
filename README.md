@@ -64,12 +64,16 @@ lookup for all layers. This needs to be supplement with additional work to popul
 
 ## Getting started
 
+In the absence of ansible scripts, here are some instructions for setting up a local development environment for pipelines.
+
 1. Run `git clone https://github.com/djtfmartin/la-pipelines`
 1. Build with maven `mvn clean install`
 1. Run `git clone https://github.com/djtfmartin/ala-namematching-service`
-1. Download name matching index from here:  `https://archives.ala.org.au/archives/nameindexes/latest/namematching-20190213.tgz` and unzip to `/data/lucene` and rename `/data/lucene/namematching` to `/data/lucene/namematching`
+1. Download name matching index from here:  `https://archives.ala.org.au/archives/nameindexes/latest/namematching-20190213.tgz` and unzip to `/data/lucene` and rename `/data/lucene/namematching-20190213` to `/data/lucene/namematching`
+1. Create directory `/data/ala-namematching/service/config`
+1. Copy JSON files from https://github.com/djtfmartin/ala-namematching-service/tree/master/src/main/resources to this directory
 1. Run with `nohup ala-namematching-service/run.sh  &`
-1. Download a darwin core archive (e.g. https://archives.ala.org.au/archives/gbif/dr1411/dr1411.zip) and expand it into `/data/biocache-load` e.g. `/data/biocache-load/dr1411`
+1. Download a darwin core archive (e.g. https://archives.ala.org.au/archives/gbif/dr893/dr893.zip) and expand it into `/data/biocache-load` e.g. `/data/biocache-load/dr1411`
 1. Create `/data/pipelines-data` directory
 1. To convert DwCA to AVRO, run `./ingest.sh dr1411`
 1. To interpret, run `./interpret.sh dr1411`
