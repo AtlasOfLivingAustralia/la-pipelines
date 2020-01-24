@@ -7,14 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.transforms.Create;
-import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
 import org.apache.beam.sdk.transforms.View;
-import org.apache.beam.sdk.transforms.join.CoGbkResult;
-import org.apache.beam.sdk.transforms.join.CoGroupByKey;
-import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
-import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
@@ -24,9 +18,6 @@ import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.transforms.common.DefaultValuesTransform;
-import org.gbif.pipelines.transforms.common.FilterExtendedRecordTransform;
-import org.gbif.pipelines.transforms.common.UniqueGbifIdTransform;
 import org.gbif.pipelines.transforms.common.UniqueIdTransform;
 import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
 import org.gbif.pipelines.transforms.core.*;
@@ -134,9 +125,6 @@ public class ALAVerbatimToInterpretedPipeline {
     AudubonTransform audubonTransform = AudubonTransform.create();
     ImageTransform imageTransform = ImageTransform.create();
 
-    // Extra
-    UniqueGbifIdTransform gbifIdTransform = UniqueGbifIdTransform.create(useExtendedRecordId);
-
     log.info("Creating beam pipeline");
     // Create and write metadata
     PCollection<MetadataRecord> metadataRecord =
@@ -155,66 +143,39 @@ public class ALAVerbatimToInterpretedPipeline {
         verbatimTransform.emptyCollection(p) :
         p.apply("Read ExtendedRecords", verbatimTransform.read(options.getInputPath()))
             .apply("Read occurrences from extension", OccurrenceExtensionTransform.create())
-            .apply("Filter duplicates", UniqueIdTransform.create())
-            .apply("Set default values", DefaultValuesTransform.create(properties, datasetId, skipRegistryCalls));
-
-    PCollectionTuple basicCollection =
-        uniqueRecords.apply("Check basic transform condition", basicTransform.check(types))
-            .apply("Interpret basic", basicTransform.interpret())
-            .apply("Get invalid GBIF IDs", gbifIdTransform);
-
-    // Filter record with identical GBIF ID
-    PCollection<KV<String, ExtendedRecord>> uniqueRecordsKv =
-        uniqueRecords.apply("Map verbatim to KV", verbatimTransform.toKv());
-
-    PCollection<KV<String, BasicRecord>> uniqueBasicRecordsKv =
-        basicCollection.get(gbifIdTransform.getInvalidTag())
-            .apply("Map basic to KV", basicTransform.toKv());
-
-    SingleOutput<KV<String, CoGbkResult>, ExtendedRecord> filterByGbifIdFn =
-        FilterExtendedRecordTransform.create(verbatimTransform.getTag(), basicTransform.getTag()).filter();
-
-    PCollection<ExtendedRecord> filteredUniqueRecords =
-        KeyedPCollectionTuple
-            // Core
-            .of(verbatimTransform.getTag(), uniqueRecordsKv)
-            .and(basicTransform.getTag(), uniqueBasicRecordsKv)
-            // Apply
-            .apply("Grouping objects", CoGroupByKey.create())
-            .apply("Filter verbatim", filterByGbifIdFn);
+            .apply("Filter duplicates", UniqueIdTransform.create());
 
     // Interpret and write all record types
-    basicCollection.get(gbifIdTransform.getTag())
-        .apply("Write basic to avro", basicTransform.write(pathFn));
-
-    basicCollection.get(gbifIdTransform.getInvalidTag())
-        .apply("Write invalid basic to avro", basicTransform.writeInvalid(pathFn));
-
-    filteredUniqueRecords
+    uniqueRecords
         .apply("Check verbatim transform condition", verbatimTransform.check(types))
         .apply("Write verbatim to avro", verbatimTransform.write(pathFn));
 
-    filteredUniqueRecords
+    uniqueRecords
+        .apply("Check basic transform condition", basicTransform.check(types))
+        .apply("Interpret basic", basicTransform.interpret())
+        .apply("Write basic to avro", basicTransform.write(pathFn));
+
+    uniqueRecords
         .apply("Check temporal transform condition", temporalTransform.check(types))
         .apply("Interpret temporal", temporalTransform.interpret())
         .apply("Write temporal to avro", temporalTransform.write(pathFn));
 
-    filteredUniqueRecords
+    uniqueRecords
         .apply("Check multimedia transform condition", multimediaTransform.check(types))
         .apply("Interpret multimedia", multimediaTransform.interpret())
         .apply("Write multimedia to avro", multimediaTransform.write(pathFn));
 
-    filteredUniqueRecords
+    uniqueRecords
         .apply("Check image transform condition", imageTransform.check(types))
         .apply("Interpret image", imageTransform.interpret())
         .apply("Write image to avro", imageTransform.write(pathFn));
 
-    filteredUniqueRecords
+    uniqueRecords
         .apply("Check audubon transform condition", audubonTransform.check(types))
         .apply("Interpret audubon", audubonTransform.interpret())
         .apply("Write audubon to avro", audubonTransform.write(pathFn));
 
-    filteredUniqueRecords
+    uniqueRecords
         .apply("Check measurement transform condition", measurementOrFactTransform.check(types))
         .apply("Interpret measurement", measurementOrFactTransform.interpret())
         .apply("Write measurement to avro", measurementOrFactTransform.write(pathFn));
@@ -224,12 +185,12 @@ public class ALAVerbatimToInterpretedPipeline {
 //        .apply("Interpret taxonomy", taxonomyTransform.interpret())
 //        .apply("Write taxon to avro", taxonomyTransform.write(pathFn));
 
-    filteredUniqueRecords
+    uniqueRecords
         .apply("Check ALA taxonomy transform condition", alaTaxonomyTransform.check(types))
         .apply("Interpret ALA taxonomy", alaTaxonomyTransform.interpret())
         .apply("Write ALA taxon to avro", alaTaxonomyTransform.write(pathFn));
 
-    filteredUniqueRecords
+    uniqueRecords
         .apply("Check location transform condition", locationTransform.check(types))
         .apply("Interpret location", locationTransform.interpret(metadataView))
         .apply("Write location to avro", locationTransform.write(pathFn));
