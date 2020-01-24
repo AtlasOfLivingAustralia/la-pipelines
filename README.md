@@ -68,9 +68,9 @@ lookup for all layers. This needs to be supplement with additional work to popul
 1. build with maven `mvn clean install`
 1. `git clone https://github.com/djtfmartin/ala-namematching-service` this repository
 1. Download name matching index from here:  https://archives.ala.org.au/archives/nameindexes/latest/namematching-20190213.tgz  and unzip to  /data/lucene
-1. Run with `ala-namematching-service/run.sh`
-1. Download a darwin core archive and expand it into `/data/biocache-load` e.g. `/data/biocache-load/dr1411`
-1. Create `/data/pipelines-data`directory
+1. Run with `nohup ala-namematching-service/run.sh  &`
+1. Download a darwin core archive (e.g. https://archives.ala.org.au/archives/gbif/dr1411/dr1411.zip) and expand it into `/data/biocache-load` e.g. `/data/biocache-load/dr1411`
+1. Create `/data/pipelines-data` directory
 1. To convert DwCA to AVRO, run `./ingest.sh dr1411`
 1. To interpret, run `./interpret.sh dr1411`
 1. To setup SOLR:
