@@ -64,10 +64,10 @@ lookup for all layers. This needs to be supplement with additional work to popul
 
 ## Getting started
 
-1. `git clone https://github.com/djtfmartin/la-pipelines` this repository
-1. build with maven `mvn clean install`
-1. `git clone https://github.com/djtfmartin/ala-namematching-service` this repository
-1. Download name matching index from here:  https://archives.ala.org.au/archives/nameindexes/latest/namematching-20190213.tgz  and unzip to  /data/lucene
+1. Run `git clone https://github.com/djtfmartin/la-pipelines`
+1. Build with maven `mvn clean install`
+1. Run `git clone https://github.com/djtfmartin/ala-namematching-service`
+1. Download name matching index from here:  `https://archives.ala.org.au/archives/nameindexes/latest/namematching-20190213.tgz` and unzip to `/data/lucene` and rename `/data/lucene/namematching` to `/data/lucene/namematching`
 1. Run with `nohup ala-namematching-service/run.sh  &`
 1. Download a darwin core archive (e.g. https://archives.ala.org.au/archives/gbif/dr1411/dr1411.zip) and expand it into `/data/biocache-load` e.g. `/data/biocache-load/dr1411`
 1. Create `/data/pipelines-data` directory
