@@ -16,6 +16,21 @@
     <avro.version>1.8.2</avro.version>
     <apache.beam.version>2.17.0</apache.beam.version>
   </properties>
+  
+  
+  <repositories>
+    <repository>
+      <id>gbif-all</id>
+      <url>http://repository.gbif.org/content/groups/gbif</url>
+    </repository>
+  </repositories>
+
+  <pluginRepositories>
+    <pluginRepository>
+      <id>gbif-all</id>
+      <url>http://repository.gbif.org/content/groups/gbif</url>
+    </pluginRepository>
+  </pluginRepositories>  
 
   <build>
     <plugins>
