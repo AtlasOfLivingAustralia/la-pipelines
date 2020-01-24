@@ -50,13 +50,22 @@ In addition pipelines for following will need to be developed:
 
 The pipelines work will necessitate some minor additional API additions and change to the following components:
 
-* ### biocache-service
+#### biocache-service
 [experimental/pipelines branch](https://github.com/AtlasOfLivingAustralia/biocache-service/tree/experimental/pipelines) 
 The aim for this proof of concept is to make very minimal changes to biocache-service, maintain the existing API and have no impact on existing services and applications.
 
-* ### ala-namematching-service
-So far a simple **drop wizard wrapper around the [ala-name-matching](https://github.com/AtlasOfLivingAustralia/ala-name-matching) library** has been prototyped to support integration with pipelines.
+#### ala-namematching-service
+A simple **drop wizard wrapper around the [ala-name-matching](https://github.com/AtlasOfLivingAustralia/ala-name-matching) library** has been prototyped to support integration with pipelines.
  
-* ### spatial-service
+#### spatial-service
 [intersect-cache branch](https://github.com/AtlasOfLivingAustralia/spatial-service/tree/intersect-cache) An additional webservice to allow a point
 lookup for all layers. This needs to be supplement with additional work to populate a key value store cache using the spatial-service batch API.
+
+
+## Getting started
+
+1. `git clone https://github.com/djtfmartin/la-pipelines` this repository
+1. build with maven `mvn clean install`
+1. `git clone https://github.com/djtfmartin/ala-namematching-service` this repository
+1. Download name matching index from here:  https://archives.ala.org.au/archives/nameindexes/latest/namematching-20190213.tgz  and unzip to  /data/lucene
+1. Run with `ala-namematching-service/run.sh'`
