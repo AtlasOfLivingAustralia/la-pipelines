@@ -68,7 +68,7 @@ public class ALATaxonomyInterpreter {
 //                    for (Map.Entry<String, Object> entry : usageMatch.) {
 
                     try {
-                        BeanUtils.copyProperties(usageMatch, atr);
+                        BeanUtils.copyProperties(atr, usageMatch);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
