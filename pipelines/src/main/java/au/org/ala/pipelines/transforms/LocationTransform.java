@@ -9,7 +9,7 @@ import org.gbif.pipelines.parsers.config.model.KvConfig;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 
-import au.org.ala.kvs.cache.GeocodeMapDBKeyValueStore2;
+import au.org.ala.kvs.cache.GeocodeMapDBKeyValueStore;
 
 public class LocationTransform extends org.gbif.pipelines.transforms.core.LocationTransform {
 
@@ -33,7 +33,7 @@ public class LocationTransform extends org.gbif.pipelines.transforms.core.Locati
           .withTimeOut(config.getTimeout()) //Geocode service connection time-out
           .build();
 
-      this.setKvStore(GeocodeMapDBKeyValueStore2.create(clientConfig));
+      this.setKvStore(GeocodeMapDBKeyValueStore.create(clientConfig));
     }
   }
 

@@ -1,106 +1,86 @@
 package au.org.ala.kvs.cache;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.gbif.kvs.KeyValueStore;
-import org.gbif.rest.client.geocode.GeocodeResponse;
-import org.jetbrains.annotations.NotNull;
-import org.mapdb.*;
-
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import org.gbif.kvs.geocode.*;
 
-import java.util.concurrent.ConcurrentMap;
+import org.gbif.kvs.KeyValueStore;
+import org.gbif.kvs.geocode.LatLng;
+import org.gbif.rest.client.configuration.ClientConfiguration;
+import org.gbif.rest.client.geocode.GeocodeResponse;
+import org.gbif.rest.client.geocode.retrofit.GeocodeServiceSyncClient;
 
-/**
- * MapDB implementation of geocode key value store. This type specific version is
- * required due to lack of default constructor on LatLng class.
- */
+import org.jetbrains.annotations.NotNull;
+import org.mapdb.DB;
+import org.mapdb.DBMaker;
+import org.mapdb.DataInput2;
+import org.mapdb.DataOutput2;
+import org.mapdb.HTreeMap;
+import org.mapdb.Serializer;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 public class GeocodeMapDBKeyValueStore implements KeyValueStore<LatLng, GeocodeResponse> {
 
-    //Wrapped KeyValueStore
-    private final KeyValueStore<LatLng, GeocodeResponse> keyValueStore;
+  private final GeocodeServiceSyncClient service;
+  private final DB db;
+  private final HTreeMap<LatLng, GeocodeResponse> cache;
 
-    private final DB db;
+  private GeocodeMapDBKeyValueStore(ClientConfiguration config) {
+    this.service = new GeocodeServiceSyncClient(config);
 
-    private final ConcurrentMap<LatLng, GeocodeResponse> cache;
+    this.db = DBMaker
+        .fileDB("/tmp/geocoderesponse")
+        .closeOnJvmShutdown()
+        .fileMmapEnableIfSupported()
+        .make();
 
-    /**
-     * Creates a Cache for the KV store.
-     *
-     * @param keyValueStore wrapped kv store
-     */
-    private GeocodeMapDBKeyValueStore(KeyValueStore<LatLng, GeocodeResponse> keyValueStore) {
-        this.keyValueStore = keyValueStore;
-        this.db = DBMaker
-                .fileDB("/tmp/" + "geocoderesponse")
-                .transactionEnable()
-                .closeOnJvmShutdown()
-                .make();
+    this.cache = db.hashMap("geocoderesponse")
+        .keySerializer(new Serializer<LatLng>() {
+          @Override
+          public void serialize(@NotNull DataOutput2 dataOutput2, @NotNull LatLng latLng) throws IOException {
+            String toString = latLng.getLatitude() + "&&&" + latLng.getLongitude();
+            dataOutput2.writeChars(toString);
+          }
 
-        cache = db.hashMap("geocoderesponse")
-            .keySerializer(new Serializer<LatLng>() {
-                @Override
-                public void serialize(@NotNull DataOutput2 dataOutput2, @NotNull LatLng latLng) throws IOException {
-                    String toString = latLng.getLatitude() + "&&&" + latLng.getLongitude();
-                    dataOutput2.writeChars(toString);
-                }
-                @Override
-                public LatLng deserialize(@NotNull DataInput2 dataInput2, int i) throws IOException {
-                    String[] parts = dataInput2.readLine().split("&&&");
-                    return LatLng.builder()
-                            .withLatitude(Double.parseDouble(parts[0]))
-                            .withLongitude(Double.parseDouble(parts[1]))
-                            .build();
-                }
-            }).valueSerializer(new Serializer<GeocodeResponse>() {
-                ObjectMapper objectMapper = new ObjectMapper();
-                @Override
-                public void serialize(@NotNull DataOutput2 dataOutput2, @NotNull GeocodeResponse resp) throws IOException {
-                    objectMapper.writeValue((DataOutput) dataOutput2, resp);
-                }
+          @Override
+          public LatLng deserialize(@NotNull DataInput2 dataInput2, int i) throws IOException {
+            String[] parts = dataInput2.readLine().split("&&&");
+            return LatLng.builder()
+                .withLatitude(Double.parseDouble(parts[0]))
+                .withLongitude(Double.parseDouble(parts[1]))
+                .build();
+          }
+        }).valueSerializer(new Serializer<GeocodeResponse>() {
+          ObjectMapper objectMapper = new ObjectMapper();
 
-                @Override
-                public GeocodeResponse deserialize(@NotNull DataInput2 dataInput2, int i) throws IOException {
-                    return objectMapper.readValue((DataInput) dataInput2, GeocodeResponse.class);
-                }
-            })
-            .createOrOpen();
+          @Override
+          public void serialize(@NotNull DataOutput2 dataOutput2, @NotNull GeocodeResponse resp) throws IOException {
+            objectMapper.writeValue((DataOutput) dataOutput2, resp);
+          }
 
-        this.db.getStore().fileLoad();
-    }
+          @Override
+          public GeocodeResponse deserialize(@NotNull DataInput2 dataInput2, int i) throws IOException {
+            return objectMapper.readValue((DataInput) dataInput2, GeocodeResponse.class);
+          }
+        })
+        .createOrOpen();
+  }
 
-    /**
-     * Factory method to create instances of KeyValueStore caches.
-     *
-     * @param keyValueStore store to be cached/wrapped
-     * @return a new instance of KeyValueStore cache
-     */
-    public static GeocodeMapDBKeyValueStore cache(KeyValueStore<LatLng, GeocodeResponse> keyValueStore) {
-        return new GeocodeMapDBKeyValueStore(keyValueStore);
-    }
+  public static GeocodeMapDBKeyValueStore create(ClientConfiguration config) {
+    return new GeocodeMapDBKeyValueStore(config);
+  }
 
-    @Override
-    public GeocodeResponse get(LatLng key) {
-        GeocodeResponse value = cache.get(key);
-        if (value == null){
-            synchronized (key){
-                value = cache.get(key);
-                if  (value == null) {
-//                    System.out.println("############## CACHE MISS  - " + key.toString());
-                    value = keyValueStore.get(key);
-                    cache.put(key, value);
-                    db.commit();
-                }
-            }
-        }
+  @Override
+  public GeocodeResponse get(LatLng key) {
+    return cache.computeIfAbsent(key,
+        latLng -> new GeocodeResponse(service.reverse(latLng.getLatitude(), latLng.getLongitude())));
+  }
 
-        return value;
-    }
-
-    @Override
-    public void close() throws IOException {
-        keyValueStore.close();
-    }
+  @Override
+  public void close() throws IOException {
+    cache.close();
+    db.close();
+    service.close();
+  }
 }
