@@ -34,7 +34,7 @@ import org.apache.beam.sdk.values.PCollectionView;
 import org.slf4j.MDC;
 
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
-import au.org.ala.pipelines.transforms.LocationTransform;
+import au.org.ala.pipelines.transforms.GbifLocationTransform;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -120,7 +120,7 @@ public class ALAVerbatimToInterpretedPipeline {
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.create();
 //    TaxonomyTransform taxonomyTransform = TaxonomyTransform.create(properties);
-    LocationTransform locationTransform = LocationTransform.create(properties);
+    GbifLocationTransform locationTransform = GbifLocationTransform.create(properties);
 
     // ALA specific transforms
     ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.create(properties);

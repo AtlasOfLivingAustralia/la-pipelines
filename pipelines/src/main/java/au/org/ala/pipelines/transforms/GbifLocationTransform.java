@@ -11,15 +11,15 @@ import org.gbif.rest.client.geocode.GeocodeResponse;
 
 import au.org.ala.kvs.cache.GeocodeMapDBKeyValueStore;
 
-public class LocationTransform extends org.gbif.pipelines.transforms.core.LocationTransform {
+public class GbifLocationTransform extends org.gbif.pipelines.transforms.core.LocationTransform {
 
-  private LocationTransform(KeyValueStore<LatLng, GeocodeResponse> kvStore, KvConfig kvConfig) {
+  private GbifLocationTransform(KeyValueStore<LatLng, GeocodeResponse> kvStore, KvConfig kvConfig) {
     super(kvStore, kvConfig);
   }
 
-  public static LocationTransform create(Properties properties) {
+  public static GbifLocationTransform create(Properties properties) {
     KvConfig config = KvConfigFactory.create(properties, KvConfigFactory.GEOCODE_PREFIX);
-    return new LocationTransform(null, config);
+    return new GbifLocationTransform(null, config);
   }
 
   @Setup

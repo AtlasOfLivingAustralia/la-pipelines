@@ -1,6 +1,5 @@
 package au.org.ala.kvs.cache;
 
-import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
@@ -20,22 +19,16 @@ import org.mapdb.Serializer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+@SuppressWarnings("all")
 public class GeocodeMapDBKeyValueStore implements KeyValueStore<LatLng, GeocodeResponse> {
 
   private final GeocodeServiceSyncClient service;
-  private final DB db;
   private final HTreeMap<LatLng, GeocodeResponse> cache;
 
   private GeocodeMapDBKeyValueStore(ClientConfiguration config) {
     this.service = new GeocodeServiceSyncClient(config);
 
-    this.db = DBMaker
-        .fileDB("/tmp/geocoderesponse")
-        .closeOnJvmShutdown()
-        .fileMmapEnableIfSupported()
-        .make();
-
-    this.cache = db.hashMap("geocoderesponse")
+    this.cache = DBMakerFactory.create().hashMap("geocoderesponse")
         .keySerializer(new Serializer<LatLng>() {
           @Override
           public void serialize(@NotNull DataOutput2 dataOutput2, @NotNull LatLng latLng) throws IOException {
@@ -61,7 +54,7 @@ public class GeocodeMapDBKeyValueStore implements KeyValueStore<LatLng, GeocodeR
 
           @Override
           public GeocodeResponse deserialize(@NotNull DataInput2 dataInput2, int i) throws IOException {
-            return objectMapper.readValue((DataInput) dataInput2, GeocodeResponse.class);
+            return objectMapper.readValue(dataInput2, GeocodeResponse.class);
           }
         })
         .createOrOpen();
@@ -79,8 +72,28 @@ public class GeocodeMapDBKeyValueStore implements KeyValueStore<LatLng, GeocodeR
 
   @Override
   public void close() throws IOException {
-    cache.close();
-    db.close();
     service.close();
+  }
+
+  private static class DBMakerFactory {
+
+    private static volatile DB instance;
+    private static final Object MUTEX = new Object();
+
+    private static DB create() {
+      if (instance == null) {
+        synchronized (MUTEX) {
+          if (instance == null) {
+            instance = DBMaker
+                .fileDB("/tmp/geocoderesponse")
+                .closeOnJvmShutdown()
+                .fileMmapEnableIfSupported()
+                .make();
+          }
+        }
+      }
+      return instance;
+    }
+
   }
 }
