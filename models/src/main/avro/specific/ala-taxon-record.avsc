@@ -70,8 +70,8 @@
     {"name": "species", "type": ["null", "string"], "default" : null },
     {"name": "speciesID", "type": ["null", "string"], "default" : null },
     {"name": "vernacularName", "type": ["null", "string"], "default" : null },
-    {"name": "speciesGroup", "type": {"type": "array", "items": "string"}, "default" : null },
-    {"name": "speciesSubgroup", "type": {"type": "array","items": "string"}, "default" : null },
+    {"name": "speciesGroup", "type": {"type": "array", "items": "string"}, "default" : [] },
+    {"name": "speciesSubgroup", "type": {"type": "array", "items": "string"}, "default" : [] },
     {"name": "diagnostics", "default" : null, "type" : ["null",
         {
           "name" : "Diagnostic",
@@ -80,7 +80,7 @@
             {"name" : "matchType", "type" : ["null", "MatchType"], "default" : null},
             {"name" : "confidence", "type" : ["null", "int"], "default" : null},
             {"name" : "status", "type" : ["null", "Status"], "default" : null},
-            {"name" : "lineage", "type" : ["null", {"type" : "array", "items" : "string"}], "default" : null},
+            {"name" : "lineage", "type": {"type": "array", "items": "string"}, "default" : [] },
             {"name" : "note", "type" : ["null", "string"], "default" : null}
           ]
         }

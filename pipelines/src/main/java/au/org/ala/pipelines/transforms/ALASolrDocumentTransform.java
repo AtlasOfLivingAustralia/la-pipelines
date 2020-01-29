@@ -116,6 +116,7 @@ public class ALASolrDocumentTransform implements Serializable {
                 skipKeys.add("crawlId");
                 skipKeys.add("networkKeys");
                 skipKeys.add("protocol");
+                skipKeys.add("issues");
                 skipKeys.add("machineTags"); //TODO review content
 
                 SolrInputDocument doc = new SolrInputDocument();
@@ -170,13 +171,17 @@ public class ALASolrDocumentTransform implements Serializable {
                 if (atxr.getTaxonConceptID() != null){
                     List<Schema.Field> fields = atxr.getSchema().getFields();
                     for (Schema.Field field: fields){
-                        field.name();
                         Object value = atxr.get(field.name());
-                        if (value != null && !field.name().equals("speciesGroup")&& !field.name().equals("speciesSubgroup")){
-                            if (value instanceof Integer){
-                                doc.setField(field.name(), value);
+                        if (value != null && !field.name().equals("speciesGroup") && !field.name().equals("speciesSubgroup")){
+
+                            if (field.name().equalsIgnoreCase("issues")){
+                                doc.setField("assertions", value);
                             } else {
-                                doc.setField(field.name(), value.toString());
+                                if (value instanceof Integer) {
+                                    doc.setField(field.name(), value);
+                                } else {
+                                    doc.setField(field.name(), value.toString());
+                                }
                             }
                         }
                     }
