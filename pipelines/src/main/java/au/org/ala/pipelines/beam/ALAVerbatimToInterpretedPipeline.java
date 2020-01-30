@@ -17,6 +17,7 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.transforms.common.UniqueIdTransform;
 import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
+import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.MetadataTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
@@ -34,7 +35,7 @@ import org.apache.beam.sdk.values.PCollectionView;
 import org.slf4j.MDC;
 
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
-import au.org.ala.pipelines.transforms.GbifLocationTransform;
+
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -120,7 +121,7 @@ public class ALAVerbatimToInterpretedPipeline {
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.create();
 //    TaxonomyTransform taxonomyTransform = TaxonomyTransform.create(properties);
-    GbifLocationTransform locationTransform = GbifLocationTransform.create(properties);
+    LocationTransform locationTransform = LocationTransform.create(properties);
 
     // ALA specific transforms
     ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.create(properties);
