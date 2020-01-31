@@ -13,6 +13,7 @@ public class ALAKvConfig implements Serializable {
 
     String taxonomyBasePath;
     String spatialBasePath;
+    String collectoryBasePath;
     String listsBasePath;
     long timeout;
 

@@ -60,7 +60,7 @@ public class ALASamplingTransform extends Transform<LocationRecord, AustraliaSpa
     }
 
     public static ALASamplingTransform create(Properties properties) {
-        ALAKvConfig config = ALAKvConfigFactory.create(properties, ALAKvConfigFactory.ALA_SPATIAL_PREFIX);
+        ALAKvConfig config = ALAKvConfigFactory.create(properties);
         return new ALASamplingTransform(null, config);
     }
 

@@ -26,8 +26,10 @@ import java.util.Properties;
 
 import static au.org.ala.pipelines.common.ALARecordTypes.ALA_TAXONOMY;
 
-
 /**
+ *
+ * ALA taxonomy transform for adding ALA taxonomy to interpreted occurrence data.
+ *
  * Beam level transformations for the DWC Taxon, reads an avro, writes an avro, maps from value to keyValue and
  * transforms form {@link ExtendedRecord} to {@link TaxonRecord}.
  * <p>
@@ -60,12 +62,8 @@ public class ALATaxonomyTransform extends Transform<ExtendedRecord, ALATaxonReco
     return new ALATaxonomyTransform(kvStore, null);
   }
 
-//  public static ALATaxonomyTransform create(String propertiesPath) {
-//    return new ALATaxonomyTransform(null, ALAKvConfigFactory.create(Paths.get(propertiesPath), ALAKvConfigFactory.ALA_TAXONOMY_PREFIX));
-//  }
-
   public static ALATaxonomyTransform create(Properties properties) {
-    return new ALATaxonomyTransform(null, ALAKvConfigFactory.create(properties, ALAKvConfigFactory.ALA_TAXONOMY_PREFIX));
+    return new ALATaxonomyTransform(null, ALAKvConfigFactory.create(properties));
   }
 
   /** Maps {@link ALATaxonRecord} to key value, where key is {@link TaxonRecord#getId} */

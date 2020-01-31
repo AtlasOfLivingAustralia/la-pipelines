@@ -4,7 +4,8 @@ import org.gbif.pipelines.common.PipelinesVariables;
 
 public enum ALARecordTypes implements PipelinesVariables.Pipeline.Interpretation.InterpretationType {
     ALL,
-    ALA_TAXONOMY;
+    ALA_TAXONOMY,
+    ALA_ATTRIBUTION;
     ALARecordTypes() { }
     @Override
     public String all() {

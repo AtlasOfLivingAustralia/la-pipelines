@@ -1,6 +1,7 @@
 package au.org.ala.pipelines.java;
 
 import au.org.ala.pipelines.options.ALAInterpretationPipelineOptions;
+import au.org.ala.pipelines.transforms.ALAAttributionTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -153,7 +154,7 @@ public class ALAVerbatimToInterpretedPipeline {
         LocationTransform locationTransform = LocationTransform.create(properties).counterFn(incMetricFn).init();
         VerbatimTransform verbatimTransform = VerbatimTransform.create().counterFn(incMetricFn);
         TemporalTransform temporalTransform = TemporalTransform.create().counterFn(incMetricFn);
-
+        ALAAttributionTransform alaAttributionTransform = ALAAttributionTransform.create(properties).counterFn(incMetricFn).init();
         // Extension
         MeasurementOrFactTransform measurementTransform = MeasurementOrFactTransform.create().counterFn(incMetricFn);
 //        MultimediaTransform multimediaTransform = MultimediaTransform.create().counterFn(incMetricFn);
@@ -170,15 +171,11 @@ public class ALAVerbatimToInterpretedPipeline {
                 SyncDataFileWriter<ExtendedRecord> verbatimWriter = createWriter(options, ExtendedRecord.getClassSchema(), verbatimTransform, id, false);
                 SyncDataFileWriter<MetadataRecord> metadataWriter = createWriter(options, MetadataRecord.getClassSchema(), metadataTransform, id, false);
                 SyncDataFileWriter<BasicRecord> basicWriter = createWriter(options, BasicRecord.getClassSchema(), basicTransform, id, false);
-                SyncDataFileWriter<BasicRecord> basicInvalidWriter = createWriter(options, BasicRecord.getClassSchema(), basicTransform, id, true);
                 SyncDataFileWriter<TemporalRecord> temporalWriter = createWriter(options, TemporalRecord.getClassSchema(), temporalTransform, id, false);
-//                SyncDataFileWriter<MultimediaRecord> multimediaWriter = createWriter(options, MultimediaRecord.getClassSchema(), multimediaTransform, id, false);
-//                SyncDataFileWriter<ImageRecord> imageWriter = createWriter(options, ImageRecord.getClassSchema(), imageTransform, id, false);
-//                SyncDataFileWriter<AudubonRecord> audubonWriter = createWriter(options, AudubonRecord.getClassSchema(), audubonTransform, id, false);
                 SyncDataFileWriter<MeasurementOrFactRecord> measurementWriter = createWriter(options, MeasurementOrFactRecord.getClassSchema(), measurementTransform, id, false);
-//                SyncDataFileWriter<TaxonRecord> taxonWriter = createWriter(options, TaxonRecord.getClassSchema(), taxonomyTransform, id, false);
                 SyncDataFileWriter<ALATaxonRecord> alaTaxonWriter = createWriter(options, ALATaxonRecord.getClassSchema(), alaTaxonomyTransform, id, false);
-                SyncDataFileWriter<LocationRecord> locationWriter = createWriter(options, LocationRecord.getClassSchema(), locationTransform, id, false)
+                SyncDataFileWriter<LocationRecord> locationWriter = createWriter(options, LocationRecord.getClassSchema(), locationTransform, id, false);
+                SyncDataFileWriter<ALAAttributionRecord> alaAttributionWriter = createWriter(options, ALAAttributionRecord.getClassSchema(), locationTransform, id, false);
         ) {
 
             System.out.println("Creating metadata record");
@@ -222,6 +219,7 @@ public class ALAVerbatimToInterpretedPipeline {
 //                    taxonomyTransform.processElement(er).ifPresent(taxonWriter::append);
                     locationTransform.processElement(er, mdr).ifPresent(locationWriter::append);
                     alaTaxonomyTransform.processElement(er).ifPresent(alaTaxonWriter::append);
+                    alaAttributionTransform.processElement(er, mdr).ifPresent(alaAttributionWriter::append);
 //                } else {
 //                    basicInvalidWriter.append(br);
 //                }
