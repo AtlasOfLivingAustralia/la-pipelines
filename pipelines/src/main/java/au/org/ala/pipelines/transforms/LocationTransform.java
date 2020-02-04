@@ -2,6 +2,8 @@ package au.org.ala.pipelines.transforms;
 
 import java.util.Properties;
 
+import au.org.ala.kvs.ALAKvConfig;
+import au.org.ala.kvs.ALAKvConfigFactory;
 import org.gbif.pipelines.parsers.config.factory.KvConfigFactory;
 import org.gbif.pipelines.parsers.config.model.KvConfig;
 
@@ -14,8 +16,10 @@ public class LocationTransform extends org.gbif.pipelines.transforms.core.Locati
   }
 
   public static LocationTransform create(Properties properties) {
-    KvConfig config = KvConfigFactory.create(properties, "geocode");
-    return new LocationTransform(config);
+    ALAKvConfig config = ALAKvConfigFactory.create(properties);
+    KvConfig kv = KvConfigFactory.create(properties, "geocode");
+    KvConfig kvConfig = KvConfig.create(config.getGeocodeBasePath(), kv.getTimeout(), kv.getCacheSizeMb(), kv.getTableName(), kv.getZookeeperUrl(), kv.getNumOfKeyBuckets(), true,  kv.getImagePath());
+    return new LocationTransform(kvConfig);
   }
 
   @Setup

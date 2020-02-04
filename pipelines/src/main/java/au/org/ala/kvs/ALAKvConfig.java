@@ -11,6 +11,7 @@ import java.io.Serializable;
 @AllArgsConstructor
 public class ALAKvConfig implements Serializable {
 
+    String geocodeBasePath;
     String taxonomyBasePath;
     String spatialBasePath;
     String collectoryBasePath;

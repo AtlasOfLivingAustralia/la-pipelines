@@ -4,7 +4,6 @@ import au.org.ala.kvs.ALAKvConfig;
 import au.org.ala.kvs.ALAKvConfigFactory;
 import au.org.ala.kvs.cache.ALAAttributionKVStoreFactory;
 import au.org.ala.kvs.cache.ALACollectionKVStoreFactory;
-import au.org.ala.kvs.cache.ALANameMatchKVStoreFactory;
 import au.org.ala.kvs.client.ALACollectionLookup;
 import au.org.ala.kvs.client.ALACollectionMatch;
 import au.org.ala.kvs.client.ALACollectoryMetadata;
@@ -19,7 +18,6 @@ import org.gbif.pipelines.core.interpreters.core.TaxonomyInterpreter;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
-import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 
 import java.util.Optional;
