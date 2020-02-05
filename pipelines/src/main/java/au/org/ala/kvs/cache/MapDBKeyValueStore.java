@@ -35,7 +35,7 @@ public class MapDBKeyValueStore<K,V> implements KeyValueStore<K,V> {
     private MapDBKeyValueStore(KeyValueStore<K, V> keyValueStore, long capacity, Class<K> keyClass, Class<V> valueClass) {
         this.keyValueStore = keyValueStore;
         this.db = DBMaker
-                .fileDB("/tmp/" + (keyClass.getTypeName() + "-" + valueClass.getTypeName()).toLowerCase())
+                .fileDB("/data/pipelines-caches/" + (keyClass.getTypeName() + "-" + valueClass.getTypeName()).toLowerCase())
                 .transactionEnable()
                 .closeOnJvmShutdown()
                 .make();

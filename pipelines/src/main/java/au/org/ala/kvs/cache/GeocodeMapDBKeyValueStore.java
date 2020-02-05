@@ -85,7 +85,7 @@ public class GeocodeMapDBKeyValueStore implements KeyValueStore<LatLng, GeocodeR
         synchronized (MUTEX) {
           if (instance == null) {
             instance = DBMaker
-                .fileDB("/tmp/geocoderesponse")
+                .fileDB("/data/pipelines-caches/geocoderesponse")
                 .closeOnJvmShutdown()
                 .fileMmapEnableIfSupported()
                 .make();
