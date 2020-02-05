@@ -10,8 +10,11 @@ import au.org.ala.kvs.client.ALACollectoryMetadata;
 import au.org.ala.pipelines.interpreters.ALAAttributionInterpreter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollectionView;
+import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.TaxonomyInterpreter;
@@ -71,6 +74,12 @@ public class ALAAttributionTransform extends Transform<ExtendedRecord, ALAAttrib
 
     public static ALAAttributionTransform create() {
         return new ALAAttributionTransform(null, null);
+    }
+
+    /** Maps {@link ALATaxonRecord} to key value, where key is {@link TaxonRecord#getId} */
+    public MapElements<ALAAttributionRecord, KV<String, ALAAttributionRecord>> toKv() {
+        return MapElements.into(new TypeDescriptor<KV<String, ALAAttributionRecord>>() {})
+                .via((ALAAttributionRecord tr) -> KV.of(tr.getId(), tr));
     }
 
     @SneakyThrows

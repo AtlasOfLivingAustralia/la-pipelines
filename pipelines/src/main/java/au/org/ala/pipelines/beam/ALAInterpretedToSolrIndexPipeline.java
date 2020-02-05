@@ -1,6 +1,7 @@
 package au.org.ala.pipelines.beam;
 
 import au.org.ala.pipelines.options.ALASolrPipelineOptions;
+import au.org.ala.pipelines.transforms.ALAAttributionTransform;
 import au.org.ala.pipelines.transforms.ALASolrDocumentTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import lombok.AccessLevel;
@@ -65,6 +66,7 @@ public class ALAInterpretedToSolrIndexPipeline {
         ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.create();
         AustraliaSpatialTransform australiaSpatialTransform = AustraliaSpatialTransform.create();
         LocationTransform locationTransform = LocationTransform.create();
+        ALAAttributionTransform alaAttributionTransform = ALAAttributionTransform.create();
 
         // Extension
         MeasurementOrFactTransform measurementOrFactTransform = MeasurementOrFactTransform.create();
@@ -120,6 +122,10 @@ public class ALAInterpretedToSolrIndexPipeline {
                 p.apply("Read Measurement", measurementOrFactTransform.read(pathFn))
                         .apply("Map Measurement to KV", measurementOrFactTransform.toKv());
 
+        PCollection<KV<String, ALAAttributionRecord>> alaAttributionCollection =
+                p.apply("Read attribution", alaAttributionTransform.read(pathFn))
+                        .apply("Map attribution to KV", alaAttributionTransform.toKv());
+
         PCollection<KV<String, AustraliaSpatialRecord>> australiaSpatialCollection = null;
         if(options.getIncludeSampling()) {
             australiaSpatialCollection =
@@ -141,6 +147,7 @@ public class ALAInterpretedToSolrIndexPipeline {
                         audubonTransform.getTag(),
                         measurementOrFactTransform.getTag(),
                         options.getIncludeSampling() ? australiaSpatialTransform.getTag() : null,
+                        alaAttributionTransform.getTag(),
                         metadataView
                 ).converter();
 
@@ -149,7 +156,6 @@ public class ALAInterpretedToSolrIndexPipeline {
                 .of(basicTransform.getTag(), basicCollection)
                 .and(temporalTransform.getTag(), temporalCollection)
                 .and(locationTransform.getTag(), locationCollection)
-
                 // Extension
                 .and(multimediaTransform.getTag(), multimediaCollection)
                 .and(imageTransform.getTag(), imageCollection)
@@ -158,7 +164,8 @@ public class ALAInterpretedToSolrIndexPipeline {
                 // Raw
                 .and(verbatimTransform.getTag(), verbatimCollection)
                 //Specific
-                .and(alaTaxonomyTransform.getTag(), alaTaxonCollection);
+                .and(alaTaxonomyTransform.getTag(), alaTaxonCollection)
+                .and(alaAttributionTransform.getTag(), alaAttributionCollection);
 
 
         if (options.getIncludeSampling()){

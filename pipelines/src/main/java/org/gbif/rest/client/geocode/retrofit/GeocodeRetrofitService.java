@@ -11,6 +11,8 @@ import retrofit2.http.Query;
 /**
  * GBIF Geocode Retrofit Service client.
  * This class is used for creation of Sync and Async clients. It is not exposed outside this package.
+ *
+ * FIXME - to be removed!!! Only here because the path in the original is hardcoded with a /v1/ context path...
  */
 interface GeocodeRetrofitService {
 

@@ -13,6 +13,7 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrInputDocument;
 import org.gbif.pipelines.core.converters.MultimediaConverter;
 import org.gbif.pipelines.core.utils.TemporalUtils;
@@ -27,6 +28,10 @@ import java.util.*;
 import static org.apache.avro.Schema.Type.UNION;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
 
+/**
+ * A SOLR transform that aims to provide a index that is backwards compatible with
+ * ALA's biocache-service.
+ */
 @AllArgsConstructor(staticName = "create")
 public class ALASolrDocumentTransform implements Serializable {
 
@@ -55,6 +60,8 @@ public class ALASolrDocumentTransform implements Serializable {
     private final TupleTag<MeasurementOrFactRecord> mfrTag;
 
     private final TupleTag<AustraliaSpatialRecord> asrTag;
+
+    private final TupleTag<ALAAttributionRecord> aarTag;
 
     @NonNull
     private final PCollectionView<MetadataRecord> metadataView;
@@ -89,12 +96,12 @@ public class ALASolrDocumentTransform implements Serializable {
 
                 // ALA specific
                 ALATaxonRecord atxr = v.getOnly(atxrTag, ALATaxonRecord.newBuilder().setId(k).build());
+                ALAAttributionRecord aar = v.getOnly(aarTag, ALAAttributionRecord.newBuilder().setId(k).build());
 
                 AustraliaSpatialRecord asr = null;
                 if (asrTag != null){
                     asr = v.getOnly(asrTag, AustraliaSpatialRecord.newBuilder().setId(k).build());
                 }
-
 
                 MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
 
@@ -141,6 +148,7 @@ public class ALASolrDocumentTransform implements Serializable {
                     //ignore for now
                 }
 
+                //GBIF taxonomy - add if available
                 if (txr != null) {
                     //add the classification
                     List<RankedName> taxonomy = txr.getClassification();
@@ -154,6 +162,7 @@ public class ALASolrDocumentTransform implements Serializable {
                     doc.setField("gbif_s_scientificName", txr.getAcceptedUsage().getName().toString());
                 }
 
+                //Verbatim (Raw) data
                 Map<String,String> raw = er.getCoreTerms();
                 for (Map.Entry<String, String> entry : raw.entrySet()) {
                     String key = entry.getKey();
@@ -167,7 +176,7 @@ public class ALASolrDocumentTransform implements Serializable {
                     addGeo(doc, lr.getDecimalLatitude(), lr.getDecimalLongitude());
                 }
 
-                //TODO assertions
+                //ALA taxonomy & species groups - backwards compatible for EYA
                 if (atxr.getTaxonConceptID() != null){
                     List<Schema.Field> fields = atxr.getSchema().getFields();
                     for (Schema.Field field: fields){
@@ -207,7 +216,7 @@ public class ALASolrDocumentTransform implements Serializable {
                 doc.setField("geospatial_kosher", lr.getHasCoordinate());
                 doc.setField("first_loaded_date", new Date());
 
-                //add sampling
+                //Add sampling data
                 if (asr != null) {
                     Map<String, String> samples = asr.getItems();
                     for (Map.Entry<String, String> sample : samples.entrySet()) {
@@ -219,6 +228,15 @@ public class ALASolrDocumentTransform implements Serializable {
                             }
                         }
                     }
+                }
+
+                // Add legacy collectory fields
+                if(aar != null){
+                    addIfNotEmpty(doc,"license", aar.getLicenseType());
+                    addIfNotEmpty(doc,"data_resource_uid", aar.getDataResourceUid());
+                    addIfNotEmpty(doc,"data_provider_uid", aar.getDataProviderUid());
+                    addIfNotEmpty(doc,"institution_uid", aar.getInstitutionUid());
+                    addIfNotEmpty(doc, "collection_uid", aar.getCollectionUid());
                 }
 
                 //legacy fields reference directly in biocache-service code
@@ -255,6 +273,12 @@ public class ALASolrDocumentTransform implements Serializable {
         };
 
         return ParDo.of(fn).withSideInputs(metadataView);
+    }
+
+    void addIfNotEmpty(SolrInputDocument doc, String fieldName, String value){
+        if(value !=null){
+            doc.setField(fieldName, value);
+        }
     }
 
 
