@@ -22,7 +22,7 @@ ulimit -n 100000
 
 echo $(date)
 SECONDS=0
-java -Xmx8g -Xmx8g -XX:+UseG1GC  -Dspark.master=local[24]  -cp pipelines/target/pipelines-1.0-SNAPSHOT-shaded.jar au.org.ala.pipelines.beam.ALAVerbatimToInterpretedPipeline \
+java -Xmx8g -XX:+UseG1GC  -Dspark.master=local[*]  -cp pipelines/target/pipelines-1.0-SNAPSHOT-shaded.jar au.org.ala.pipelines.beam.ALAVerbatimToInterpretedPipeline \
     --datasetId=$1 \
     --attempt=1 \
     --interpretationTypes=ALL \
