@@ -379,11 +379,10 @@
   <field name="matchType"  type="string" docValues="true" indexed="true"/>
 
   <!-- ALA legacy attribution fields -->
-  <field name="data_resource_uid" type="string" docValues="true" indexed="true" />
-  <field name="data_provider_uid" type="string" docValues="true" indexed="true" />
-  <field name="institution_uid" type="string" docValues="true" indexed="true" />
-  <field name="collection_uid" type="string" docValues="true" indexed="true" />
-
+  <field name="dataResourceUid" type="string" docValues="true" indexed="true" />
+  <field name="dataProviderUid" type="string" docValues="true" indexed="true" />
+  <field name="institutionUid" type="string" docValues="true" indexed="true" />
+  <field name="collectionUid" type="string" docValues="true" indexed="true" />
 
   <field name="machineTags"  type="string" docValues="true" indexed="true"  multiValued="true" />
 
