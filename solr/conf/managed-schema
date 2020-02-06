@@ -383,6 +383,10 @@
   <field name="dataProviderUid" type="string" docValues="true" indexed="true" />
   <field name="institutionUid" type="string" docValues="true" indexed="true" />
   <field name="collectionUid" type="string" docValues="true" indexed="true" />
+  <field name="dataResourceName" type="string" docValues="true" indexed="true" />
+  <field name="dataProviderName" type="string" docValues="true" indexed="true" />
+  <field name="institutionName" type="string" docValues="true" indexed="true" />
+  <field name="collectionName" type="string" docValues="true" indexed="true" />
 
   <field name="machineTags"  type="string" docValues="true" indexed="true"  multiValued="true" />
 

@@ -6,9 +6,13 @@
   "fields":[
     {"name": "id","type":"string"},
     {"name": "dataResourceUid", "type": ["null", "string"], "default" : null },
+    {"name": "dataResourceName", "type": ["null", "string"], "default" : null },
     {"name": "dataProviderUid", "type": ["null", "string"], "default" : null },
+    {"name": "dataProviderName", "type": ["null", "string"], "default" : null },
     {"name": "collectionUid", "type": ["null", "string"], "default" : null },
+    {"name": "collectionName", "type": ["null", "string"], "default" : null },
     {"name": "institutionUid", "type": ["null", "string"], "default" : null },
+    {"name": "institutionName", "type": ["null", "string"], "default" : null },
     {"name": "licenseType", "type": ["null", "string"], "default" : null },
     {"name": "licenseVersion", "type": ["null", "string"], "default" : null },
     {"name": "hubMemberships", "type": {"type": "array", "items": "string"}, "default" : [] },

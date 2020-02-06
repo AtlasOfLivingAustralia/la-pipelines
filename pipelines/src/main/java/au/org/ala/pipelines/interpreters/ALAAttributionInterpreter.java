@@ -24,6 +24,7 @@ public class ALAAttributionInterpreter {
                     ALACollectoryMetadata m = dataResourceKvStore.get(mr.getId());
                     if (m != null) {
                         aar.setDataResourceUid(m.getUid());
+                        aar.setDataResourceName(m.getName());
                         aar.setLicenseType(m.getLicenseType());
                         aar.setLicenseVersion(m.getLicenseVersion());
                     } else {
@@ -49,7 +50,9 @@ public class ALAAttributionInterpreter {
                             .build();
                     ALACollectionMatch m = collectionKvStore.get(lookup);
                     aar.setCollectionUid(m.getCollectionUid());
+                    aar.setCollectionName(m.getCollectionName());
                     aar.setInstitutionUid(m.getInstitutionUid());
+                    aar.setInstitutionName(m.getInstitutionName());
                 }
             }
         };

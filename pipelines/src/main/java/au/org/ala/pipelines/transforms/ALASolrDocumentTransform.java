@@ -244,10 +244,15 @@ public class ALASolrDocumentTransform implements Serializable {
                 // Add legacy collectory fields
                 if(aar != null){
                     addIfNotEmpty(doc,"license", aar.getLicenseType());
+                    addIfNotEmpty(doc,"raw_dataResourceUid", aar.getDataResourceUid()); //for backwards compatibility
                     addIfNotEmpty(doc,"dataResourceUid", aar.getDataResourceUid());
+                    addIfNotEmpty(doc,"dataResourceName", aar.getDataResourceName());
                     addIfNotEmpty(doc,"dataProviderUid", aar.getDataProviderUid());
+                    addIfNotEmpty(doc,"dataProviderName", aar.getDataProviderName());
                     addIfNotEmpty(doc,"institutionUid", aar.getInstitutionUid());
-                    addIfNotEmpty(doc, "collectionUid", aar.getCollectionUid());
+                    addIfNotEmpty(doc,"collectionUid", aar.getCollectionUid());
+                    addIfNotEmpty(doc,"institutionName", aar.getInstitutionName());
+                    addIfNotEmpty(doc,"collectionName", aar.getCollectionName());
                 }
 
                 //legacy fields reference directly in biocache-service code
