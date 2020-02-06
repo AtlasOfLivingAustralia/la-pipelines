@@ -16,3 +16,6 @@ java -Xmx8g -Xmx8g -XX:+UseG1GC  -cp pipelines/target/pipelines-1.0-SNAPSHOT-sha
  --properties=pipelines.properties \
  --zkHost=localhost:9983 \
  --solrCollection=biocache
+
+
+curl -X GET "http://localhost:8983/solr/admin/collections?action=RELOAD&name=biocache"

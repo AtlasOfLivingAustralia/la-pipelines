@@ -205,6 +205,10 @@ public class ALASolrDocumentTransform implements Serializable {
                     doc.setField("rank", atxr.getRank());
                     doc.setField("rank_id", atxr.getRankID());
 
+                    if(atxr.getVernacularName() != null) {
+                        doc.setField("common_name", atxr.getVernacularName());
+                    }
+
                     for (String s : atxr.getSpeciesGroup()){
                         doc.setField("species_group", s);
                     }
