@@ -157,6 +157,7 @@
 
   <!-- legacy fields referenced by biocache-service code - to be refactor out! -->
   <field name="taxon_name"        type="string"  docValues="true" indexed="true"/>
+  <field name="common_name"       type="string"  docValues="true" indexed="true"/>
   <field name="rank"              type="string"  docValues="true" indexed="true"/>
   <field name="rank_id"           type="tint"    docValues="true" indexed="true"/>
   <field name="lsid"              type="string"  docValues="true" indexed="true"/>
@@ -167,7 +168,7 @@
   <field name="species_group"     type="string"  docValues="true" multiValued="true" indexed="true"/>
   <field name="species_subgroup"  type="string"  docValues="true" multiValued="true" indexed="true" />
   <field name="image_url"         type="string"  docValues="true" multiValued="true" indexed="true" />
-  <field name="assertions"         type="string"  docValues="true" multiValued="true" indexed="true" />
+  <field name="assertions"        type="string"  docValues="true" multiValued="true" indexed="true" />
 
   <!-- All DWC fields -->
   <field name="acceptedNameUsage" type="string" docValues="true" indexed="true"/>
