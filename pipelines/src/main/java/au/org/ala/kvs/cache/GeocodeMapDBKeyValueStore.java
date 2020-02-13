@@ -3,10 +3,12 @@ package au.org.ala.kvs.cache;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import au.org.ala.kvs.GeocodeShpIntersectService;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.gbif.rest.client.geocode.GeocodeResponse;
+import org.gbif.rest.client.geocode.GeocodeService;
 import org.gbif.rest.client.geocode.retrofit.GeocodeServiceSyncClient;
 
 import org.jetbrains.annotations.NotNull;
@@ -22,11 +24,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @SuppressWarnings("all")
 public class GeocodeMapDBKeyValueStore implements KeyValueStore<LatLng, GeocodeResponse> {
 
-  private final GeocodeServiceSyncClient service;
+//  private final GeocodeService service;
+  private final GeocodeService service;
   private final HTreeMap<LatLng, GeocodeResponse> cache;
 
   private GeocodeMapDBKeyValueStore(ClientConfiguration config) {
-    this.service = new GeocodeServiceSyncClient(config);
+//    this.service = new GeocodeServiceSyncClient(config);
+    this.service = GeocodeShpIntersectService.getInstance();
 
     this.cache = DBMakerFactory.create().hashMap("geocoderesponse")
         .keySerializer(new Serializer<LatLng>() {

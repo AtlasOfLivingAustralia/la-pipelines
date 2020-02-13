@@ -34,5 +34,4 @@ public class GeocodeServiceFactory {
 
     return GeocodeMapDBKeyValueStore.create(clientConfig);
   }
-
 }
