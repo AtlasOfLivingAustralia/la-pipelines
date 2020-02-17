@@ -151,7 +151,7 @@ public class ALAVerbatimToInterpretedPipeline {
         BasicTransform basicTransform = BasicTransform.create(properties, datasetId, tripletValid, occIdValid, useErdId).counterFn(incMetricFn).init();
 //        TaxonomyTransform taxonomyTransform = TaxonomyTransform.create(properties).counterFn(incMetricFn).init();
         ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.create(properties).counterFn(incMetricFn).init();
-        LocationTransform locationTransform = LocationTransform.create(properties);
+        LocationTransform locationTransform = LocationTransform.create(properties).init();
         VerbatimTransform verbatimTransform = VerbatimTransform.create().counterFn(incMetricFn);
         TemporalTransform temporalTransform = TemporalTransform.create().counterFn(incMetricFn);
         ALAAttributionTransform alaAttributionTransform = ALAAttributionTransform.create(properties).counterFn(incMetricFn).init();
@@ -208,21 +208,12 @@ public class ALAVerbatimToInterpretedPipeline {
             // Create interpretation function
             System.out.println("Create interpretation function");
             Consumer<ExtendedRecord> interpretAllFn = er -> {
-//                BasicRecord br = gbifIdTransform.getBrInvalidMap().get(er.getId());
-//                if (br == null) {
-                    verbatimWriter.append(er);
+                verbatimWriter.append(er);
                     temporalTransform.processElement(er).ifPresent(temporalWriter::append);
-//                    multimediaTransform.processElement(er).ifPresent(multimediaWriter::append);
-//                    imageTransform.processElement(er).ifPresent(imageWriter::append);
-//                    audubonTransform.processElement(er).ifPresent(audubonWriter::append);
                     measurementTransform.processElement(er).ifPresent(measurementWriter::append);
-//                    taxonomyTransform.processElement(er).ifPresent(taxonWriter::append);
                     locationTransform.processElement(er, mdr).ifPresent(locationWriter::append);
                     alaTaxonomyTransform.processElement(er).ifPresent(alaTaxonWriter::append);
                     alaAttributionTransform.processElement(er, mdr).ifPresent(alaAttributionWriter::append);
-//                } else {
-//                    basicInvalidWriter.append(br);
-//                }
             };
 
             // Run async writing for BasicRecords

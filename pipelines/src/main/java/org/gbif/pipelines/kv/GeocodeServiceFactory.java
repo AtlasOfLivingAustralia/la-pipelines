@@ -2,14 +2,9 @@ package org.gbif.pipelines.kv;
 
 import au.org.ala.kvs.cache.GeocodeMapDBKeyValueStore;
 import lombok.SneakyThrows;
-import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.parsers.config.model.KvConfig;
 import org.gbif.pipelines.parsers.parsers.location.GeocodeService;
 import org.gbif.rest.client.configuration.ClientConfiguration;
-import org.gbif.rest.client.geocode.GeocodeResponse;
-
-import java.io.IOException;
 
 public class GeocodeServiceFactory {
 
@@ -37,13 +32,6 @@ public class GeocodeServiceFactory {
     /* TODO Comment */
     @SneakyThrows
     public static GeocodeService create(KvConfig config) {
-        return GeocodeService.create(creatKvStore(config), BitmapFactory.getInstance(config));
-    }
-
-    private static KeyValueStore<LatLng, GeocodeResponse> creatKvStore(KvConfig config) throws IOException {
-        if (config == null) {
-            return null;
-        }
 
         ClientConfiguration clientConfig = ClientConfiguration.builder()
                 .withBaseApiUrl(config.getBasePath()) //GBIF base API url
@@ -51,6 +39,7 @@ public class GeocodeServiceFactory {
                 .withTimeOut(config.getTimeout()) //Geocode service connection time-out
                 .build();
 
-        return GeocodeMapDBKeyValueStore.create(clientConfig);
+        GeocodeMapDBKeyValueStore kvStore = GeocodeMapDBKeyValueStore.create(clientConfig);
+        return GeocodeService.create(kvStore, BitmapFactory.getInstance(config));
     }
 }
