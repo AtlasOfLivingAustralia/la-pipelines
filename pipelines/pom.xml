@@ -68,6 +68,14 @@
               <relocations>
                 <!-- Transient from core: conflicts with Beam on Spark -->
                 <relocation>
+                  <pattern>com.fasterxml.jackson</pattern>
+                  <shadedPattern>jjjj213.com.fasterxml.jackson</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>okhttp3</pattern>
+                  <shadedPattern>o115.okhttp3</shadedPattern>
+                </relocation>
+                <relocation>
                   <pattern>okio</pattern>
                   <shadedPattern>o113.okio</shadedPattern>
                 </relocation>
@@ -679,6 +687,11 @@
     <dependency>
       <groupId>com.fasterxml.jackson.dataformat</groupId>
       <artifactId>jackson-dataformat-avro</artifactId>
+      <version>${jackson.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
       <version>${jackson.version}</version>
     </dependency>
 
