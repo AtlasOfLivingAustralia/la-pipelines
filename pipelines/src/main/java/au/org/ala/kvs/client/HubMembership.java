@@ -7,25 +7,18 @@ import lombok.Builder;
 import lombok.ToString;
 import lombok.Value;
 
-import java.util.List;
-import java.util.Map;
-
-@JsonDeserialize(builder = ALACollectionMatch.ALACollectionMatchBuilder.class)
+@JsonDeserialize(builder = HubMembership.HubMembershipBuilder.class)
 @Value
 @Builder
 @ToString
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ALACollectionMatch {
+public class HubMembership {
 
-    String collectionUid;
-    String collectionName;
-    List<HubMembership> hubMembership;
-    String institutionUid;
-    String institutionName;
-//    Map<String, String> taxonomyCoverageHints;
+    String uid;
+    String name;
+    String uri;
 
     @JsonPOJOBuilder(withPrefix = "")
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class ALACollectionMatchBuilder {}
-
+    public static class HubMembershipBuilder {}
 }
