@@ -30,6 +30,7 @@ import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.specific.AustraliaSpatialTransform;
+import org.joda.time.Duration;
 import org.slf4j.MDC;
 
 import java.util.function.UnaryOperator;
@@ -186,9 +187,12 @@ public class ALAInterpretedToSolrIndexPipeline {
                 options.getZkHost()
         );
 
+        SolrIO.RetryConfiguration retryConn = SolrIO.RetryConfiguration.create(5, Duration.standardMinutes(5));
+
         jsonCollection.apply(
                 SolrIO.write()
                         .to(options.getSolrCollection()) //biocache
+                        .withRetryConfiguration(retryConn)
                         .withConnectionConfiguration(conn)
         );
 
@@ -197,6 +201,7 @@ public class ALAInterpretedToSolrIndexPipeline {
         result.waitUntilFinish();
 
         MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
+
 
         log.info("Pipeline has been finished");
     }
