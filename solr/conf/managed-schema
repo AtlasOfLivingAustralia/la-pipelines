@@ -64,24 +64,6 @@
   </fieldType>
   <fieldType name="tdate" class="solr.TrieDateField" omitNorms="true" positionIncrementGap="0" precisionStep="6"/>
   <fieldType name="tdouble" class="solr.TrieDoubleField" omitNorms="true" positionIncrementGap="0" precisionStep="8"/>
-  <fieldType name="text" class="solr.TextField" positionIncrementGap="100">
-    <analyzer type="index">
-      <tokenizer class="solr.WhitespaceTokenizerFactory"/>
-      <filter class="solr.StopFilterFactory" words="stopwords.txt" ignoreCase="true"/>
-      <filter class="solr.WordDelimiterFilterFactory" catenateNumbers="1" generateNumberParts="1" splitOnCaseChange="1" generateWordParts="1" catenateAll="0" catenateWords="1"/>
-      <filter class="solr.LowerCaseFilterFactory"/>
-      <filter class="solr.PorterStemFilterFactory"/>
-    </analyzer>
-    <analyzer type="query">
-      <tokenizer class="solr.WhitespaceTokenizerFactory"/>
-      <filter class="solr.SynonymFilterFactory" expand="true" ignoreCase="true" synonyms="synonyms.txt"/>
-      <filter class="solr.StopFilterFactory" words="stopwords.txt" ignoreCase="true"/>
-      <filter class="solr.WordDelimiterFilterFactory" catenateNumbers="0" generateNumberParts="1" splitOnCaseChange="1" generateWordParts="1" catenateAll="0" catenateWords="0"/>
-      <filter class="solr.LowerCaseFilterFactory"/>
-      <filter class="solr.KeywordMarkerFilterFactory" protected="protwords.txt"/>
-      <filter class="solr.PorterStemFilterFactory"/>
-    </analyzer>
-  </fieldType>
   <fieldType name="textTight" class="solr.TextField" positionIncrementGap="100">
     <analyzer>
       <tokenizer class="solr.WhitespaceTokenizerFactory"/>
@@ -201,6 +183,8 @@
   <field name="day" type="tint" docValues="true" indexed="true"/>
   <field name="decimalLatitude" type="tdouble" docValues="true" indexed="true"/>
   <field name="decimalLongitude" type="tdouble" docValues="true" indexed="true"/>
+  <field name="depth" type="tdouble" docValues="true" indexed="true"/>
+  <field name="depthAccuracy" type="tdouble" docValues="true" indexed="true"/>
   <field name="disposition" type="string" docValues="true" indexed="true"/>
   <field name="dynamicProperties" type="string" docValues="true" indexed="true"/>
   <field name="earliestAgeOrLowestStage" type="string" docValues="true" indexed="true"/>
@@ -412,13 +396,11 @@
   <!-- Adhoc fields -->
   <dynamicField name="_*"    type="string" docValues="true" indexed="true" stored="false"/>
 
-  <dynamicField name="*Count" type="int" docValues="true" indexed="true" stored="false"/>
   <dynamicField name="*_m_s" type="string" docValues="true" multiValued="true" indexed="true" stored="false"/>
   <dynamicField name="*_dt" type="date" docValues="true" indexed="true" stored="false"/>
   <dynamicField name="*_i" type="int" docValues="true" indexed="true" stored="false"/>
   <dynamicField name="*_s" type="string" docValues="true" indexed="true" stored="false"/>
-  <dynamicField name="*_l" type="long" docValues="true" indexed="true" stored="false"/>
-  <dynamicField name="*_t" type="text" docValues="false" indexed="true" stored="true"/>
+  <dynamicField name="*_l" type="long" docValues="true" indexed="true" stored="false"/>./
   <dynamicField name="*_b" type="boolean" docValues="true" indexed="true" stored="false"/>
   <dynamicField name="*_f" type="float" docValues="true" indexed="true" stored="false"/>
   <dynamicField name="*_d" type="double" docValues="true" indexed="true" stored="false"/>
