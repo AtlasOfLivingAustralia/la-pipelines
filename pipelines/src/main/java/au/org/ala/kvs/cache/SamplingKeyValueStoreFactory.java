@@ -78,6 +78,8 @@ public class SamplingKeyValueStoreFactory {
             //read file
             CSVReader csvReader = new CSVReader(file, "UTF-8", ",", '"', 1);
             String [] header = csvReader.header;
+            Map<LatLng, Map<String, String>> buff = new HashMap<LatLng, Map<String, String>>();
+
             while (csvReader.hasNext()){
                 counter ++;
 
@@ -105,10 +107,18 @@ public class SamplingKeyValueStoreFactory {
                                 .longitude(Double.parseDouble(longitude))
                                 .build();
 
-                        cache.put(ll, map);
+                        if (counter % 1000 == 0){
+                            cache.putAll(buff);
+                            buff.clear();
+                        }
+                        buff.put(ll, map);
                     }
                 }
             }
+            cache.putAll(buff);
+            buff.clear();
+
+            csvReader.close();
             log.info("Populating MapDB  - Finished file {}, lines read {}", file.getAbsolutePath(), counter);
         }
 
