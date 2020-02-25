@@ -31,23 +31,11 @@ public class SamplingKeyValueStoreFactory {
     }
 
     public static void setupFor(String datasetID) {
-//        String cacheDir = "/data/pipelines-data/" + datasetID + "/1/caches";
-//
-//        //read sampling
-//        KeyValueStore kvs = new KeyValueStore<LatLng, Map<String, String>>() {
-//            @Override
-//            public Map<String, String> get(LatLng key) {
-//                return new HashMap<String, String>();
-//            }
-//            @Override
-//            public void close() throws IOException {}
-//        };
-//
-//        WarmableCache cache = MapDBKeyValueStore.cache(cacheDir, kvs, LatLng.class, Map.class);
         try {
             KeyValueStore<LatLng, Map<String, String>> cache =  buildForDataset(datasetID);
             getInstance().refCache.put(datasetID, cache);
         } catch (Exception e){
+            log.error(e.getMessage(), e);
             e.printStackTrace();
         }
     }
@@ -59,7 +47,6 @@ public class SamplingKeyValueStoreFactory {
     public static KeyValueStore<LatLng, Map<String, String>> buildForDataset(String datasetID) throws Exception {
 
         Instant start = Instant.now();
-        SamplingKeyValueStoreFactory skvs = new SamplingKeyValueStoreFactory();
 
         //read sampling
         KeyValueStore kvs = new KeyValueStore<LatLng, Map<String, String>>() {
@@ -76,7 +63,6 @@ public class SamplingKeyValueStoreFactory {
 
         WarmableCache cache = MapDBKeyValueStore.cache(cacheDir, kvs, LatLng.class, Map.class);
 
-
         File[] files = new File("/data/pipelines-data/" + datasetID+ "/1/sampling").listFiles(new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
@@ -86,10 +72,19 @@ public class SamplingKeyValueStoreFactory {
 
         for (File file: files){
 
+            log.info("Populating MapDB  - Reading file {} ", file.getAbsolutePath());
+            int counter = 0;
+
             //read file
             CSVReader csvReader = new CSVReader(file, "UTF-8", ",", '"', 1);
             String [] header = csvReader.header;
             while (csvReader.hasNext()){
+                counter ++;
+
+                if (counter % 1000 == 0){
+                    log.info("Populating MapDB  - Reading file {}, at line number {}", file.getAbsolutePath(), counter);
+                }
+
                 String[] line  = csvReader.next();
 
                 if (header.length != line.length){
@@ -99,7 +94,7 @@ public class SamplingKeyValueStoreFactory {
                     String latitude = line[0];
                     String longitude = line[1];
 
-                    if(latitude != null && longitude != null && !longitude.equals("null") && !latitude.equals("null")) {
+                    if (latitude != null && longitude != null && !longitude.equals("null") && !latitude.equals("null")) {
                         Map<String, String> map = new HashMap<String, String>();
                         for (int i = 2; i < header.length; i++) {
                             map.put(header[i], line[i]);
@@ -114,6 +109,7 @@ public class SamplingKeyValueStoreFactory {
                     }
                 }
             }
+            log.info("Populating MapDB  - Finished file {}, lines read {}", file.getAbsolutePath(), counter);
         }
 
         log.info("Cache built in {}", Duration.between(start, Instant.now()));
