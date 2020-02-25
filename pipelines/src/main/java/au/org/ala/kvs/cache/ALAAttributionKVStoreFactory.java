@@ -57,7 +57,7 @@ public class ALAAttributionKVStoreFactory {
                     closeHandler.execute();
                 }
             };
-            mapDBCache = MapDBKeyValueStore.cache(kvs, 100000l, String.class, ALACollectoryMetadata.class);
+            mapDBCache = MapDBKeyValueStore.cache("/data/pipelines-cache", kvs, String.class, ALACollectoryMetadata.class);
         }
 
         return mapDBCache;

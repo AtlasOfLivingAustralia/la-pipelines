@@ -1,7 +1,9 @@
 package au.org.ala.pipelines.transforms;
 
-import lombok.AllArgsConstructor;
+import au.org.ala.kvs.cache.SamplingKeyValueStoreFactory;
+import au.org.ala.kvs.client.LatLng;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.Schema;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.beam.sdk.metrics.Counter;
@@ -13,8 +15,8 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrInputDocument;
+import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.core.converters.MultimediaConverter;
 import org.gbif.pipelines.core.utils.TemporalUtils;
 import org.gbif.pipelines.io.avro.*;
@@ -32,39 +34,75 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_
  * A SOLR transform that aims to provide a index that is backwards compatible with
  * ALA's biocache-service.
  */
-@AllArgsConstructor(staticName = "create")
+@Slf4j
 public class ALASolrDocumentTransform implements Serializable {
 
     private static final long serialVersionUID = 1279313931024806169L;
     // Core
     @NonNull
-    private final TupleTag<ExtendedRecord> erTag;
+    private TupleTag<ExtendedRecord> erTag;
     @NonNull
-    private final TupleTag<BasicRecord> brTag;
+    private TupleTag<BasicRecord> brTag;
     @NonNull
-    private final TupleTag<TemporalRecord> trTag;
+    private TupleTag<TemporalRecord> trTag;
     @NonNull
-    private final TupleTag<LocationRecord> lrTag;
+    private TupleTag<LocationRecord> lrTag;
 
-    private final TupleTag<TaxonRecord> txrTag;
+    private  TupleTag<TaxonRecord> txrTag;
     @NonNull
-    private final TupleTag<ALATaxonRecord> atxrTag;
+    private  TupleTag<ALATaxonRecord> atxrTag;
     // Extension
     @NonNull
-    private final TupleTag<MultimediaRecord> mrTag;
+    private  TupleTag<MultimediaRecord> mrTag;
     @NonNull
-    private final TupleTag<ImageRecord> irTag;
+    private  TupleTag<ImageRecord> irTag;
     @NonNull
-    private final TupleTag<AudubonRecord> arTag;
+    private  TupleTag<AudubonRecord> arTag;
     @NonNull
-    private final TupleTag<MeasurementOrFactRecord> mfrTag;
+    private  TupleTag<MeasurementOrFactRecord> mfrTag;
 
-    private final TupleTag<AustraliaSpatialRecord> asrTag;
+    private  TupleTag<AustraliaSpatialRecord> asrTag;
 
-    private final TupleTag<ALAAttributionRecord> aarTag;
+    private  TupleTag<ALAAttributionRecord> aarTag;
 
     @NonNull
-    private final PCollectionView<MetadataRecord> metadataView;
+    private  PCollectionView<MetadataRecord> metadataView;
+
+    String datasetID;
+
+    public static ALASolrDocumentTransform create(
+            TupleTag<ExtendedRecord> erTag,
+            TupleTag<BasicRecord> brTag,
+            TupleTag<TemporalRecord> trTag,
+            TupleTag<LocationRecord> lrTag,
+            TupleTag<TaxonRecord> txrTag,
+            TupleTag<ALATaxonRecord> atxrTag,
+            TupleTag<MultimediaRecord> mrTag,
+            TupleTag<ImageRecord> irTag,
+            TupleTag<AudubonRecord> arTag,
+            TupleTag<MeasurementOrFactRecord> mfrTag,
+            TupleTag<AustraliaSpatialRecord> asrTag,
+            TupleTag<ALAAttributionRecord> aarTag,
+            PCollectionView<MetadataRecord> metadataView,
+            String datasetID
+    ){
+        ALASolrDocumentTransform t = new ALASolrDocumentTransform();
+        t.erTag = erTag;
+        t.brTag = brTag;
+        t.trTag = trTag;
+        t.lrTag = lrTag;
+        t.txrTag = txrTag;
+        t.atxrTag = atxrTag;
+        t.mrTag = mrTag;
+        t.irTag = irTag;
+        t.arTag = arTag;
+        t.mfrTag = mfrTag;
+        t.asrTag =  asrTag;
+        t.aarTag  = aarTag;
+        t.metadataView = metadataView;
+        t.datasetID = datasetID;
+        return t;
+    }
 
     public ParDo.SingleOutput<KV<String, CoGbkResult>, SolrInputDocument> converter() {
 
@@ -220,8 +258,21 @@ public class ALASolrDocumentTransform implements Serializable {
                 doc.setField("geospatial_kosher", lr.getHasCoordinate());
                 doc.setField("first_loaded_date", new Date());
 
-                //Add sampling data
-                if (asr != null) {
+                KeyValueStore<LatLng, Map<String,String>> samplingKeyValueStore = SamplingKeyValueStoreFactory.getForDataset(datasetID);
+
+                if (samplingKeyValueStore != null && lr.getDecimalLatitude() != null && lr.getDecimalLongitude() != null){
+
+                    try {
+                        LatLng ll = LatLng.builder().latitude(lr.getDecimalLatitude()).longitude(lr.getDecimalLongitude()).build();
+                        Map<String, String> samples = samplingKeyValueStore.get(ll);
+                        for (Map.Entry<String, String> sample : samples.entrySet()) {
+                            addIfNotEmpty(doc, sample.getKey(), sample.getValue());
+                        }
+                    } catch(Exception e){
+                        e.printStackTrace();
+                    }
+
+                } else if (asr != null) {
                     Map<String, String> samples = asr.getItems();
                     for (Map.Entry<String, String> sample : samples.entrySet()) {
                         if (!StringUtils.isEmpty(sample.getValue())) {
@@ -233,17 +284,6 @@ public class ALASolrDocumentTransform implements Serializable {
                         }
                     }
                 }
-
-//                @BeanProperty var dataProviderUid:String,
-//                        @BeanProperty var dataProviderName:String,
-//                        @BeanProperty var dataResourceUid:String,
-//                        @BeanProperty var dataResourceName:String,
-//                        @BeanProperty var collectionUid:String,
-//                        @BeanProperty var institutionUid:String,
-//                        @BeanProperty var dataHubUid:Array[String],
-//                        @BeanProperty var dataHubName:String,
-//                        @BeanProperty var institutionName:String,
-//                        @BeanProperty var collectionName:String,
 
                 // Add legacy collectory fields
                 if(aar != null){
@@ -268,21 +308,21 @@ public class ALASolrDocumentTransform implements Serializable {
                 }
 
                 IssueRecord geospatialIssues = lr.getIssues();
-                for(String issue : geospatialIssues.getIssueList()){
+                for (String issue : geospatialIssues.getIssueList()){
                     doc.setField("assertions", issue);
                 }
 
                 IssueRecord temporalIssues = tr.getIssues();
-                for(String issue : temporalIssues.getIssueList()){
+                for (String issue : temporalIssues.getIssueList()){
                     doc.setField("assertions", issue);
                 }
 
                 IssueRecord basisOfRecordIssues = br.getIssues();
-                for(String issue : basisOfRecordIssues.getIssueList()){
+                for (String issue : basisOfRecordIssues.getIssueList()){
                     doc.setField("assertions", issue);
                 }
 
-                for(String issue : mdr.getIssues().getIssueList()){
+                for (String issue : mdr.getIssues().getIssueList()){
                     doc.setField("assertions", issue);
                 }
 
@@ -296,11 +336,10 @@ public class ALASolrDocumentTransform implements Serializable {
     }
 
     void addIfNotEmpty(SolrInputDocument doc, String fieldName, String value){
-        if(value !=null){
+        if (StringUtils.isNotEmpty(value)){
             doc.setField(fieldName, value);
         }
     }
-
 
     void addGeo(SolrInputDocument doc, double lat, double lon){
         String latlon = "";

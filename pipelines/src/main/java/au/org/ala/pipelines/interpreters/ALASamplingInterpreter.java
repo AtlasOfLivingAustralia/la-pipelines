@@ -28,7 +28,7 @@ public class ALASamplingInterpreter {
                             .longitude(lr.getDecimalLongitude()).build();
                     Map<String, String> resp = kvStore.get(request);
                     if(resp != null){
-                        if (resp !=null && !resp.isEmpty()) {
+                        if (resp != null && !resp.isEmpty()) {
                             asr.setItems(resp);
                         }
                     }

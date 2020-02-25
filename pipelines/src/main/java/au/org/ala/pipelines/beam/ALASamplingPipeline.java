@@ -22,41 +22,7 @@ import java.util.function.UnaryOperator;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
 /**
- * Pipeline sequence:
- *
- * <pre>
- *    1) Reads verbatim.avro file
- *    2) Interprets and converts avro {@link ExtendedRecord} file to:
- *      {@link MetadataRecord},
- *      {@link BasicRecord},
- *      {@link TemporalRecord},
- *      {@link MultimediaRecord},
- *      {@link ImageRecord},
- *      {@link AudubonRecord},
- *      {@link MeasurementOrFactRecord},
- *      {@link TaxonRecord},
- *      {@link LocationRecord}
- *    3) Writes data to independent files
- * </pre>
- *
- * <p>How to run:
- *
- * <pre>{@code
- * java -jar target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar some.properties
- *
- * or pass all parameters:
- *
- * java -jar target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar
- * --pipelineStep=VERBATIM_TO_ALA_INTERPRETED \
- * --properties=/some/path/to/output/ws.properties
- * --datasetId=0057a720-17c9-4658-971e-9578f3577cf5
- * --attempt=1
- * --interpretationTypes=ALL
- * --runner=SparkRunner
- * --targetPath=/some/path/to/output/
- * --inputPath=/some/path/to/output/0057a720-17c9-4658-971e-9578f3577cf5/1/verbatim.avro
- *
- * }</pre>
+ * Pipeline that adds a sampling AVRO extension to the stored
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)

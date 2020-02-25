@@ -53,7 +53,7 @@ public class ALSamplingKVStoreFactory {
                     closeHandler.execute();
                 }
             };
-            mapDBCache = MapDBKeyValueStore.cache(kvs, 100000l, ALASamplingRequest.class, Map.class);
+            mapDBCache = MapDBKeyValueStore.cache("/data/pipelines-cache", kvs, ALASamplingRequest.class, Map.class);
         }
 
         return mapDBCache;

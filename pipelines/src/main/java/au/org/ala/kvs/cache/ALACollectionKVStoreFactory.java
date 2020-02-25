@@ -57,7 +57,7 @@ public class ALACollectionKVStoreFactory {
                     closeHandler.execute();
                 }
             };
-            mapDBCache = MapDBKeyValueStore.cache(kvs, 100000l, ALACollectionLookup.class, ALACollectionMatch.class);
+            mapDBCache = MapDBKeyValueStore.cache("/data/pipelines-cache", kvs, ALACollectionLookup.class, ALACollectionMatch.class);
         }
 
         return mapDBCache;

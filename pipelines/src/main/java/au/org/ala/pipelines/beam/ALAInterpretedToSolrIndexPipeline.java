@@ -1,5 +1,6 @@
 package au.org.ala.pipelines.beam;
 
+import au.org.ala.kvs.cache.SamplingKeyValueStoreFactory;
 import au.org.ala.pipelines.options.ALASolrPipelineOptions;
 import au.org.ala.pipelines.transforms.ALAAttributionTransform;
 import au.org.ala.pipelines.transforms.ALASolrDocumentTransform;
@@ -30,7 +31,6 @@ import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.specific.AustraliaSpatialTransform;
-import org.joda.time.Duration;
 import org.slf4j.MDC;
 
 import java.util.function.UnaryOperator;
@@ -128,29 +128,35 @@ public class ALAInterpretedToSolrIndexPipeline {
                         .apply("Map attribution to KV", alaAttributionTransform.toKv());
 
         PCollection<KV<String, AustraliaSpatialRecord>> australiaSpatialCollection = null;
-        if(options.getIncludeSampling()) {
+        if (options.getIncludeSampling()) {
             australiaSpatialCollection =
                     p.apply("Read Sampling", australiaSpatialTransform.read(pathFn))
-                            .apply("Map Sampling to KV", australiaSpatialTransform.toKv());
+                         .apply("Map Sampling to KV", australiaSpatialTransform.toKv());
         }
 
+        log.info("Loading sampling data into MapDB for intersection for dataset {}  ......", options.getDatasetId());
+        SamplingKeyValueStoreFactory.setupFor(options.getDatasetId());
+        log.info("Finished loading for dataset {}", options.getDatasetId());
+
+        ALASolrDocumentTransform solrDocumentTransform = ALASolrDocumentTransform.create(
+                verbatimTransform.getTag(),
+                basicTransform.getTag(),
+                temporalTransform.getTag(),
+                locationTransform.getTag(),
+                options.getIncludeGbifTaxonomy() ? taxonomyTransform.getTag() : null,
+                alaTaxonomyTransform.getTag(),
+                multimediaTransform.getTag(),
+                imageTransform.getTag(),
+                audubonTransform.getTag(),
+                measurementOrFactTransform.getTag(),
+                options.getIncludeSampling() ? australiaSpatialTransform.getTag() : null,
+                alaAttributionTransform.getTag(),
+                metadataView,
+                options.getDatasetId()
+        );
+
         log.info("Adding step 3: Converting into a json object");
-        ParDo.SingleOutput<KV<String, CoGbkResult>, SolrInputDocument> alaSolrDoFn =
-                ALASolrDocumentTransform.create(
-                        verbatimTransform.getTag(),
-                        basicTransform.getTag(),
-                        temporalTransform.getTag(),
-                        locationTransform.getTag(),
-                        options.getIncludeGbifTaxonomy() ? taxonomyTransform.getTag() : null,
-                        alaTaxonomyTransform.getTag(),
-                        multimediaTransform.getTag(),
-                        imageTransform.getTag(),
-                        audubonTransform.getTag(),
-                        measurementOrFactTransform.getTag(),
-                        options.getIncludeSampling() ? australiaSpatialTransform.getTag() : null,
-                        alaAttributionTransform.getTag(),
-                        metadataView
-                ).converter();
+        ParDo.SingleOutput<KV<String, CoGbkResult>, SolrInputDocument> alaSolrDoFn = solrDocumentTransform.converter();
 
         KeyedPCollectionTuple<String> kpct = KeyedPCollectionTuple
                 // Core
@@ -181,18 +187,17 @@ public class ALAInterpretedToSolrIndexPipeline {
                 .apply("Grouping objects", CoGroupByKey.create())
                 .apply("Merging to Solr doc", alaSolrDoFn);
 
-
         log.info("Adding step 4: SOLR indexing");
         SolrIO.ConnectionConfiguration conn = SolrIO.ConnectionConfiguration.create(
                 options.getZkHost()
         );
 
-        SolrIO.RetryConfiguration retryConn = SolrIO.RetryConfiguration.create(5, Duration.standardMinutes(5));
+//        SolrIO.RetryConfiguration retryConn = SolrIO.RetryConfiguration.create(5, Duration.standardMinutes(5));
 
         jsonCollection.apply(
                 SolrIO.write()
                         .to(options.getSolrCollection()) //biocache
-                        .withRetryConfiguration(retryConn)
+//                        .withRetryConfiguration(retryConn)
                         .withConnectionConfiguration(conn)
         );
 

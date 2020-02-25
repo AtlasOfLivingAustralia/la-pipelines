@@ -8,6 +8,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.BiConsumer;
 
 /**
  * MapDB implementation of key value store.
@@ -15,7 +16,7 @@ import java.util.concurrent.ConcurrentMap;
  * @param <K>
  * @param <V>
  */
-public class MapDBKeyValueStore<K,V> implements KeyValueStore<K,V> {
+public class MapDBKeyValueStore<K,V> implements WarmableCache<K,V> {
 
     //Wrapped KeyValueStore
     private final KeyValueStore<K, V> keyValueStore;
@@ -28,14 +29,13 @@ public class MapDBKeyValueStore<K,V> implements KeyValueStore<K,V> {
      * Creates a Cache for the KV store.
      *
      * @param keyValueStore wrapped kv store
-     * @param capacity      maximum capacity of the cache
      * @param keyClass      type descriptor for the key elements
      * @param valueClass    type descriptor for the value elements
      */
-    private MapDBKeyValueStore(KeyValueStore<K, V> keyValueStore, long capacity, Class<K> keyClass, Class<V> valueClass) {
+    private MapDBKeyValueStore(String baseDirectory, KeyValueStore<K, V> keyValueStore, Class<K> keyClass, Class<V> valueClass) {
         this.keyValueStore = keyValueStore;
         this.db = DBMaker
-                .fileDB("/data/pipelines-caches/" + (keyClass.getTypeName() + "-" + valueClass.getTypeName()).toLowerCase())
+                .fileDB(baseDirectory + "/" + (keyClass.getTypeName() + "-" + valueClass.getTypeName()).toLowerCase())
                 .transactionEnable()
                 .closeOnJvmShutdown()
                 .make();
@@ -72,15 +72,19 @@ public class MapDBKeyValueStore<K,V> implements KeyValueStore<K,V> {
      * Factory method to create instances of KeyValueStore caches.
      *
      * @param keyValueStore store to be cached/wrapped
-     * @param capacity      maximum capacity of the in-memory cache
      * @param keyClass      type descriptor for the key elements
      * @param valueClass    type descriptor for the value elements
      * @param <K1>          type of key elements
      * @param <V1>          type of value elements
      * @return a new instance of KeyValueStore cache
      */
-    public static <K1, V1> KeyValueStore<K1, V1> cache(KeyValueStore<K1, V1> keyValueStore, long capacity, Class<K1> keyClass, Class<V1> valueClass) {
-        return new MapDBKeyValueStore<>(keyValueStore, capacity, keyClass, valueClass);
+    public static <K1, V1> WarmableCache<K1, V1> cache(String baseDirectory, KeyValueStore<K1, V1> keyValueStore,  Class<K1> keyClass, Class<V1> valueClass) {
+        return new MapDBKeyValueStore<>(baseDirectory, keyValueStore, keyClass, valueClass);
+    }
+
+    @Override
+    public void put(K key, V value) {
+        cache.put(key, value);
     }
 
     @Override

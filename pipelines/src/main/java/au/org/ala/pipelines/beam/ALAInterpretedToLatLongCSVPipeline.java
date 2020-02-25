@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.TextIO;
+import org.apache.beam.sdk.transforms.Distinct;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
@@ -15,6 +16,7 @@ import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
+import org.apache.commons.io.FileUtils;
 import org.gbif.pipelines.ingest.options.BasePipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
@@ -25,20 +27,25 @@ import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.MetadataTransform;
 import org.slf4j.MDC;
 
+import java.io.File;
 import java.util.function.UnaryOperator;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
+/**
+ * Exports a unique set of coordinates for a data resource.
+ *
+ */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ALAInterpretedToLatLongCSVPipeline {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         BasePipelineOptions options = PipelinesOptionsFactory.create(BasePipelineOptions.class, args);
         run(options);
     }
 
-    public static void run(BasePipelineOptions options) {
+    public static void run(BasePipelineOptions options) throws Exception {
 
         MDC.put("datasetId", options.getDatasetId());
         MDC.put("attempt", options.getAttempt().toString());
@@ -73,7 +80,15 @@ public class ALAInterpretedToLatLongCSVPipeline {
                         .apply("Grouping objects", CoGroupByKey.create())
                         .apply("Merging to CSV doc", alaCSVrDoFn);
 
-        csvCollection.apply(TextIO.write().to(options.getTargetPath() +"/latlong.csv"));
+
+        String outputPath = FsUtils.buildDatasetAttemptPath(options, "latlng", true);
+
+        System.out.println("Output path = " + outputPath);
+        FileUtils.forceMkdir(new File(outputPath));
+
+        csvCollection
+                .apply(Distinct.<String>create())
+                .apply(TextIO.write().to(outputPath + "/latlong.csv"));
 
         log.info("Running the pipeline");
         PipelineResult result = p.run();
@@ -81,6 +96,6 @@ public class ALAInterpretedToLatLongCSVPipeline {
 
         MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
 
-        log.info("Pipeline has been finished. Output written to " + options.getTargetPath() + "/latlong.csv");
+        log.info("Pipeline has been finished. Output written to " + outputPath + "/latlong.csv");
     }
 }

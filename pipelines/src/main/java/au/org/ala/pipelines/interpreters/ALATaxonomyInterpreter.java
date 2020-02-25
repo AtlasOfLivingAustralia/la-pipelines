@@ -70,7 +70,7 @@ public class ALATaxonomyInterpreter {
                     try {
                         BeanUtils.copyProperties(atr, usageMatch);
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        log.error(e.getMessage(), e);
                     }
 //                    }
 

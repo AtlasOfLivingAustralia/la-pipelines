@@ -335,6 +335,12 @@
       <groupId>org.gbif.pipelines</groupId>
       <artifactId>ingest-gbif</artifactId>
       <version>${gbif-pipelines.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>ch.qos.logback</groupId>
+          <artifactId>logback-classic</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
@@ -356,6 +362,12 @@
       <groupId>org.gbif.pipelines</groupId>
       <artifactId>ingest-hdfs-table</artifactId>
       <version>${gbif-pipelines.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>ch.qos.logback</groupId>
+          <artifactId>logback-classic</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
@@ -428,6 +440,12 @@
       <groupId>org.gbif.kvs</groupId>
       <artifactId>kvs-core</artifactId>
       <version>${kvs.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>ch.qos.logback</groupId>
+          <artifactId>logback-classic</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.gbif</groupId>
@@ -624,11 +642,11 @@
       <artifactId>slf4j-api</artifactId>
       <version>${slf4j.version}</version>
     </dependency>
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
-      <version>${logback.version}</version>
-    </dependency>
+<!--    <dependency>-->
+<!--      <groupId>ch.qos.logback</groupId>-->
+<!--      <artifactId>logback-classic</artifactId>-->
+<!--      <version>${logback.version}</version>-->
+<!--    </dependency>-->
     <dependency>
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>

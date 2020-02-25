@@ -18,8 +18,6 @@ then
     echo "/data/pipelines-data/$1/1/verbatim.avro does not exists on your filesystem. Have you ran ingest ?"
 fi
 
-ulimit -n 100000
-
 echo $(date)
 SECONDS=0
 java -Xmx8g -XX:+UseG1GC  -Dspark.master=local[*]  -cp pipelines/target/pipelines-1.0-SNAPSHOT-shaded.jar au.org.ala.pipelines.beam.ALAVerbatimToInterpretedPipeline \

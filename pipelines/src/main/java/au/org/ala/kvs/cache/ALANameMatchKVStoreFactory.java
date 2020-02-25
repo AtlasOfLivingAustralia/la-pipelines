@@ -82,7 +82,7 @@ public class ALANameMatchKVStoreFactory {
                     closeHandler.execute();
                 }
             };
-            mapDBCache = MapDBKeyValueStore.cache(kvs, 100000l, ALASpeciesMatchRequest.class, ALANameUsageMatch.class);
+            mapDBCache = MapDBKeyValueStore.cache("/data/pipelines-cache", kvs, ALASpeciesMatchRequest.class, ALANameUsageMatch.class);
         }
 
         return mapDBCache;

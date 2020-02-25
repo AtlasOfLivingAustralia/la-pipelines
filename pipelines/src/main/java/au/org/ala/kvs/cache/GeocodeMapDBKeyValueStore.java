@@ -29,7 +29,7 @@ public class GeocodeMapDBKeyValueStore implements KeyValueStore<LatLng, GeocodeR
   private final HTreeMap<LatLng, GeocodeResponse> cache;
 
   private GeocodeMapDBKeyValueStore(ClientConfiguration config) {
-//    this.service = new GeocodeServiceSyncClient(config);
+
     this.service = GeocodeShpIntersectService.getInstance();
 
     this.cache = DBMakerFactory.create().hashMap("geocoderesponse")
