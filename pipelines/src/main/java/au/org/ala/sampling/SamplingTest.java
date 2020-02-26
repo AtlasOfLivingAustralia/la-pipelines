@@ -1,4 +1,4 @@
-package au.org;
+package au.org.ala.sampling;
 
 import au.org.ala.kvs.cache.SamplingCache2;
 import au.org.ala.kvs.cache.SamplingKeyValueStoreFactory;
