@@ -10,6 +10,7 @@ import org.xerial.snappy.Snappy;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -27,6 +28,9 @@ public class SamplingCache2 {
     public Map<String, String> getSamples(Double latitude, Double longitude) throws Exception {
         ObjectMapper om = new ObjectMapper();
         String json = cache.get(latitude + "," + longitude);
+        if (json == null) {
+            return new HashMap<String, String>();
+        }
         return om.readValue(json, Map.class);
     }
 
@@ -47,7 +51,7 @@ public class SamplingCache2 {
                 .fileMmapPreclearDisable()
                 .make();
 
-        cache = db.hashMap("sample-cache")
+        this.cache = db.hashMap("sample-cache")
                 .keySerializer(Serializer.STRING)
                 .valueSerializer(new SerializerCompressionWrapper(Serializer.STRING))
             .createOrOpen();
@@ -57,6 +61,6 @@ public class SamplingCache2 {
 
 
     public void closeForWriting(){
-        db.commit();
+        this.db.commit();
     }
 }
