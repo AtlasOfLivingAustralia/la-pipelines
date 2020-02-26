@@ -42,8 +42,9 @@ public class SamplingCache2 {
 
         this.db = DBMaker
                 .fileDB(baseDirectory + "/sample-cache")
-                .transactionEnable()
                 .closeOnJvmShutdown()
+                .fileMmapEnableIfSupported()
+                .fileMmapPreclearDisable()
                 .make();
 
         cache = db.hashMap("sample-cache")
