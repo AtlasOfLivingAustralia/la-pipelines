@@ -1,5 +1,6 @@
 package au.org.ala.pipelines.transforms;
 
+import au.org.ala.kvs.cache.SamplingCache2;
 import au.org.ala.kvs.cache.SamplingKeyValueStoreFactory;
 import au.org.ala.kvs.client.LatLng;
 import lombok.NonNull;
@@ -258,13 +259,12 @@ public class ALASolrDocumentTransform implements Serializable {
                 doc.setField("geospatial_kosher", lr.getHasCoordinate());
                 doc.setField("first_loaded_date", new Date());
 
-                KeyValueStore<LatLng, Map<String,String>> samplingKeyValueStore = SamplingKeyValueStoreFactory.getForDataset(datasetID);
+                SamplingCache2 samplingKeyValueStore = SamplingKeyValueStoreFactory.getForDataset2(datasetID);
 
                 if (samplingKeyValueStore != null && lr.getDecimalLatitude() != null && lr.getDecimalLongitude() != null){
 
                     try {
-                        LatLng ll = LatLng.builder().latitude(lr.getDecimalLatitude()).longitude(lr.getDecimalLongitude()).build();
-                        Map<String, String> samples = samplingKeyValueStore.get(ll);
+                        Map<String, String> samples = samplingKeyValueStore.getSamples(lr.getDecimalLatitude(), lr.getDecimalLongitude());
                         for (Map.Entry<String, String> sample : samples.entrySet()) {
                             addIfNotEmpty(doc, sample.getKey(), sample.getValue());
                         }

@@ -1,9 +1,12 @@
 package au.org.ala.kvs.cache;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.io.IOUtils;
 import org.gbif.kvs.KeyValueStore;
 import org.jetbrains.annotations.NotNull;
 import org.mapdb.*;
+import org.xerial.snappy.Snappy;
+
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -24,7 +27,7 @@ public class MapDBKeyValueStore<K,V> implements WarmableCache<K,V> {
 
     private final DB db;
 
-    private final ConcurrentMap<K, V> cache;
+    private final HTreeMap<K, V> cache;
 
     /**
      * Creates a Cache for the KV store.
@@ -45,8 +48,8 @@ public class MapDBKeyValueStore<K,V> implements WarmableCache<K,V> {
             .valueSerializer(new Serializer<V>() {
                 ObjectMapper objectMapper = new ObjectMapper();
                 @Override
-                public void serialize(@NotNull DataOutput2 dataOutput2, @NotNull V alaNameUsageMatch) throws IOException {
-                    objectMapper.writeValue((DataOutput) dataOutput2, alaNameUsageMatch);
+                public void serialize(@NotNull DataOutput2 dataOutput2, @NotNull V object) throws IOException {
+                    objectMapper.writeValue((DataOutput) dataOutput2, object);
                 }
                 @Override
                 public V deserialize(@NotNull DataInput2 dataInput2, int i) throws IOException {
@@ -101,7 +104,7 @@ public class MapDBKeyValueStore<K,V> implements WarmableCache<K,V> {
         if (value == null){
             synchronized (key) {
                 value = cache.get(key);
-                if(value == null) {
+                if (value == null) {
                     value = keyValueStore.get(key);
                     cache.put(key, value);
                     db.commit();

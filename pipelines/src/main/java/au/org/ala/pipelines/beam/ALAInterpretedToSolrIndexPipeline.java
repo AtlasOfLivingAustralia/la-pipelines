@@ -135,7 +135,7 @@ public class ALAInterpretedToSolrIndexPipeline {
         }
 
         log.info("Loading sampling data into MapDB for intersection for dataset {}  ......", options.getDatasetId());
-        SamplingKeyValueStoreFactory.setupFor(options.getDatasetId());
+        SamplingKeyValueStoreFactory.setupFor2(options.getDatasetId());
         log.info("Finished loading for dataset {}", options.getDatasetId());
 
         ALASolrDocumentTransform solrDocumentTransform = ALASolrDocumentTransform.create(
