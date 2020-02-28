@@ -18,7 +18,7 @@ dwca_dir="/data/pipelines-data/$1"
 --master spark://172.30.2.127:7077 \
 --driver-java-options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
 /efs-mount-point/pipelines.jar \
---appName "Lat Long export for $1" \
+--appName="Lat Long export for $1" \
 --datasetId=$1 \
 --attempt=1 \
 --runner=SparkRunner \
