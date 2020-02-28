@@ -110,6 +110,7 @@ public class ALAVerbatimToInterpretedPipeline {
     UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, id);
 
     log.info("Creating a pipeline from options");
+
     Pipeline p = Pipeline.create(options);
 
     // Core

@@ -1,9 +1,7 @@
 package au.org.ala.sampling;
 
-import au.org.ala.kvs.cache.SamplingCache2;
-import au.org.ala.kvs.cache.SamplingKeyValueStoreFactory;
-import au.org.ala.kvs.client.LatLng;
-import org.gbif.kvs.KeyValueStore;
+import au.org.ala.kvs.cache.SamplingCache;
+import au.org.ala.kvs.cache.SampleCacheFactory;
 
 import java.util.Map;
 
@@ -12,9 +10,9 @@ public class SamplingTest {
 
     public static void main(String[] args) throws Exception {
 
-        SamplingKeyValueStoreFactory.setupFor2(args[0]);
+        SampleCacheFactory.setupFor(args[0]);
 
-        SamplingCache2 cache = SamplingKeyValueStoreFactory.getForDataset2(args[0]);
+        SamplingCache cache = SampleCacheFactory.getForDataset(args[0]);
 
         Map<String, String> samples = cache.getSamples(Double.parseDouble(args[1]),Double.parseDouble(args[2]));
         if(samples != null) {

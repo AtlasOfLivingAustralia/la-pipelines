@@ -1,8 +1,7 @@
 package au.org.ala.pipelines.transforms;
 
-import au.org.ala.kvs.cache.SamplingCache2;
-import au.org.ala.kvs.cache.SamplingKeyValueStoreFactory;
-import au.org.ala.kvs.client.LatLng;
+import au.org.ala.kvs.cache.SamplingCache;
+import au.org.ala.kvs.cache.SampleCacheFactory;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.Schema;
@@ -17,7 +16,6 @@ import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.solr.common.SolrInputDocument;
-import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.core.converters.MultimediaConverter;
 import org.gbif.pipelines.core.utils.TemporalUtils;
 import org.gbif.pipelines.io.avro.*;
@@ -259,17 +257,29 @@ public class ALASolrDocumentTransform implements Serializable {
                 doc.setField("geospatial_kosher", lr.getHasCoordinate());
                 doc.setField("first_loaded_date", new Date());
 
-                SamplingCache2 samplingKeyValueStore = SamplingKeyValueStoreFactory.getForDataset2(datasetID);
+                SamplingCache samplingKeyValueStore = SampleCacheFactory.getForDataset(datasetID);
 
-                if (samplingKeyValueStore != null && lr.getDecimalLatitude() != null && lr.getDecimalLongitude() != null){
+                if (lr.getDecimalLatitude() != null && lr.getDecimalLongitude() != null){
 
-                    try {
-                        Map<String, String> samples = samplingKeyValueStore.getSamples(lr.getDecimalLatitude(), lr.getDecimalLongitude());
-                        for (Map.Entry<String, String> sample : samples.entrySet()) {
-                            addIfNotEmpty(doc, sample.getKey(), sample.getValue());
+                    if (samplingKeyValueStore != null) {
+
+                        try {
+                            Map<String, String> samples = samplingKeyValueStore.getSamples(lr.getDecimalLatitude(), lr.getDecimalLongitude());
+                            if(samples.isEmpty()){
+                                log.warn("Empty sampling result set returned for latlng:  {} {}", lr.getDecimalLatitude(), lr.getDecimalLongitude());
+                                throw new RuntimeException("empty result is null");
+                            } else {
+                                for (Map.Entry<String, String> sample : samples.entrySet()) {
+                                    addIfNotEmpty(doc, sample.getKey(), sample.getValue());
+                                }
+                            }
+                        } catch (Exception e) {
+                            log.error(e.getMessage(), e);
+                            throw new RuntimeException("sampling issue " + e.getMessage(), e);
                         }
-                    } catch(Exception e){
-                        e.printStackTrace();
+                    } else {
+                        log.warn("samplingKeyValueStore is null");
+                        throw new RuntimeException("samplingKeyValueStore is null");
                     }
 
                 } else if (asr != null) {

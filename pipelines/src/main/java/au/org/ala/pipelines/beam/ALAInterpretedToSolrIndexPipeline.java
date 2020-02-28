@@ -1,6 +1,6 @@
 package au.org.ala.pipelines.beam;
 
-import au.org.ala.kvs.cache.SamplingKeyValueStoreFactory;
+import au.org.ala.kvs.cache.SampleCacheFactory;
 import au.org.ala.pipelines.options.ALASolrPipelineOptions;
 import au.org.ala.pipelines.transforms.ALAAttributionTransform;
 import au.org.ala.pipelines.transforms.ALASolrDocumentTransform;
@@ -134,8 +134,9 @@ public class ALAInterpretedToSolrIndexPipeline {
                          .apply("Map Sampling to KV", australiaSpatialTransform.toKv());
         }
 
-        log.info("Loading sampling data into MapDB for intersection for dataset {}  ......", options.getDatasetId());
-        SamplingKeyValueStoreFactory.setupFor2(options.getDatasetId());
+        log.info("Opening sampling data into MapDB for intersection for dataset {}  ......", options.getDatasetId());
+        SampleCacheFactory skvs = SampleCacheFactory.getInstance();
+        skvs.setupFor(options.getDatasetId());
         log.info("Finished loading for dataset {}", options.getDatasetId());
 
         ALASolrDocumentTransform solrDocumentTransform = ALASolrDocumentTransform.create(
@@ -172,7 +173,8 @@ public class ALAInterpretedToSolrIndexPipeline {
                 .and(verbatimTransform.getTag(), verbatimCollection)
                 //Specific
                 .and(alaTaxonomyTransform.getTag(), alaTaxonCollection)
-                .and(alaAttributionTransform.getTag(), alaAttributionCollection);
+                .and(alaAttributionTransform.getTag(), alaAttributionCollection)
+                ;
 
 
         if (options.getIncludeSampling()){
@@ -183,7 +185,7 @@ public class ALAInterpretedToSolrIndexPipeline {
             kpct = kpct.and(taxonomyTransform.getTag(), taxonCollection);
         }
 
-        PCollection<SolrInputDocument> jsonCollection = kpct
+        PCollection<SolrInputDocument> solrInputDocumentPCollection = kpct
                 .apply("Grouping objects", CoGroupByKey.create())
                 .apply("Merging to Solr doc", alaSolrDoFn);
 
@@ -194,7 +196,7 @@ public class ALAInterpretedToSolrIndexPipeline {
 
 //        SolrIO.RetryConfiguration retryConn = SolrIO.RetryConfiguration.create(5, Duration.standardMinutes(5));
 
-        jsonCollection.apply(
+        solrInputDocumentPCollection.apply(
                 SolrIO.write()
                         .to(options.getSolrCollection()) //biocache
 //                        .withRetryConfiguration(retryConn)
