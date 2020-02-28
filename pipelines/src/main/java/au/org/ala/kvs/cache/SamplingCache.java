@@ -80,6 +80,11 @@ public class SamplingCache {
                     .concurrencyDisable()
                     .readOnly()
                     .make();
+
+            this.cache = db.hashMap("sample-cache")
+                    .keySerializer(Serializer.STRING)
+                    .valueSerializer(new SerializerCompressionWrapper(Serializer.STRING))
+                    .open();
         } else {
             this.db = DBMaker
                     .fileDB(baseDirectory + "/" + cacheFileName)
@@ -87,12 +92,12 @@ public class SamplingCache {
                     .fileMmapEnableIfSupported()
                     .fileMmapPreclearDisable()
                     .make();
-        }
 
-        this.cache = db.hashMap(cacheFileName)
-                .keySerializer(Serializer.STRING)
-                .valueSerializer(new SerializerCompressionWrapper(Serializer.STRING))
-            .createOrOpen();
+            this.cache = db.hashMap("sample-cache")
+                    .keySerializer(Serializer.STRING)
+                    .valueSerializer(new SerializerCompressionWrapper(Serializer.STRING))
+                    .createOrOpen();
+        }
 
         this.db.getStore().fileLoad();
     }
