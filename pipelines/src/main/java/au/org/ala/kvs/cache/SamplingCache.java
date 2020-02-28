@@ -74,7 +74,7 @@ public class SamplingCache {
      */
     private SamplingCache(String baseDirectory, String cacheFileName, Boolean readonly) {
 
-        if(readonly){
+        if (readonly){
             this.db = DBMaker
                     .fileDB(baseDirectory + "/" + cacheFileName)
                     .concurrencyDisable()

@@ -1,7 +1,7 @@
 package au.org.ala.pipelines.transforms;
 
 import au.org.ala.kvs.cache.SamplingCache;
-import au.org.ala.kvs.cache.SampleCacheFactory;
+import au.org.ala.kvs.cache.SamplingCacheFactory;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.Schema;
@@ -257,7 +257,7 @@ public class ALASolrDocumentTransform implements Serializable {
                 doc.setField("geospatial_kosher", lr.getHasCoordinate());
                 doc.setField("first_loaded_date", new Date());
 
-                SamplingCache samplingKeyValueStore = SampleCacheFactory.getForDataset(datasetID);
+                SamplingCache samplingKeyValueStore = SamplingCacheFactory.getForDataset(datasetID);
 
                 if (lr.getDecimalLatitude() != null && lr.getDecimalLongitude() != null){
 

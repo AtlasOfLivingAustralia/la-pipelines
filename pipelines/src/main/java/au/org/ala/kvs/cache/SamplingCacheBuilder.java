@@ -35,8 +35,6 @@ public class SamplingCacheBuilder {
      */
     public static void buildForDataset(String datasetID, String workingDirectory) throws Exception {
 
-        File targetFile = new File("/data/pipelines-data/" + datasetID + "/1/caches/sample-cache");
-
         Instant start = Instant.now();
 
         SamplingCache cache = SamplingCache.createNewCache(workingDirectory, "sample-cache-" + datasetID);
@@ -94,6 +92,17 @@ public class SamplingCacheBuilder {
 
         log.info("Cache built in {}", Duration.between(start, Instant.now()));
 
+
+        // move to target directory
+        String targetDir = "/data/pipelines-data/" + datasetID + "/1/caches";
+        log.info("Creating target directory {}", targetDir);
+        File targetDirectory = new File(targetDir);
+        FileUtils.forceMkdir(targetDirectory);
+
+        File targetFile = new File(targetDirectory, "sample-cache");
+
+        log.info("Copying to target directory {}", targetDir);
         FileUtils.copyFile(new File(workingDirectory + "/" + "sample-cache-" + datasetID), targetFile);
+        log.info("Finished for {}", datasetID);
     }
 }

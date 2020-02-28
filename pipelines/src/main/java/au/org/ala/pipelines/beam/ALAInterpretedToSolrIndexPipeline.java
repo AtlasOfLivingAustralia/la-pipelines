@@ -1,6 +1,6 @@
 package au.org.ala.pipelines.beam;
 
-import au.org.ala.kvs.cache.SampleCacheFactory;
+import au.org.ala.kvs.cache.SamplingCacheFactory;
 import au.org.ala.pipelines.options.ALASolrPipelineOptions;
 import au.org.ala.pipelines.transforms.ALAAttributionTransform;
 import au.org.ala.pipelines.transforms.ALASolrDocumentTransform;
@@ -135,7 +135,7 @@ public class ALAInterpretedToSolrIndexPipeline {
         }
 
         log.info("Opening sampling data into MapDB for intersection for dataset {}  ......", options.getDatasetId());
-        SampleCacheFactory skvs = SampleCacheFactory.getInstance();
+        SamplingCacheFactory skvs = SamplingCacheFactory.getInstance();
         skvs.setupFor(options.getDatasetId());
         log.info("Finished loading for dataset {}", options.getDatasetId());
 

@@ -11,19 +11,19 @@ import java.util.Map;
  * Singleton for accessing Sample Caches
  */
 @Slf4j
-public class SampleCacheFactory {
+public class SamplingCacheFactory {
 
-    static SampleCacheFactory instance;
+    static SamplingCacheFactory instance;
 
     Map<String, KeyValueStore<LatLng, Map<String, String>>> refCache =  new HashMap<String, KeyValueStore<LatLng, Map<String, String>>>();
 
     Map<String, SamplingCache> refCache2 =  new HashMap<String, SamplingCache>();
 
-    private SampleCacheFactory(){}
+    private SamplingCacheFactory(){}
 
-    public static SampleCacheFactory getInstance() {
+    public static SamplingCacheFactory getInstance() {
         if(instance == null){
-            instance  = new SampleCacheFactory();
+            instance  = new SamplingCacheFactory();
         }
         return instance;
     }

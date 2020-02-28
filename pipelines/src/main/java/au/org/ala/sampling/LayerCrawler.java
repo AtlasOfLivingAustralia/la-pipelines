@@ -37,7 +37,6 @@ import java.util.zip.ZipInputStream;
 /**
  * A utility to crawl the ALA layers. Requires an input csv containing lat, lng (no header)
  * and an output directory.
- *
  */
 @Slf4j
 public class LayerCrawler {
@@ -85,7 +84,6 @@ public class LayerCrawler {
         log.info("Finished sampling for {}. Time taken {} minutes", dataSetID, Duration.between(batchStart, batchFinish).toMinutes());
     }
 
-
     public LayerCrawler(){
         log.info("Initialising crawler....");
         this.service = retrofit.create(SamplingService.class);
@@ -94,7 +92,7 @@ public class LayerCrawler {
 
     public String getRequiredLayers() throws Exception {
 
-        log.info("Retrieving layer list");
+        log.info("Retrieving layer list from sampling service");
         List<String> requiredEls = Arrays.asList(SELECTED_ELS.split(","));
         String layers = service.getLayers().execute().body().stream()
                 .map(l -> String.valueOf(l.getId()))
@@ -110,7 +108,7 @@ public class LayerCrawler {
     public void crawl(String layers, File inputFile, File outputDirectory) throws Exception {
 
         // partition the coordinates into batches of N to submit
-        log.info("Partitioning coordinates " + inputFile.getAbsolutePath());
+        log.info("Partitioning coordinates {}", inputFile.getAbsolutePath());
 
         Stream<String> coordinateStream = Files.lines(inputFile.toPath());
         Collection<List<String>> partitioned = partition(coordinateStream, BATCH_SIZE);
