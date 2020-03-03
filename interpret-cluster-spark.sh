@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-echo "Interpret verbatim.arvo file."
-
 if [ $# -eq 0 ]
   then
     echo "Please supply a data resource UID"
@@ -11,16 +9,26 @@ fi
 if [[ !  -d "/data/pipelines-data" ]]
 then
     echo "/data/pipelines-data does not exists on your filesystem."
+    exit 1
 fi
 
 if [[ !  -f "/data/pipelines-data/$1/1/verbatim.avro" ]]
 then
     echo "/data/pipelines-data/$1/1/verbatim.avro does not exists on your filesystem. Have you ran ingest ?"
+    exit 1
 fi
 
-echo $(date)
-SECONDS=0
-java -Xmx8g -XX:+UseG1GC  -Dspark.master=local[*]  -cp pipelines/target/pipelines-1.0-SNAPSHOT-shaded.jar au.org.ala.pipelines.beam.ALAVerbatimToInterpretedPipeline \
+/data/spark/bin/spark-submit \
+--name "interpret $1" \
+--num-executors 8 \
+--executor-cores 8 \
+--executor-memory 16G \
+--driver-memory 4G \
+--class au.org.ala.pipelines.beam.ALAVerbatimToInterpretedPipeline \
+--master spark://172.30.2.127:7077 \
+--driver-java-options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
+/efs-mount-point/pipelines.jar \
+--appName="Interpretation for $1" \
 --datasetId=$1 \
 --attempt=1 \
 --interpretationTypes=ALL \
@@ -28,9 +36,6 @@ java -Xmx8g -XX:+UseG1GC  -Dspark.master=local[*]  -cp pipelines/target/pipeline
 --targetPath=/data/pipelines-data \
 --inputPath=/data/pipelines-data/$1/1/verbatim.avro \
 --metaFileName=interpretation-metrics.yml \
---properties=pipelines.properties \
+--properties=/efs-mount-point/pipelines.properties \
 --useExtendedRecordId=true \
 --skipRegisrtyCalls=true
-echo $(date)
-duration=$SECONDS
-echo "Interpretation of $1 took $(($duration / 60)) minutes and $(($duration % 60)) seconds."

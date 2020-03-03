@@ -6,9 +6,9 @@ for file in /data/biocache-load/*
 do
     if [[ -d $file ]]; then
         datasetID=$(basename $file)
-        echo "[DWCA-AVRO] Starting interpretation for $datasetID....."
+        echo "[DWCA-AVRO] Starting dwca avro conversion for $datasetID....."
         ./dwca-arvo.sh $datasetID
-        echo "[DWCA-AVRO] Finished interpretation for $datasetID."
+        echo "[DWCA-AVRO] Finished dwca avro conversion for $datasetID."
     fi
 done
 duration=$SECONDS
@@ -22,7 +22,7 @@ do
     if [[ -d $file ]]; then
         datasetID=$(basename $file)
         echo "[Interpretation] Starting interpretation for $datasetID....."
-        ./interpret-spark.sh $datasetID
+        groovy interpret.groovy $datasetID
         echo "[Interpretation] Finished interpretation for $datasetID."
     fi
 done
@@ -37,7 +37,7 @@ do
     if [[ -d $file ]]; then
         datasetID=$(basename $file)
         echo "[LatLong] Starting lat long export for $datasetID....."
-        ./export-latlng-spark $datasetID
+        groovy export-latlng.groovy $datasetID
         echo "[LatLong] Finished lat long export for $datasetID."
     fi
 done
@@ -82,7 +82,7 @@ do
     if [[ -d $file ]]; then
         datasetID=$(basename $file)
         echo "[Indexing] Starting indexing for $datasetID....."
-        ./index-spark.sh $datasetID
+        groovy index.groovy $datasetID
         echo "[Indexing] Finished indexing for $datasetID."
     fi
 done

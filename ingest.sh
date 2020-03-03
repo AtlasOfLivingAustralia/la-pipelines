@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-echo "Fully Ingest DwCA - Converts DwCA to AVRO, Interpret, Sample, Index."
+echo "Fully Ingest DwCA - Converts DwCA to AVRO, interpret, Sample, Index."
 
 if [ $# -eq 0 ]
   then
@@ -9,8 +9,8 @@ if [ $# -eq 0 ]
 fi
 
 ./dwca-arvo.sh $1
-./interpret.sh $1
-./export-latlng.sh $1
+groovy interpret.groovy $1
+groovy export-latlng.groovy $1
 ./sample.sh $1
 ./sample-cache.sh $1
-./index.sh $1
+groovy index.groovy $1

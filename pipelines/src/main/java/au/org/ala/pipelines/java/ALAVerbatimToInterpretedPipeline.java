@@ -32,7 +32,10 @@ import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.MetadataTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
+import org.gbif.pipelines.transforms.extension.AudubonTransform;
+import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
+import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.slf4j.MDC;
 
 import java.time.LocalDateTime;
@@ -97,7 +100,6 @@ public class ALAVerbatimToInterpretedPipeline {
     }
 
     public static void run(String[] args) {
-
         ALAInterpretationPipelineOptions options = (ALAInterpretationPipelineOptions) PipelinesOptionsFactory.create(ALAInterpretationPipelineOptions.class, args);
         run(options);
     }
@@ -140,12 +142,12 @@ public class ALAVerbatimToInterpretedPipeline {
 
         String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
-        System.out.println("Init metrics");
+        log.info("Init metrics");
         IngestMetrics metrics = IngestMetricsBuilder.createVerbatimToInterpretedMetrics();
         SerializableConsumer<String> incMetricFn = metrics::incMetric;
 
 
-        System.out.println("Creating pipelines transforms");
+        log.info("Creating pipelines transforms");
         // Core
         MetadataTransform metadataTransform = MetadataTransform.create(properties, endPointType, attempt, skipRegistryCalls).counterFn(incMetricFn).init();
         BasicTransform basicTransform = BasicTransform.create(properties, datasetId, tripletValid, occIdValid, useErdId).counterFn(incMetricFn).init();
@@ -157,15 +159,15 @@ public class ALAVerbatimToInterpretedPipeline {
         ALAAttributionTransform alaAttributionTransform = ALAAttributionTransform.create(properties).counterFn(incMetricFn).init();
         // Extension
         MeasurementOrFactTransform measurementTransform = MeasurementOrFactTransform.create().counterFn(incMetricFn);
-//        MultimediaTransform multimediaTransform = MultimediaTransform.create().counterFn(incMetricFn);
-//        AudubonTransform audubonTransform = AudubonTransform.create().counterFn(incMetricFn);
-//        ImageTransform imageTransform = ImageTransform.create().counterFn(incMetricFn);
+        MultimediaTransform multimediaTransform = MultimediaTransform.create().counterFn(incMetricFn);
+        AudubonTransform audubonTransform = AudubonTransform.create().counterFn(incMetricFn);
+        ImageTransform imageTransform = ImageTransform.create().counterFn(incMetricFn);
 //
 //         Extra
         OccurrenceExtensionTransform occExtensionTransform = OccurrenceExtensionTransform.create().counterFn(incMetricFn);
         DefaultValuesTransform defaultValuesTransform = DefaultValuesTransform.create(properties, datasetId, skipRegistryCalls);
 
-        System.out.println("Creating writers");
+        log.info("Creating writers");
         try (
 
                 SyncDataFileWriter<ExtendedRecord> verbatimWriter = createWriter(options, ExtendedRecord.getClassSchema(), verbatimTransform, id, false);
@@ -178,23 +180,23 @@ public class ALAVerbatimToInterpretedPipeline {
                 SyncDataFileWriter<ALAAttributionRecord> alaAttributionWriter = createWriter(options, ALAAttributionRecord.getClassSchema(), locationTransform, id, false);
         ) {
 
-            System.out.println("Creating metadata record");
+            log.info("Creating metadata record");
             // Create MetadataRecord
             MetadataRecord mdr = metadataTransform.processElement(options.getDatasetId()).orElseThrow(() -> new IllegalArgumentException("MetadataRecord can't be null"));
             metadataWriter.append(mdr);
 
             // Read DWCA and replace default values
-            System.out.println("Reading DwcA - into erMap");
+            log.info("Reading DwcA - into erMap");
             Map<String, ExtendedRecord> erMap = AvroReader.readUniqueRecords(hdfsSiteConfig, ExtendedRecord.class, options.getInputPath());
 
-            System.out.println("Reading DwcA - extension transform");
+            log.info("Reading DwcA - extension transform");
             Map<String, ExtendedRecord> erExtMap = occExtensionTransform.transform(erMap);
             defaultValuesTransform.replaceDefaultValues(erExtMap);
 
             boolean useSyncMode = options.getSyncThreshold() > erExtMap.size();
 
-//            // Filter GBIF id duplicates
-            System.out.println("Filter GBIF id duplicates");
+            // Filter GBIF id duplicates
+            log.info("Filter GBIF id duplicates");
             UniqueGbifIdTransform gbifIdTransform =
                     UniqueGbifIdTransform.builder()
                             .executor(executor)
@@ -206,7 +208,7 @@ public class ALAVerbatimToInterpretedPipeline {
                             .run();
 
             // Create interpretation function
-            System.out.println("Create interpretation function");
+            log.info("Create interpretation function");
             Consumer<ExtendedRecord> interpretAllFn = er -> {
                 verbatimWriter.append(er);
                     temporalTransform.processElement(er).ifPresent(temporalWriter::append);
@@ -217,7 +219,7 @@ public class ALAVerbatimToInterpretedPipeline {
             };
 
             // Run async writing for BasicRecords
-            System.out.println("Run async writing for BasicRecords");
+            log.info("Run async writing for BasicRecords");
             Stream<CompletableFuture<Void>> streamBr;
             Collection<BasicRecord> brCollection = gbifIdTransform.getBrMap().values();
             if (useSyncMode) {
@@ -227,7 +229,7 @@ public class ALAVerbatimToInterpretedPipeline {
             }
 
             // Run async interpretation and writing for all records
-            System.out.println("Run async writing for all records");
+            log.info("Run async writing for all records");
             Stream<CompletableFuture<Void>> streamAll;
             Collection<ExtendedRecord> erCollection = erExtMap.values();
             if (useSyncMode) {
@@ -237,7 +239,7 @@ public class ALAVerbatimToInterpretedPipeline {
             }
 
             // Wait for all features
-            System.out.println("Wait for all features");
+            log.info("Wait for all features");
             CompletableFuture[] futures = Stream.concat(streamBr, streamAll).toArray(CompletableFuture[]::new);
             CompletableFuture.allOf(futures).get();
 
@@ -246,12 +248,12 @@ public class ALAVerbatimToInterpretedPipeline {
             throw new IllegalStateException("Failed performing conversion on ", e);
         } finally {
             basicTransform.tearDown();
-//            taxonomyTransform.tearDown();
+            alaTaxonomyTransform.tearDown();
             locationTransform.tearDown();
         }
 
         MetricsHandler.saveCountersToTargetPathFile(options, metrics.getMetricsResult());
-        System.out.println("Pipeline has been finished - " + LocalDateTime.now());
+        log.info("Pipeline has been finished - " + LocalDateTime.now());
     }
 
     /** Create an AVRO file writer */
