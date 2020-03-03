@@ -4,8 +4,11 @@ package au.org.ala.pipelines.transforms;
 import au.org.ala.kvs.ALAKvConfig;
 import au.org.ala.kvs.ALAKvConfigFactory;
 import au.org.ala.kvs.cache.ALSamplingKVStoreFactory;
+import au.org.ala.kvs.cache.SamplingCache;
+import au.org.ala.kvs.cache.SamplingCacheFactory;
 import au.org.ala.kvs.client.ALASamplingRequest;
 import au.org.ala.pipelines.interpreters.ALASamplingInterpreter;
+import com.codahale.metrics.Sampling;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.transforms.MapElements;
@@ -42,27 +45,22 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 @Slf4j
 public class ALASamplingTransform extends Transform<LocationRecord, AustraliaSpatialRecord> {
 
-    private final ALAKvConfig kvConfig;
-    private KeyValueStore<ALASamplingRequest, Map<String,String>> kvStore;
+    private SamplingCache samplingCache;
+    private String datasetID;
 
-    private ALASamplingTransform(KeyValueStore<ALASamplingRequest, Map<String,String>> kvStore, ALAKvConfig kvConfig) {
+    private ALASamplingTransform(String datasetID) {
         super(AustraliaSpatialRecord.class, AUSTRALIA_SPATIAL, AustraliaSpatialTransform.class.getName(), AUSTRALIA_SPATIAL_RECORDS_COUNT);
-        this.kvStore = kvStore;
-        this.kvConfig = kvConfig;
+        this.datasetID = datasetID;
     }
 
     public static ALASamplingTransform create() {
-        return new ALASamplingTransform(null, null);
+        return new ALASamplingTransform(null);
     }
 
-    public static ALASamplingTransform create(KeyValueStore<ALASamplingRequest, Map<String,String>> kvStore) {
-        return new ALASamplingTransform(kvStore, null);
+    public static ALASamplingTransform create(String datasetID) {
+        return new ALASamplingTransform(datasetID);
     }
 
-    public static ALASamplingTransform create(Properties properties) {
-        ALAKvConfig config = ALAKvConfigFactory.create(properties);
-        return new ALASamplingTransform(null, config);
-    }
 
     /** Maps {@link AustraliaSpatialRecord} to key value, where key is {@link AustraliaSpatialRecord#getId} */
     public MapElements<AustraliaSpatialRecord, KV<String, AustraliaSpatialRecord>> toKv() {
@@ -83,26 +81,11 @@ public class ALASamplingTransform extends Transform<LocationRecord, AustraliaSpa
     @SneakyThrows
     @Setup
     public void setup() {
-        if (kvConfig != null) {
-            ClientConfiguration clientConfiguration = ClientConfiguration.builder()
-                    .withBaseApiUrl(kvConfig.getSpatialBasePath()) //GBIF base API url
-                    .withTimeOut(kvConfig.getTimeout()) //Geocode service connection time-out
-                    .build();
-
-            kvStore = ALSamplingKVStoreFactory.alaNameMatchKVStore(clientConfiguration);
-        }
+        samplingCache = SamplingCacheFactory.getForDataset(this.datasetID);
     }
 
     @Teardown
-    public void tearDown() {
-        if (Objects.nonNull(kvStore)) {
-            try {
-                kvStore.close();
-            } catch (IOException ex) {
-                log.error("Error closing KVStore", ex);
-            }
-        }
-    }
+    public void tearDown() {}
 
     @Override
     public Optional<AustraliaSpatialRecord> convert(LocationRecord source) {
@@ -114,7 +97,7 @@ public class ALASamplingTransform extends Transform<LocationRecord, AustraliaSpa
                 .when(lr -> Optional.ofNullable(lr.getCountryCode())
                         .filter(c -> new LatLng(lr.getDecimalLatitude(), lr.getDecimalLongitude()).isValid())
                         .isPresent())
-                .via(ALASamplingInterpreter.interpret(kvStore))
+                .via(ALASamplingInterpreter.interpret(samplingCache))
                 .get();
     }
 }

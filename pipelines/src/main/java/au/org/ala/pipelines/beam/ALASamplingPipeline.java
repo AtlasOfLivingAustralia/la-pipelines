@@ -58,7 +58,7 @@ public class ALASamplingPipeline {
 
     log.info("Creating transformations");
     LocationTransform locationTransform = LocationTransform.create();
-    ALASamplingTransform alaSamplingTransform = ALASamplingTransform.create(properties);
+    ALASamplingTransform alaSamplingTransform = ALASamplingTransform.create(options.getDatasetId());
 
     log.info("Adding pipeline transforms");
     p.apply("Read Location", locationTransform.read(pathLocationFn))

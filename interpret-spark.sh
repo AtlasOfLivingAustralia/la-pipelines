@@ -6,7 +6,6 @@ if [ $# -eq 0 ]
     exit 1
 fi
 
-
 /data/spark/bin/spark-submit \
 --name "Interpret $1" \
 --num-executors 8 \
@@ -24,7 +23,7 @@ fi
 --runner=SparkRunner \
 --targetPath=/data/pipelines-data \
 --inputPath=/data/pipelines-data/$1/1/verbatim.avro \
---metaFileName=interpretation-metrics.txt \
+--metaFileName=interpretation-metrics.yml \
 --properties=/efs-mount-point/pipelines.properties \
 --useExtendedRecordId=true \
 --skipRegisrtyCalls=true

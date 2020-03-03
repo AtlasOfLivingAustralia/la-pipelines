@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-echo "Ingest DwCA - Converts DwCA to verbatim.arvo file."
+echo "Fully Ingest DwCA - Converts DwCA to AVRO, Interpret, Sample, Index."
 
 if [ $# -eq 0 ]
   then
@@ -8,17 +8,9 @@ if [ $# -eq 0 ]
     exit 1
 fi
 
-dwca_dir="/data/biocache-load/$1"
-
-if [[ ! -d  $dwca_dir ]]
-then
-    echo "$dwca_dir does not exists on your filesystem."
-    exit 1
-fi
-
-java -cp pipelines/target/pipelines-1.0-SNAPSHOT-shaded.jar org.gbif.pipelines.ingest.pipelines.DwcaToVerbatimPipeline \
-  --datasetId=$1 \
-  --attempt=1 \
-  --runner=SparkRunner \
-  --targetPath=/data/pipelines-data \
-  --inputPath=$dwca_dir
+./dwca-arvo.sh $1
+./interpret.sh $1
+./export-latlng.sh $1
+./sample.sh $1
+./sample-cache.sh $1
+./index.sh $1

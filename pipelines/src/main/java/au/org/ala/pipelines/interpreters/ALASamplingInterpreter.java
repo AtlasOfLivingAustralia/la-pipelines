@@ -3,6 +3,7 @@ package au.org.ala.pipelines.interpreters;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
+import au.org.ala.kvs.cache.SamplingCache;
 import au.org.ala.kvs.client.ALASamplingRequest;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.io.avro.AustraliaSpatialRecord;
@@ -18,19 +19,19 @@ import lombok.extern.slf4j.Slf4j;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ALASamplingInterpreter {
 
-    public static BiConsumer<LocationRecord, AustraliaSpatialRecord> interpret(KeyValueStore<ALASamplingRequest, Map<String, String>> kvStore) {
+    public static BiConsumer<LocationRecord, AustraliaSpatialRecord> interpret(SamplingCache samplingCache) {
         return (lr, asr) -> {
-            if (kvStore != null) {
-
+            if (samplingCache != null) {
                 if (lr.getDecimalLongitude() != null && lr.getDecimalLatitude() != null) {
-                    ALASamplingRequest request = ALASamplingRequest.builder()
-                            .latitude(lr.getDecimalLatitude())
-                            .longitude(lr.getDecimalLongitude()).build();
-                    Map<String, String> resp = kvStore.get(request);
-                    if(resp != null){
-                        if (resp != null && !resp.isEmpty()) {
-                            asr.setItems(resp);
+                    try {
+                        Map<String, String> resp = samplingCache.getSamples(lr.getDecimalLatitude(), lr.getDecimalLongitude());
+                        if (resp != null){
+                            if (resp != null && !resp.isEmpty()) {
+                                asr.setItems(resp);
+                            }
                         }
+                    } catch (Exception e){
+                        throw new RuntimeException(e.getMessage(), e);
                     }
                 }
             }

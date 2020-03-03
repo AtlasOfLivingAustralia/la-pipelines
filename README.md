@@ -45,7 +45,6 @@ In addition pipelines for following will need to be developed:
 5. Extensions with separate taxonomies e.g. NZOR
 6. Handling of images with ALA's image-service as storage
 
-
 ## Dependent projects
 
 The pipelines work will necessitate some minor additional API additions and change to the following components:
@@ -65,6 +64,7 @@ lookup for all layers. This needs to be supplement with additional work to popul
 ## Getting started
 
 In the absence of ansible scripts, here are some instructions for setting up a local development environment for pipelines.
+These steps will load a dataset in SOLR.
 
 1. Run `git clone https://github.com/djtfmartin/la-pipelines`
 1. Build with maven `mvn clean install`
@@ -73,10 +73,15 @@ In the absence of ansible scripts, here are some instructions for setting up a l
 1. Create directory `/data/ala-namematching-service/config`
 1. Copy JSON files from https://github.com/djtfmartin/ala-namematching-service/tree/master/src/main/resources to this directory
 1. Run with `nohup ala-namematching-service/run.sh  &`
-1. Download a darwin core archive (e.g. https://archives.ala.org.au/archives/gbif/dr893/dr893.zip) and expand it into `/data/biocache-load` e.g. `/data/biocache-load/dr1411`
+1. Download shape files from [here](https://pipelines-shp.s3-ap-southeast-2.amazonaws.com/pipelines-shapefiles.zip) and expand into `/data/pipelines-shp` directory
+1. Download a darwin core archive (e.g. https://archives.ala.org.au/archives/gbif/dr893/dr893.zip) and expand it into `/data/biocache-load` e.g. `/data/biocache-load/dr893`
 1. Create `/data/pipelines-data` directory
-1. To convert DwCA to AVRO, run `./ingest.sh dr1411`
-1. To interpret, run `./interpret.sh dr1411`
+1. To convert DwCA to AVRO, run `./dwca-avro.sh dr893`
+1. To interpret, run `./interpret.sh dr893`
+1. To sample run
+    1. ./export-latlng.sh dr893
+    1. ./sample.sh dr893
+    1. ./sample-cache.sh dr893
 1. To setup SOLR:
     1. Run `docker-compose -f solr.yml start`
     1. Run `./upload-solr-config.sh`
