@@ -1,4 +1,4 @@
-@Grab('org.yaml:snakeyaml:1.17')
+@Grab('org.yaml:snakeyaml:1.26')
 import org.yaml.snakeyaml.Yaml
 
 if (this.args.length == 1) {
