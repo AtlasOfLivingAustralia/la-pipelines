@@ -92,7 +92,6 @@ public class SamplingCacheBuilder {
 
         log.info("Cache built in {}", Duration.between(start, Instant.now()));
 
-
         // move to target directory
         String targetDir = "/data/pipelines-data/" + datasetID + "/1/caches";
         log.info("Creating target directory {}", targetDir);
@@ -102,7 +101,12 @@ public class SamplingCacheBuilder {
         File targetFile = new File(targetDirectory, "sample-cache");
 
         log.info("Copying to target directory {}", targetDir);
-        FileUtils.copyFile(new File(workingDirectory + "/" + "sample-cache-" + datasetID), targetFile);
+        File sourceFile = new File(workingDirectory + "/" + "sample-cache-" + datasetID);
+        FileUtils.copyFile(sourceFile, targetFile);
+
+        log.info("Deleting copy from working directory {}", sourceFile.getAbsolutePath());
+        FileUtils.forceDelete(sourceFile);
+
         log.info("Finished for {}", datasetID);
     }
 }
