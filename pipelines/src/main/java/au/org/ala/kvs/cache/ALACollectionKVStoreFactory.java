@@ -48,7 +48,7 @@ public class ALACollectionKVStoreFactory {
                     try {
                         return service.lookupCodes(key.getInstitutionCode(), key.getCollectionCode());
                     } catch (Exception ex) {
-                        throw logAndThrow(ex, "Error contacting the species match service");
+                        throw logAndThrow(ex, "Error contacting the collectory service");
                     }
                 }
 

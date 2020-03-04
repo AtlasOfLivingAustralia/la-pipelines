@@ -48,7 +48,7 @@ public class ALAAttributionKVStoreFactory {
                     try {
                         return service.lookupDataResource(key);
                     } catch (Exception ex) {
-                        throw logAndThrow(ex, "Error contacting the species match service");
+                        throw logAndThrow(ex, "Error contacting the collectory service to retrieve data resource metadata. Has resource been removed ? " + key);
                     }
                 }
 
