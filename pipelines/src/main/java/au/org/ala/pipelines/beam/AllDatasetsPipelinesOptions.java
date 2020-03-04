@@ -3,7 +3,6 @@ package au.org.ala.pipelines.beam;
 import org.apache.beam.sdk.io.hdfs.HadoopFileSystemOptions;
 import org.apache.beam.sdk.options.*;
 import org.apache.hadoop.conf.Configuration;
-import org.gbif.pipelines.ingest.options.BasePipelineOptions;
 
 import java.util.List;
 import java.util.Optional;
@@ -50,22 +49,4 @@ public interface AllDatasetsPipelinesOptions  extends PipelineOptions {
     int getSyncThreshold();
 
     void setSyncThreshold(int var1);
-
-    public static class DefaultDirectoryFactory implements DefaultValueFactory<String> {
-        public DefaultDirectoryFactory() {
-        }
-
-        static Optional<String> getDefaultFs(PipelineOptions options) {
-            List<Configuration> configs = ((HadoopFileSystemOptions)options.as(HadoopFileSystemOptions.class)).getHdfsConfiguration();
-            return Optional.ofNullable(configs).filter((x) -> {
-                return !x.isEmpty();
-            }).map((c) -> {
-                return ((Configuration)configs.get(0)).get("fs.defaultFS");
-            });
-        }
-
-        public String create(PipelineOptions options) {
-            return (String)getDefaultFs(options).orElse("hdfs://");
-        }
-    }
 }

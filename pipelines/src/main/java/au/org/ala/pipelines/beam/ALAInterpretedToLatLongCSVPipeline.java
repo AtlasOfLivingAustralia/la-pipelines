@@ -62,17 +62,13 @@ public class ALAInterpretedToLatLongCSVPipeline {
         LocationTransform locationTransform = LocationTransform.create();
 
         log.info("Adding step 3: Creating beam pipeline");
-        PCollectionView<MetadataRecord> metadataView =
-                p.apply("Read Metadata", metadataTransform.read(pathFn))
-                        .apply("Convert to view", View.asSingleton());
-
         PCollection<KV<String, LocationRecord>> locationCollection =
                 p.apply("Read Location", locationTransform.read(pathFn))
                         .apply("Map Location to KV", locationTransform.toKv());
 
         log.info("Adding step 3: Converting into a json object");
         ParDo.SingleOutput<KV<String, CoGbkResult>, String> alaCSVrDoFn =
-                ALACSVDocumentTransform.create(locationTransform.getTag(), metadataView).converter();
+                ALACSVDocumentTransform.create(locationTransform.getTag()).converter();
 
         PCollection<String> csvCollection =
                 KeyedPCollectionTuple
