@@ -151,25 +151,24 @@ public class ALAVerbatimToInterpretedPipeline {
         // Core
         MetadataTransform metadataTransform = MetadataTransform.create(properties, endPointType, attempt, skipRegistryCalls).counterFn(incMetricFn).init();
         BasicTransform basicTransform = BasicTransform.create(properties, datasetId, tripletValid, occIdValid, useErdId).counterFn(incMetricFn).init();
-//        TaxonomyTransform taxonomyTransform = TaxonomyTransform.create(properties).counterFn(incMetricFn).init();
         ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.create(properties).counterFn(incMetricFn).init();
         LocationTransform locationTransform = LocationTransform.create(properties).init();
         VerbatimTransform verbatimTransform = VerbatimTransform.create().counterFn(incMetricFn);
         TemporalTransform temporalTransform = TemporalTransform.create().counterFn(incMetricFn);
         ALAAttributionTransform alaAttributionTransform = ALAAttributionTransform.create(properties).counterFn(incMetricFn).init();
+
         // Extension
         MeasurementOrFactTransform measurementTransform = MeasurementOrFactTransform.create().counterFn(incMetricFn);
         MultimediaTransform multimediaTransform = MultimediaTransform.create().counterFn(incMetricFn);
         AudubonTransform audubonTransform = AudubonTransform.create().counterFn(incMetricFn);
         ImageTransform imageTransform = ImageTransform.create().counterFn(incMetricFn);
-//
-//         Extra
+
+        // Extra
         OccurrenceExtensionTransform occExtensionTransform = OccurrenceExtensionTransform.create().counterFn(incMetricFn);
         DefaultValuesTransform defaultValuesTransform = DefaultValuesTransform.create(properties, datasetId, skipRegistryCalls);
 
         log.info("Creating writers");
         try (
-
                 SyncDataFileWriter<ExtendedRecord> verbatimWriter = createWriter(options, ExtendedRecord.getClassSchema(), verbatimTransform, id, false);
                 SyncDataFileWriter<MetadataRecord> metadataWriter = createWriter(options, MetadataRecord.getClassSchema(), metadataTransform, id, false);
                 SyncDataFileWriter<BasicRecord> basicWriter = createWriter(options, BasicRecord.getClassSchema(), basicTransform, id, false);
@@ -178,6 +177,9 @@ public class ALAVerbatimToInterpretedPipeline {
                 SyncDataFileWriter<ALATaxonRecord> alaTaxonWriter = createWriter(options, ALATaxonRecord.getClassSchema(), alaTaxonomyTransform, id, false);
                 SyncDataFileWriter<LocationRecord> locationWriter = createWriter(options, LocationRecord.getClassSchema(), locationTransform, id, false);
                 SyncDataFileWriter<ALAAttributionRecord> alaAttributionWriter = createWriter(options, ALAAttributionRecord.getClassSchema(), locationTransform, id, false);
+                SyncDataFileWriter<MultimediaRecord> multimediaWriter = createWriter(options, MultimediaRecord.getClassSchema(), multimediaTransform, id, false);
+                SyncDataFileWriter<ImageRecord> imageWriter = createWriter(options, ImageRecord.getClassSchema(), imageTransform, id, false);
+                SyncDataFileWriter<AudubonRecord> audubonWriter = createWriter(options, AudubonRecord.getClassSchema(), audubonTransform, id, false);
         ) {
 
             log.info("Creating metadata record");
@@ -211,11 +213,14 @@ public class ALAVerbatimToInterpretedPipeline {
             log.info("Create interpretation function");
             Consumer<ExtendedRecord> interpretAllFn = er -> {
                 verbatimWriter.append(er);
-                    temporalTransform.processElement(er).ifPresent(temporalWriter::append);
-                    measurementTransform.processElement(er).ifPresent(measurementWriter::append);
-                    locationTransform.processElement(er, mdr).ifPresent(locationWriter::append);
-                    alaTaxonomyTransform.processElement(er).ifPresent(alaTaxonWriter::append);
-                    alaAttributionTransform.processElement(er, mdr).ifPresent(alaAttributionWriter::append);
+                temporalTransform.processElement(er).ifPresent(temporalWriter::append);
+                multimediaTransform.processElement(er).ifPresent(multimediaWriter::append);
+                imageTransform.processElement(er).ifPresent(imageWriter::append);
+                audubonTransform.processElement(er).ifPresent(audubonWriter::append);
+                measurementTransform.processElement(er).ifPresent(measurementWriter::append);
+                locationTransform.processElement(er, mdr).ifPresent(locationWriter::append);
+                alaTaxonomyTransform.processElement(er).ifPresent(alaTaxonWriter::append);
+                alaAttributionTransform.processElement(er, mdr).ifPresent(alaAttributionWriter::append);
             };
 
             // Run async writing for BasicRecords
