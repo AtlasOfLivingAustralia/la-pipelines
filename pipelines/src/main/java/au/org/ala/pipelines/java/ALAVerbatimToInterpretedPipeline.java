@@ -176,7 +176,7 @@ public class ALAVerbatimToInterpretedPipeline {
                 SyncDataFileWriter<MeasurementOrFactRecord> measurementWriter = createWriter(options, MeasurementOrFactRecord.getClassSchema(), measurementTransform, id, false);
                 SyncDataFileWriter<ALATaxonRecord> alaTaxonWriter = createWriter(options, ALATaxonRecord.getClassSchema(), alaTaxonomyTransform, id, false);
                 SyncDataFileWriter<LocationRecord> locationWriter = createWriter(options, LocationRecord.getClassSchema(), locationTransform, id, false);
-                SyncDataFileWriter<ALAAttributionRecord> alaAttributionWriter = createWriter(options, ALAAttributionRecord.getClassSchema(), locationTransform, id, false);
+                SyncDataFileWriter<ALAAttributionRecord> alaAttributionWriter = createWriter(options, ALAAttributionRecord.getClassSchema(), alaAttributionTransform, id, false);
                 SyncDataFileWriter<MultimediaRecord> multimediaWriter = createWriter(options, MultimediaRecord.getClassSchema(), multimediaTransform, id, false);
                 SyncDataFileWriter<ImageRecord> imageWriter = createWriter(options, ImageRecord.getClassSchema(), imageTransform, id, false);
                 SyncDataFileWriter<AudubonRecord> audubonWriter = createWriter(options, AudubonRecord.getClassSchema(), audubonTransform, id, false);
