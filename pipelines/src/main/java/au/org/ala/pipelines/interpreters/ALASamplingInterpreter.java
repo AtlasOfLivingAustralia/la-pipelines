@@ -3,9 +3,7 @@ package au.org.ala.pipelines.interpreters;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
-import au.org.ala.kvs.cache.SamplingCache;
-import au.org.ala.kvs.client.ALASamplingRequest;
-import org.gbif.kvs.KeyValueStore;
+import au.org.ala.sampling.SamplingCache;
 import org.gbif.pipelines.io.avro.AustraliaSpatialRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 

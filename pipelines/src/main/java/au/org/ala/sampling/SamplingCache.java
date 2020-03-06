@@ -1,15 +1,10 @@
-package au.org.ala.kvs.cache;
+package au.org.ala.sampling;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.codehaus.plexus.util.FileUtils;
-import org.gbif.kvs.KeyValueStore;
-import org.jetbrains.annotations.NotNull;
 import org.mapdb.*;
 import org.mapdb.serializer.SerializerCompressionWrapper;
-import org.xerial.snappy.Snappy;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;

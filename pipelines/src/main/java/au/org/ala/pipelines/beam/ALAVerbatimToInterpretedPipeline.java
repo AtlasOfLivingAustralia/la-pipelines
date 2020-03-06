@@ -165,9 +165,9 @@ public class ALAVerbatimToInterpretedPipeline {
         .apply("Write basic to avro", basicTransform.write(pathFn));
 
     uniqueRecords
-            .apply("Check collection attribution", alaAttributionTransform.check(types))
-            .apply("Interpret collection  attribution", alaAttributionTransform.interpret(metadataView))
-            .apply("Write attribution to avro", alaAttributionTransform.write(pathFn));
+          .apply("Check collection attribution", alaAttributionTransform.check(types))
+          .apply("Interpret collection  attribution", alaAttributionTransform.interpret(metadataView))
+          .apply("Write attribution to avro", alaAttributionTransform.write(pathFn));
 
     uniqueRecords
         .apply("Check temporal transform condition", temporalTransform.check(types))
@@ -193,11 +193,6 @@ public class ALAVerbatimToInterpretedPipeline {
         .apply("Check measurement transform condition", measurementOrFactTransform.check(types))
         .apply("Interpret measurement", measurementOrFactTransform.interpret())
         .apply("Write measurement to avro", measurementOrFactTransform.write(pathFn));
-//
-//    filteredUniqueRecords
-//        .apply("Check taxonomy transform condition", taxonomyTransform.check(types))
-//        .apply("Interpret taxonomy", taxonomyTransform.interpret())
-//        .apply("Write taxon to avro", taxonomyTransform.write(pathFn));
 
     uniqueRecords
         .apply("Check ALA taxonomy transform condition", alaTaxonomyTransform.check(types))

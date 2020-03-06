@@ -56,32 +56,59 @@ public class LayerCrawler {
                     .validateEagerly(true)
                     .build();
 
-
     public static void main(String[] args) throws Exception  {
 
-        String dataSetID = args[0];
 
-        Instant batchStart = Instant.now();
+        if (args.length == 1) {
 
-        //list file in directory
-        LayerCrawler lc = new LayerCrawler();
+            String dataSetID = args[0];
 
-        File samples = new File("/data/pipelines-data/" + dataSetID + "/1/sampling");
-        FileUtils.forceMkdir(samples);
+            Instant batchStart = Instant.now();
 
-        Stream<File> latLngFiles =  Stream.of(
-                new File("/data/pipelines-data/" + dataSetID + "/1/latlng").listFiles()
-        );
+            //list file in directory
+            LayerCrawler lc = new LayerCrawler();
 
-        String layerList = lc.getRequiredLayers();
+            File samples = new File("/data/pipelines-data/" + dataSetID + "/1/sampling");
+            FileUtils.forceMkdir(samples);
 
-        for (Iterator<File> i = latLngFiles.iterator(); i.hasNext();  ){
-            File inputFile = i.next();
-            lc.crawl(layerList, inputFile, samples);
+            Stream<File> latLngFiles = Stream.of(
+                    new File("/data/pipelines-data/" + dataSetID + "/1/latlng").listFiles()
+            );
+
+            String layerList = lc.getRequiredLayers();
+
+            for (Iterator<File> i = latLngFiles.iterator(); i.hasNext(); ) {
+                File inputFile = i.next();
+                lc.crawl(layerList, inputFile, samples);
+            }
+            Instant batchFinish = Instant.now();
+
+            log.info("Finished sampling for {}. Time taken {} minutes", dataSetID, Duration.between(batchStart, batchFinish).toMinutes());
         }
-        Instant batchFinish = Instant.now();
 
-        log.info("Finished sampling for {}. Time taken {} minutes", dataSetID, Duration.between(batchStart, batchFinish).toMinutes());
+        if (args.length == 0) {
+
+            Instant batchStart = Instant.now();
+            //list file in directory
+            LayerCrawler lc = new LayerCrawler();
+
+            File samples = new File("/data/pipelines-sampling/sampling");
+            FileUtils.forceMkdir(samples);
+
+            Stream<File> latLngFiles = Stream.of(
+                new File("/data/pipelines-sampling/latlng/").listFiles()
+            );
+
+            String layerList = lc.getRequiredLayers();
+
+            for (Iterator<File> i = latLngFiles.iterator(); i.hasNext(); ) {
+                File inputFile = i.next();
+                lc.crawl(layerList, inputFile, samples);
+            }
+            Instant batchFinish = Instant.now();
+
+            log.info("Finished sampling for complete lat lng export. Time taken {} minutes", Duration.between(batchStart, batchFinish).toMinutes());
+        }
     }
 
     public LayerCrawler(){

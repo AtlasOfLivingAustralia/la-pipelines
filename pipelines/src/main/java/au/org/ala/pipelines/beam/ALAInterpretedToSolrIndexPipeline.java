@@ -1,6 +1,6 @@
 package au.org.ala.pipelines.beam;
 
-import au.org.ala.kvs.cache.SamplingCacheFactory;
+import au.org.ala.sampling.SamplingCacheFactory;
 import au.org.ala.pipelines.options.ALASolrPipelineOptions;
 import au.org.ala.pipelines.transforms.ALAAttributionTransform;
 import au.org.ala.pipelines.transforms.ALASolrDocumentTransform;

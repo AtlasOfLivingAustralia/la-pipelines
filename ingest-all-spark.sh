@@ -79,12 +79,12 @@ echo "#### INDEXING #####"
 SECONDS=0
 for file in /data/pipelines-data/*
 do
-    if [[ -d $file ]]; then
-        datasetID=$(basename $file)
-        echo "[Indexing] Starting indexing for $datasetID....."
-        groovy index.groovy $datasetID
-        echo "[Indexing] Finished indexing for $datasetID."
-    fi
+  if [[ -d $file ]]; then
+    datasetID=$(basename $file)
+    echo "[Indexing] Starting indexing for $datasetID....."
+    groovy index.groovy $datasetID
+    echo "[Indexing] Finished indexing for $datasetID."
+   fi
 done
 duration=$SECONDS
 echo "### INDEXING - Indexing of all took $(($duration / 60)) minutes and $(($duration % 60)) seconds."

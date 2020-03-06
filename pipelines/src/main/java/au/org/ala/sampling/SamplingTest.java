@@ -1,8 +1,5 @@
 package au.org.ala.sampling;
 
-import au.org.ala.kvs.cache.SamplingCache;
-import au.org.ala.kvs.cache.SamplingCacheFactory;
-
 import java.util.Map;
 
 public class SamplingTest {

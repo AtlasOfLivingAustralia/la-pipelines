@@ -14,6 +14,7 @@ import org.apache.beam.sdk.transforms.join.CoGroupByKey;
 import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.commons.io.FileUtils;
 import org.gbif.pipelines.ingest.options.BasePipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
@@ -22,13 +23,14 @@ import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.slf4j.MDC;
 
+import java.io.File;
 import java.util.function.UnaryOperator;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
 /**
  * Exports a unique set of coordinates for a data resource.
- *
+ * This tool is dependent on globstars being supported on the host OS.
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -40,6 +42,9 @@ public class ExportAllLatLongCSVPipeline {
     }
 
     public static void run(AllDatasetsPipelinesOptions options) throws Exception {
+
+
+        FileUtils.forceMkdir(new File("/data/pipelines-sampling/latlng/"));
 
         log.info("Adding step 1: Options");
         UnaryOperator<String> pathFn = t -> "/data/pipelines-data/**/1/interpreted/" + t + "/interpret-*" + AVRO_EXTENSION;
@@ -68,12 +73,12 @@ public class ExportAllLatLongCSVPipeline {
 
         csvCollection
                 .apply(Distinct.<String>create())
-                .apply(TextIO.write().to("/tmp/latlong.csv"));
+                .apply(TextIO.write().to("/data/pipelines-sampling/latlng/latlong.csv"));
 
         log.info("Running the pipeline");
         PipelineResult result = p.run();
         result.waitUntilFinish();
 
-        log.info("Pipeline has been finished. Output written to /tmp/latlong.csv");
+        log.info("Pipeline has been finished. Output written to /data/pipelines-sampling/latlng/latlng-export.csv");
     }
 }

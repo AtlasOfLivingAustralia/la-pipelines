@@ -1,9 +1,10 @@
-package au.org.ala.kvs.cache;
+package au.org.ala.sampling;
 
 import au.org.ala.kvs.client.LatLng;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.kvs.KeyValueStore;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -64,7 +65,24 @@ public class SamplingCacheFactory {
         }
     }
 
+    /**
+     * Open the dataset specific level cache. If this is unavailable, look the all datasets cache.
+     *
+     * @param datasetID
+     * @return
+     * @throws RuntimeException if no cache is available.
+     */
     private static SamplingCache openForDataset (String datasetID) throws Exception {
-        return SamplingCache.openReadOnlyCache("/data/pipelines-data/" + datasetID + "/1/caches", "sample-cache");
+        String cachePath = "/data/pipelines-data/" + datasetID + "/1/caches";
+        File f = new File(cachePath);
+        if (f.exists()){
+            return SamplingCache.openReadOnlyCache("/data/pipelines-data/" + datasetID + "/1/caches", "sample-cache");
+        }
+        String allDatasetsCachePath = "/data/pipelines-data/sample-cache-all/sample-cache";
+        f = new File(allDatasetsCachePath);
+        if (f.exists()){
+            return SamplingCache.openReadOnlyCache(allDatasetsCachePath, "sample-cache");
+        }
+        throw new RuntimeException("Neither dataset level cache or all dataset caches where available.");
     }
 }

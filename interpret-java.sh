@@ -8,13 +8,13 @@ if [ $# -eq 0 ]
     exit 1
 fi
 
-if [[ !  -d "/data/pipelines-data" ]]
+if [[ ! -d "/data/pipelines-data" ]]
 then
     echo "/data/pipelines-data does not exists on your filesystem."
     exit 1
 fi
 
-if [[ !  -f "/data/pipelines-data/$1/1/verbatim.avro" ]]
+if [[ ! -f "/data/pipelines-data/$1/1/verbatim.avro" ]]
 then
     echo "/data/pipelines-data/$1/1/verbatim.avro does not exists on your filesystem. Have you ran ingest ?"
     exit 1
@@ -22,11 +22,10 @@ fi
 
 echo $(date)
 SECONDS=0
-java -Xmx8g -XX:+UseG1GC  -Dspark.master=local[*]  -cp pipelines/target/pipelines-1.0-SNAPSHOT-shaded.jar au.org.ala.pipelines.java.ALAVerbatimToInterpretedPipeline \
+java -Xmx2g -XX:+UseG1GC  -Dspark.master=local[*]  -cp pipelines/target/pipelines-1.0-SNAPSHOT-shaded.jar au.org.ala.pipelines.java.ALAVerbatimToInterpretedPipeline \
 --datasetId=$1 \
 --attempt=1 \
 --interpretationTypes=ALL \
---runner=SparkRunner \
 --targetPath=/data/pipelines-data \
 --inputPath=/data/pipelines-data/$1/1/verbatim.avro \
 --metaFileName=interpretation-metrics.yml \
