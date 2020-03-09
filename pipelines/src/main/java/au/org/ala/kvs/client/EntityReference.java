@@ -7,7 +7,7 @@ import lombok.Builder;
 import lombok.ToString;
 import lombok.Value;
 
-@JsonDeserialize(builder = EntityReference.EntityReferencepBuilder.class)
+@JsonDeserialize(builder = EntityReference.EntityReferenceBuilder.class)
 @Value
 @Builder
 @ToString
@@ -20,5 +20,5 @@ public class EntityReference {
 
     @JsonPOJOBuilder(withPrefix = "")
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class EntityReferencepBuilder {}
+    public static class EntityReferenceBuilder {}
 }
