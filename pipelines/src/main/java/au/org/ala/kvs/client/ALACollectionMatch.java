@@ -8,7 +8,6 @@ import lombok.ToString;
 import lombok.Value;
 
 import java.util.List;
-import java.util.Map;
 
 @JsonDeserialize(builder = ALACollectionMatch.ALACollectionMatchBuilder.class)
 @Value
@@ -19,13 +18,12 @@ public class ALACollectionMatch {
 
     String collectionUid;
     String collectionName;
-    List<HubMembership> hubMembership;
+    List<EntityReference> hubMembership;
     String institutionUid;
     String institutionName;
-//    Map<String, String> taxonomyCoverageHints;
 
     @JsonPOJOBuilder(withPrefix = "")
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class ALACollectionMatchBuilder {}
-
+    public static final ALACollectionMatch EMPTY = ALACollectionMatch.builder().build();
 }

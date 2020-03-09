@@ -24,11 +24,14 @@ public class ALAAttributionInterpreter {
                     ALACollectoryMetadata m = dataResourceKvStore.get(mr.getId());
                     if (m != null) {
                         aar.setDataResourceUid(m.getUid());
+                        if (m.getProvider() != null) {
+                            aar.setDataProviderUid(m.getProvider().getUid());
+                        }
                         aar.setDataResourceName(m.getName());
                         aar.setLicenseType(m.getLicenseType());
                         aar.setLicenseVersion(m.getLicenseVersion());
                     } else {
-                        System.out.println("Metadata is null for " + mr.getId());
+                        log.warn("Metadata is null for {}", mr.getId());
                     }
                 }
             }
@@ -57,5 +60,4 @@ public class ALAAttributionInterpreter {
             }
         };
     }
-
 }

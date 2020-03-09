@@ -47,22 +47,22 @@ public class ALASolrDocumentTransform implements Serializable {
     @NonNull
     private TupleTag<LocationRecord> lrTag;
 
-    private  TupleTag<TaxonRecord> txrTag;
+    private TupleTag<TaxonRecord> txrTag;
     @NonNull
-    private  TupleTag<ALATaxonRecord> atxrTag;
+    private TupleTag<ALATaxonRecord> atxrTag;
     // Extension
     @NonNull
-    private  TupleTag<MultimediaRecord> mrTag;
+    private TupleTag<MultimediaRecord> mrTag;
     @NonNull
-    private  TupleTag<ImageRecord> irTag;
+    private TupleTag<ImageRecord> irTag;
     @NonNull
-    private  TupleTag<AudubonRecord> arTag;
+    private TupleTag<AudubonRecord> arTag;
     @NonNull
-    private  TupleTag<MeasurementOrFactRecord> mfrTag;
+    private TupleTag<MeasurementOrFactRecord> mfrTag;
 
-    private  TupleTag<AustraliaSpatialRecord> asrTag;
+    private TupleTag<AustraliaSpatialRecord> asrTag;
 
-    private  TupleTag<ALAAttributionRecord> aarTag;
+    private TupleTag<ALAAttributionRecord> aarTag;
 
     @NonNull
     private  PCollectionView<MetadataRecord> metadataView;
@@ -257,37 +257,39 @@ public class ALASolrDocumentTransform implements Serializable {
                 doc.setField("geospatial_kosher", lr.getHasCoordinate());
                 doc.setField("first_loaded_date", new Date());
 
-                SamplingCache samplingKeyValueStore = SamplingCacheFactory.getForDataset(datasetID);
+//                SamplingCache samplingKeyValueStore = SamplingCacheFactory.getForDataset(datasetID);
+//
+//                if (lr.getDecimalLatitude() != null && lr.getDecimalLongitude() != null){
+//
+//                    if (samplingKeyValueStore != null) {
+//
+//                        try {
+//                            Map<String, String> samples = samplingKeyValueStore.getSamples(lr.getDecimalLatitude(), lr.getDecimalLongitude());
+//                            if(samples.isEmpty()){
+//                                log.warn("Empty sampling result set returned for latlng:  {} {}", lr.getDecimalLatitude(), lr.getDecimalLongitude());
+//                                throw new RuntimeException("empty result is null");
+//                            } else {
+//                                for (Map.Entry<String, String> sample : samples.entrySet()) {
+//                                    addIfNotEmpty(doc, sample.getKey(), sample.getValue());
+//                                }
+//                            }
+//                        } catch (Exception e) {
+//                            log.error(e.getMessage(), e);
+//                            throw new RuntimeException("sampling issue " + e.getMessage(), e);
+//                        }
+//                    } else {
+//                        log.warn("samplingKeyValueStore is null");
+//                        throw new RuntimeException("samplingKeyValueStore is null");
+//                    }
+//
+//                } else
 
-                if (lr.getDecimalLatitude() != null && lr.getDecimalLongitude() != null){
-
-                    if (samplingKeyValueStore != null) {
-
-                        try {
-                            Map<String, String> samples = samplingKeyValueStore.getSamples(lr.getDecimalLatitude(), lr.getDecimalLongitude());
-                            if(samples.isEmpty()){
-                                log.warn("Empty sampling result set returned for latlng:  {} {}", lr.getDecimalLatitude(), lr.getDecimalLongitude());
-                                throw new RuntimeException("empty result is null");
-                            } else {
-                                for (Map.Entry<String, String> sample : samples.entrySet()) {
-                                    addIfNotEmpty(doc, sample.getKey(), sample.getValue());
-                                }
-                            }
-                        } catch (Exception e) {
-                            log.error(e.getMessage(), e);
-                            throw new RuntimeException("sampling issue " + e.getMessage(), e);
-                        }
-                    } else {
-                        log.warn("samplingKeyValueStore is null");
-                        throw new RuntimeException("samplingKeyValueStore is null");
-                    }
-
-                } else if (asr != null) {
+                if (asr != null) {
                     Map<String, String> samples = asr.getItems();
                     for (Map.Entry<String, String> sample : samples.entrySet()) {
                         if (!StringUtils.isEmpty(sample.getValue())) {
                             if (sample.getKey().startsWith("el")) {
-                                doc.setField(sample.getKey(), Double.valueOf(sample.getKey()));
+                                doc.setField(sample.getKey(), Double.valueOf(sample.getValue()));
                             } else {
                                 doc.setField(sample.getKey(), sample.getValue());
                             }

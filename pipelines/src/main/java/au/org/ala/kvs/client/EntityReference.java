@@ -7,12 +7,12 @@ import lombok.Builder;
 import lombok.ToString;
 import lombok.Value;
 
-@JsonDeserialize(builder = HubMembership.HubMembershipBuilder.class)
+@JsonDeserialize(builder = EntityReference.EntityReferencepBuilder.class)
 @Value
 @Builder
 @ToString
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class HubMembership {
+public class EntityReference {
 
     String uid;
     String name;
@@ -20,5 +20,5 @@ public class HubMembership {
 
     @JsonPOJOBuilder(withPrefix = "")
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class HubMembershipBuilder {}
+    public static class EntityReferencepBuilder {}
 }

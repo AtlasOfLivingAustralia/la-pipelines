@@ -134,10 +134,10 @@ public class ALAInterpretedToSolrIndexPipeline {
                          .apply("Map Sampling to KV", australiaSpatialTransform.toKv());
         }
 
-        log.info("Opening sampling data into MapDB for intersection for dataset {}  ......", options.getDatasetId());
-        SamplingCacheFactory skvs = SamplingCacheFactory.getInstance();
-        skvs.setupFor(options.getDatasetId());
-        log.info("Finished loading for dataset {}", options.getDatasetId());
+//        log.info("Opening sampling data into MapDB for intersection for dataset {}  ......", options.getDatasetId());
+//        SamplingCacheFactory skvs = SamplingCacheFactory.getInstance();
+//        skvs.setupFor(options.getDatasetId());
+//        log.info("Finished loading for dataset {}", options.getDatasetId());
 
         ALASolrDocumentTransform solrDocumentTransform = ALASolrDocumentTransform.create(
                 verbatimTransform.getTag(),
@@ -173,9 +173,7 @@ public class ALAInterpretedToSolrIndexPipeline {
                 .and(verbatimTransform.getTag(), verbatimCollection)
                 //Specific
                 .and(alaTaxonomyTransform.getTag(), alaTaxonCollection)
-                .and(alaAttributionTransform.getTag(), alaAttributionCollection)
-                ;
-
+                .and(alaAttributionTransform.getTag(), alaAttributionCollection);
 
         if (options.getIncludeSampling()){
             kpct = kpct.and(australiaSpatialTransform.getTag(), australiaSpatialCollection);

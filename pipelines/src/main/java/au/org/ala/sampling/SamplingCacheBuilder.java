@@ -23,7 +23,7 @@ public class SamplingCacheBuilder {
         if(args.length == 1) {
             log.info("Starting the build of complete sample cache for all datasets");
             buildForAllDatasets(args[0]);
-            log.info("Starting the build of complete sample cache for all datasets");
+            log.info("Finished the build of complete sample cache for all datasets");
         } else if(args.length == 2 ){
             log.info("Starting the build of {}", args[0]);
             buildForDataset(args[0], args[1]);

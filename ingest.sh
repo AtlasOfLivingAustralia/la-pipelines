@@ -9,8 +9,9 @@ if [ $# -eq 0 ]
 fi
 
 ./dwca-arvo.sh $1
-groovy interpret.groovy $1
-groovy export-latlng.groovy $1
+interpret-spark-embedded.sh $1
+./export-latlng.sh $1
 ./sample.sh $1
 ./sample-cache.sh $1
-groovy index.groovy $1
+./add-sampling-avro.sh $1
+./index.sh $1

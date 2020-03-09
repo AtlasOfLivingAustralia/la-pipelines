@@ -39,9 +39,6 @@ public class ALASamplingPipeline {
     Integer attempt = options.getAttempt();
     String targetPath = options.getTargetPath();
     String hdfsSiteConfig = options.getHdfsSiteConfig();
-    Properties properties = FsUtils.readPropertiesFile(options.getHdfsSiteConfig(), options.getProperties());
-
-    FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, options.getInterpretationTypes());
 
     MDC.put("datasetId", datasetId);
     MDC.put("attempt", attempt.toString());

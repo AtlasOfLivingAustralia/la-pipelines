@@ -27,6 +27,7 @@ SECONDS=0
 --targetPath=/data/pipelines-data \
 --metaFileName=indexing-metrics.yml \
 --properties=pipelines.properties \
+--properties= \
 --zkHost=aws-quoll-zoo-1.ala:2181,aws-quoll-zoo-2.ala:2181,aws-quoll-zoo-3.ala:2181,aws-quoll-zoo-4.ala:2181,aws-quoll-zoo-5.ala:2181 \
 --solrCollection=biocache
 

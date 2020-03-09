@@ -15,6 +15,7 @@ import lombok.Value;
 public class ALACollectoryMetadata {
 
     String name;
+    EntityReference provider;
     String acronym;
     String uid;
     String licenseType;
