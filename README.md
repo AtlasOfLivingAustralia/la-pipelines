@@ -87,4 +87,4 @@ These steps will load a dataset in SOLR.
     1. Follow the instructions in [solr/docker/README.md](solr/docker/README.md)
     1. Run `docker-compose -f solr.yml start`
     1. Run `./upload-solr-config.sh`
-1. To index, run `./index.sh dr1411`
+1. To index, run `./index.sh dr893`
