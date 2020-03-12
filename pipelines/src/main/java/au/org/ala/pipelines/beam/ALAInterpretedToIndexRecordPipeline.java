@@ -1,8 +1,8 @@
 package au.org.ala.pipelines.beam;
 
-import au.org.ala.sampling.SamplingCacheFactory;
 import au.org.ala.pipelines.options.ALASolrPipelineOptions;
 import au.org.ala.pipelines.transforms.ALAAttributionTransform;
+import au.org.ala.pipelines.transforms.ALAIndexRecordTransform;
 import au.org.ala.pipelines.transforms.ALASolrDocumentTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import lombok.AccessLevel;
@@ -10,9 +10,10 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
+import org.apache.beam.sdk.io.AvroIO;
+import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.solr.SolrIO;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.Reshuffle;
 import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.transforms.join.CoGroupByKey;
@@ -20,6 +21,7 @@ import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
+import org.apache.commons.io.FileUtils;
 import org.apache.solr.common.SolrInputDocument;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
@@ -34,13 +36,14 @@ import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.specific.AustraliaSpatialTransform;
 import org.slf4j.MDC;
 
+import java.io.File;
 import java.util.function.UnaryOperator;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class ALAInterpretedToSolrIndexPipeline {
+public class ALAInterpretedToIndexRecordPipeline {
 
     public static void main(String[] args) {
         ALASolrPipelineOptions options = PipelinesOptionsFactory.create(ALASolrPipelineOptions.class, args);
@@ -135,7 +138,7 @@ public class ALAInterpretedToSolrIndexPipeline {
                          .apply("Map Sampling to KV", australiaSpatialTransform.toKv());
         }
 
-        ALASolrDocumentTransform solrDocumentTransform = ALASolrDocumentTransform.create(
+        ALAIndexRecordTransform alaIndexRecordTransform = ALAIndexRecordTransform.create(
                 verbatimTransform.getTag(),
                 basicTransform.getTag(),
                 temporalTransform.getTag(),
@@ -153,7 +156,7 @@ public class ALAInterpretedToSolrIndexPipeline {
         );
 
         log.info("Adding step 3: Converting into a json object");
-        ParDo.SingleOutput<KV<String, CoGbkResult>, SolrInputDocument> alaSolrDoFn = solrDocumentTransform.converter();
+        ParDo.SingleOutput<KV<String, CoGbkResult>, ALAIndexRecord> alaSolrDoFn = alaIndexRecordTransform.converter();
 
         KeyedPCollectionTuple<String> kpct = KeyedPCollectionTuple
                 // Core
@@ -179,28 +182,25 @@ public class ALAInterpretedToSolrIndexPipeline {
             kpct = kpct.and(taxonomyTransform.getTag(), taxonCollection);
         }
 
-        PCollection<SolrInputDocument> solrInputDocumentPCollection = kpct
-                .apply("Grouping objects", CoGroupByKey.create())
-                .apply("reshuffle", Reshuffle.viaRandomKey())
-                .apply("Merging to Solr doc", alaSolrDoFn);
+        String filePath = "/data/pipelines-data/" + options.getDatasetId() + "/1/index/";
 
-        log.info("Adding step 4: SOLR indexing");
-        SolrIO.ConnectionConfiguration conn = SolrIO.ConnectionConfiguration.create(
-                options.getZkHost()
-        );
+        try {
+            FileUtils.forceMkdir(new File(filePath));
+        } catch (Exception e){
+            throw new RuntimeException(e);
+        }
 
-        solrInputDocumentPCollection.apply(
-                SolrIO.write()
-                        .to(options.getSolrCollection()) //biocache
-                        .withConnectionConfiguration(conn)
-        );
+        kpct
+            .apply("Grouping objects", CoGroupByKey.create())
+            .apply("Merging to ala index doc", alaSolrDoFn)
+            .apply(AvroIO.write(ALAIndexRecord.class).to(filePath + "index-record"));
+
 
         log.info("Running the pipeline");
         PipelineResult result = p.run();
         result.waitUntilFinish();
 
         MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
-
 
         log.info("Pipeline has been finished");
     }

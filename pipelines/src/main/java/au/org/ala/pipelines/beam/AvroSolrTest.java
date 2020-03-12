@@ -10,8 +10,9 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.solr.common.SolrInputDocument;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
-import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.AustraliaSpatialRecord;
 
+import java.util.Map;
 import java.util.UUID;
 
 public class AvroSolrTest {
@@ -20,35 +21,32 @@ public class AvroSolrTest {
 
         ALASolrPipelineOptions options = PipelinesOptionsFactory.create(ALASolrPipelineOptions.class, args);
         Pipeline p = Pipeline.create(options);
-
         PCollection<SolrInputDocument> records =
-                p.apply(AvroIO.read(LocationRecord.class).from("/data/pipelines-data/**/1/interpreted/location/*.avro"))
+                p.apply(AvroIO.read(AustraliaSpatialRecord.class).from("/data/pipelines-data/" + options.getDatasetId().trim() + "/1/interpreted/australia_spatial/*.avro"))
                 .apply(ParDo.of(new SolrDocumentFn()));
-
-
         SolrIO.ConnectionConfiguration conn = SolrIO.ConnectionConfiguration.create(
                 options.getZkHost()
         );
-
         records.apply(
                 SolrIO.write()
                         .to(options.getSolrCollection())
                         .withConnectionConfiguration(conn)
         );
-
         PipelineResult result = p.run();
         result.waitUntilFinish();
     }
 
-    static class SolrDocumentFn extends DoFn<LocationRecord, SolrInputDocument> {
+    static class SolrDocumentFn extends DoFn<AustraliaSpatialRecord, SolrInputDocument> {
 
         @ProcessElement
-        public void processElement(@Element LocationRecord l, OutputReceiver<SolrInputDocument> outputReceiver) {
+        public void processElement(@Element AustraliaSpatialRecord l, OutputReceiver<SolrInputDocument> outputReceiver) {
 
             SolrInputDocument s = new SolrInputDocument();
             s.setField("id", UUID.randomUUID().toString());
-            s.setField("decimalLatitude", l.getDecimalLatitude());
-            s.setField("decimalLongitude", l.getDecimalLongitude());
+
+            for(Map.Entry entry: l.getItems().entrySet()){
+                s.setField(entry.getKey().toString(),entry.getValue().toString());
+            }
             outputReceiver.output(s);
         }
     }
