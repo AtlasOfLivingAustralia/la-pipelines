@@ -181,7 +181,6 @@ public class ALAInterpretedToSolrIndexPipeline {
 
         PCollection<SolrInputDocument> solrInputDocumentPCollection = kpct
                 .apply("Grouping objects", CoGroupByKey.create())
-                .apply("reshuffle", Reshuffle.viaRandomKey())
                 .apply("Merging to Solr doc", alaSolrDoFn);
 
         log.info("Adding step 4: SOLR indexing");
@@ -192,6 +191,7 @@ public class ALAInterpretedToSolrIndexPipeline {
         solrInputDocumentPCollection.apply(
                 SolrIO.write()
                         .to(options.getSolrCollection()) //biocache
+//                        .withRetryConfiguration(retryConn)
                         .withConnectionConfiguration(conn)
         );
 
