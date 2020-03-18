@@ -84,7 +84,7 @@ These steps will load a dataset in SOLR.
     1. ./sample-cache.sh dr893
 1. To setup SOLR:
     1. Install docker
-    1. Follow the instructions in [solr/docker/README.md](solr/docker/README.md)
-    1. Run `docker-compose -f solr.yml start`
+    1. Follow the instructions in [solr8/docker/README.md](solr/docker/solr8/README.md)
+    1. Run `docker-compose -f solr8.yml start`
     1. Run `./upload-solr-config.sh`
 1. To index, run `./index.sh dr893`

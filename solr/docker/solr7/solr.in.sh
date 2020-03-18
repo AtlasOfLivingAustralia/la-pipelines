@@ -53,7 +53,7 @@ ZK_CLIENT_TIMEOUT="15000"
 
 # By default the start script uses "localhost"; override the hostname here
 # for production SolrCloud environments to control the hostname exposed to cluster state
-SOLR_HOST="bioatlas.se"
+SOLR_HOST="localhost"
 
 # By default the start script uses UTC; override the timezone if needed
 #SOLR_TIMEZONE="UTC"
