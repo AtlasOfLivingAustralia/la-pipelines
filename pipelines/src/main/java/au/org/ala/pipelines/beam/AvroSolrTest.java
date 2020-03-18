@@ -43,9 +43,13 @@ public class AvroSolrTest {
 
             SolrInputDocument s = new SolrInputDocument();
             s.setField("id", UUID.randomUUID().toString());
-
-            for(Map.Entry entry: l.getItems().entrySet()){
-                s.setField(entry.getKey().toString(),entry.getValue().toString());
+            int count = 0;
+            for (Map.Entry entry: l.getItems().entrySet()){
+                count++;
+                //double up fields
+                s.setField(entry.getKey().toString(), entry.getValue().toString());
+                if(count== 100)
+                    break;
             }
             outputReceiver.output(s);
         }

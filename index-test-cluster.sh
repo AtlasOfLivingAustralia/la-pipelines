@@ -28,7 +28,7 @@ SECONDS=0
 --properties=pipelines.properties \
 --includeSampling=true \
 --zkHost=aws-quoll-zoo-1.ala:2181,aws-quoll-zoo-2.ala:2181,aws-quoll-zoo-3.ala:2181,aws-quoll-zoo-4.ala:2181,aws-quoll-zoo-5.ala:2181 \
---solrCollection=avro-test
+    --solrCollection=avro-test
 
 echo $(date)
 duration=$SECONDS
