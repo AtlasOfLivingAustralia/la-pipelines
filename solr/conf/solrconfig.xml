@@ -39,7 +39,7 @@
 
     <!-- <lib/> directives can be used to instruct Solr to load an Jars
          identified and use them to resolve any "plugins" specified in
-         your solrconfig.xml or schema.xml (ie: Analyzers, Request
+         your solrconfig.xml or schema2.xml.xml (ie: Analyzers, Request
          Handlers, etc...).
 
          All directories and paths are resolved relative to the
@@ -154,7 +154,7 @@
              before flushing.
              If both ramBufferSizeMB and maxBufferedDocs is set, then
              Lucene will flush based on whichever limit is hit first.  -->
-        <!-- <ramBufferSizeMB>100</ramBufferSizeMB> -->
+        <ramBufferSizeMB>2048</ramBufferSizeMB>
         <!-- <maxBufferedDocs>1000</maxBufferedDocs> -->
 
         <!-- Expert: Merge Policy
@@ -1142,7 +1142,7 @@
            <lst name="master">
              <str name="replicateAfter">commit</str>
              <str name="replicateAfter">startup</str>
-             <str name="confFiles">schema.xml,stopwords.txt</str>
+             <str name="confFiles">schema2.xml.xml,stopwords.txt</str>
            </lst>
         -->
         <!--

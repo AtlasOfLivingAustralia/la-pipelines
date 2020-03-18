@@ -1,6 +1,5 @@
 package au.org.ala.pipelines.beam;
 
-import au.org.ala.sampling.SamplingCacheFactory;
 import au.org.ala.pipelines.options.ALASolrPipelineOptions;
 import au.org.ala.pipelines.transforms.ALAAttributionTransform;
 import au.org.ala.pipelines.transforms.ALASolrDocumentTransform;
@@ -12,7 +11,6 @@ import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.solr.SolrIO;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.Reshuffle;
 import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.transforms.join.CoGroupByKey;
@@ -190,9 +188,9 @@ public class ALAInterpretedToSolrIndexPipeline {
 
         solrInputDocumentPCollection.apply(
                 SolrIO.write()
-                        .to(options.getSolrCollection()) //biocache
-//                        .withRetryConfiguration(retryConn)
+                        .to(options.getSolrCollection())
                         .withConnectionConfiguration(conn)
+                        .withMaxBatchSize(options.getSolrBatchSize())
         );
 
         log.info("Running the pipeline");

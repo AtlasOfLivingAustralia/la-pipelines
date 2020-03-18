@@ -26,4 +26,9 @@ public interface ALASolrPipelineOptions extends PipelineOptions, InterpretationP
     @Default.Boolean(false)
     Boolean getIncludeGbifTaxonomy();
     void setIncludeGbifTaxonomy(Boolean includeGbifTaxonomy);
+
+    @Description("SOLR batch size")
+    @Default.Integer(500)
+    Integer getSolrBatchSize();
+    void setSolrBatchSize(Boolean solrBatchSize);
 }
