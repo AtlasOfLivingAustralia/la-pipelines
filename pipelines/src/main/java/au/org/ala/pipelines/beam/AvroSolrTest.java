@@ -31,6 +31,7 @@ public class AvroSolrTest {
                 SolrIO.write()
                         .to(options.getSolrCollection())
                         .withConnectionConfiguration(conn)
+                        .withMaxBatchSize(options.getSolrBatchSize())
         );
         PipelineResult result = p.run();
         result.waitUntilFinish();
