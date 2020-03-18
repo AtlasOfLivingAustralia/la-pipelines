@@ -30,5 +30,5 @@ public interface ALASolrPipelineOptions extends PipelineOptions, InterpretationP
     @Description("SOLR batch size")
     @Default.Integer(500)
     Integer getSolrBatchSize();
-    void setSolrBatchSize(Boolean solrBatchSize);
+    void setSolrBatchSize(Integer solrBatchSize);
 }
