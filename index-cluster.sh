@@ -10,10 +10,11 @@ echo $(date)
 SECONDS=0
 
 /data/spark/bin/spark-submit \
---num-executors 8 \
+--conf spark.default.parallelism=192 \
+--num-executors 24 \
 --executor-cores 8 \
---executor-memory 16G \
---driver-memory 4G \
+--executor-memory 7G \
+--driver-memory 1G \
 --class au.org.ala.pipelines.beam.ALAInterpretedToSolrIndexPipeline  \
 --master spark://172.30.2.127:7077 \
 --driver-java-options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
