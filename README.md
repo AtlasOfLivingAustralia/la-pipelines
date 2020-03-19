@@ -88,3 +88,7 @@ These steps will load a dataset in SOLR.
     1. Run `docker-compose -f solr8.yml start`
     1. Run `./upload-solr-config.sh`
 1. To index, run `./index.sh dr893`
+
+## Code style and tools
+
+For code style and tool see the [recommendations](https://github.com/gbif/pipelines#codestyle-and-tools-recommendations) on the GBIF pipelines project.
