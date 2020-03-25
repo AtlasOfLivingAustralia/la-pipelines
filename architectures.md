@@ -21,5 +21,6 @@ This is page is intended to document changes in the architecture of biocache to 
   * spark
   * ala-namematching-service
   * SDS required shape file layers
+  * la-pipelines build JAR file.
 
 
