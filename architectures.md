@@ -5,7 +5,7 @@ This is page is intended to document changes in the architecture of biocache to 
 ## Current architecture
 ![Existing architecture](https://docs.google.com/drawings/d/e/2PACX-1vQPYIjmbt1e-PNU0ZK6FpYpqxw4xQj4A3tXHjEZIQ3ZGPnwj0cBCdFgEs_SNnccR0rGcnpOFWgqYlLS/pub?w=960&h=720)
 
-### Notes on the diagram
+#### Notes on the diagram
 * BStore instances are virtual machines with following installed:
   * biocache-store executable
   * ala-namematching lucene index
@@ -15,7 +15,7 @@ This is page is intended to document changes in the architecture of biocache to 
 ## New architecture
 ![New architecture](https://docs.google.com/drawings/d/e/2PACX-1vSGixRyj2cCyZjGFdcMZflYLXU_VuiA4Y6CIkNiF4DHLFOa03613iolLFOaDX_-AqnhMu6qdJn-veVA/pub?w=960&h=720)
 
-### Notes on the diagram
+#### Notes on the diagram
 * The use of cassandra is still something under review. There needs to be storage of the UUID mapping. It maybe be possible to do this without using cassandra and using a serialisation of UUID mappings stored on a dataset by dataset basis on the filesystem. Having no connection from pipelines to cassandra is attractive as it reduces barriers to run ALA pipelines in other environments (e.g. GBIF). This work is being tracked in this [issue](https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/14). If cassandra is used, a reduced cluster can utilitised (2 nodes, lower specification for VMs). 
 * Cassandra still required by biocache-service to store
   * annotations
