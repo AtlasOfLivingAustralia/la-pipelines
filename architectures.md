@@ -17,6 +17,10 @@ This is page is intended to document changes in the architecture of biocache to 
 
 ### Notes on the diagram
 * The use of cassandra is still something under review. There needs to be storage of the UUID mapping. It maybe be possible to do this without using cassandra and using a serialisation of UUID mappings stored on a dataset by dataset basis on the filesystem. Having no connection from pipelines to cassandra is attractive as it reduces barriers to run ALA pipelines in other environments (e.g. GBIF). This work is being tracked in this [issue](https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/14). If cassandra is used, a reduced cluster can utilitised (2 nodes, lower specification for VMs). 
+* Cassandra still required by biocache-service to store
+  * annotations
+  * QID - query IDs, persisted SOLR queries stored in JSON.
+  * sandbox metadata
 * The connection between Spark and the SolrCloud cluster differs in that spark will make use of the SOLR HTTP API to index directly into the SOLR cloud cluster.
 * The orchestration around index generation is yet to be designed & tested. This is being tracked in this [issue](https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/25).
 * Spark nodes will have the following installed:
