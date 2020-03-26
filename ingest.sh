@@ -9,7 +9,7 @@ if [ $# -eq 0 ]
 fi
 
 ./dwca-arvo.sh $1
-interpret-spark-embedded.sh $1
+./interpret-spark-embedded.sh $1
 ./export-latlng.sh $1
 ./sample.sh $1
 ./sample-cache.sh $1

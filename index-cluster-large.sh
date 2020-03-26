@@ -11,6 +11,7 @@ SECONDS=0
 
 /data/spark/bin/spark-submit \
 --conf spark.default.parallelism=192 \
+--conf spark.yarn.submit.waitAppCompletion=false \
 --num-executors 24 \
 --executor-cores 8 \
 --executor-memory 7G \
