@@ -69,13 +69,15 @@ These steps will load a dataset in SOLR.
 1. Run `git clone https://github.com/djtfmartin/la-pipelines`
 1. Build with maven `mvn clean install`
 1. Run `git clone https://github.com/djtfmartin/ala-namematching-service`
-1. Download name matching index from here:  `https://archives.ala.org.au/archives/nameindexes/latest/namematching-20190213.tgz` and unzip to `/data/lucene` and rename `/data/lucene/namematching-20190213` to `/data/lucene/namematching`
+1. Download name matching index from here:  `https://archives.ala.org.au/archives/nameindexes/latest/namematching-20200214.tgz` and unzip to `/data/lucene` and rename `/data/lucene/namematching-20200214` to `/data/lucene/namematching`
 1. Create directory `/data/ala-namematching-service/config`
 1. Copy JSON files from https://github.com/djtfmartin/ala-namematching-service/tree/master/src/main/resources to this directory
 1. Run with `nohup ala-namematching-service/run.sh  &`
 1. Download shape files from [here](https://pipelines-shp.s3-ap-southeast-2.amazonaws.com/pipelines-shapefiles.zip) and expand into `/data/pipelines-shp` directory
 1. Download a darwin core archive (e.g. https://archives.ala.org.au/archives/gbif/dr893/dr893.zip) and expand it into `/data/biocache-load` e.g. `/data/biocache-load/dr893`
-1. Create `/data/pipelines-data` directory
+1. Create the following directories
+    1. `/data/pipelines-data`
+    1. `/data/pipelines-cache`  
 1. To convert DwCA to AVRO, run `./dwca-avro.sh dr893`
 1. To interpret, run `./interpret.sh dr893`
 1. To sample run
