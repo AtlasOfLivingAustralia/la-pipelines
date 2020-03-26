@@ -66,7 +66,7 @@ public class SolrWriter<T> {
             };
 
             Runnable pushIntoSolrFn = () -> Optional.ofNullable(requests.poll())
-                    .filter(req -> req.getDocuments().size() > 0)
+                    .filter(req -> req.getDocuments() != null && req.getDocuments().size() > 0)
                     .ifPresent(req -> {
                         if (useSyncMode) {
                             clientIndexFn.accept(req);
