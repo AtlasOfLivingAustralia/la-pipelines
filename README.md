@@ -69,7 +69,7 @@ These steps will load a dataset in SOLR.
 1. Run `git clone https://github.com/djtfmartin/la-pipelines`
 1. Build with maven `mvn clean install`
 1. Run `git clone https://github.com/djtfmartin/ala-namematching-service`
-1. Download name matching index from here:  `https://archives.ala.org.au/archives/nameindexes/latest/namematching-20190213.tgz` and unzip to `/data/lucene` and rename `/data/lucene/namematching-20190213` to `/data/lucene/namematching`
+1. Download name matching index from here:  `https://archives.ala.org.au/archives/nameindexes/latest/namematching-20200214.tgz` and unzip to `/data/lucene` and rename `/data/lucene/namematching-20200214` to `/data/lucene/namematching`
 1. Create directory `/data/ala-namematching-service/config`
 1. Copy JSON files from https://github.com/djtfmartin/ala-namematching-service/tree/master/src/main/resources to this directory
 1. Run with `nohup ala-namematching-service/run.sh  &`
