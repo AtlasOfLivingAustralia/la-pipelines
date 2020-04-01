@@ -72,9 +72,8 @@ These steps will load a dataset in SOLR.
 1. Download name matching index from here:  `https://archives.ala.org.au/archives/nameindexes/latest/namematching-20200214.tgz` and unzip to `/data/lucene` and rename `/data/lucene/namematching-20200214` to `/data/lucene/namematching`
 1. Create directory `/data/ala-namematching-service/config`
 1. Copy JSON files from https://github.com/djtfmartin/ala-namematching-service/tree/master/src/main/resources to this directory
-1. Run with `nohup ala-namematching-service/run.sh  &`
-    
-    1. or Run ala-nameMatching-service on docker [port:9179]
+1. Run with `nohup ala-namematching-service/run.sh  &`    
+   or run ala-nameMatching-service on docker [port:9179]
         la-pipeline nees this webservice running on 9179 port
         Docker only cannot copy files outside home folder to container, so we need to:
          
