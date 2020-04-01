@@ -67,8 +67,8 @@ In the absence of ansible scripts, here are some instructions for setting up a l
 These steps will load a dataset in SOLR.
 
 1. Run `git clone https://github.com/djtfmartin/la-pipelines`
-1. Build with maven `mvn clean install`
 1. Run `docker-compose -f ala-nameservice.yml up -d`
+1. Build with maven `mvn clean install`
 1. Download shape files from [here](https://pipelines-shp.s3-ap-southeast-2.amazonaws.com/pipelines-shapefiles.zip) and expand into `/data/pipelines-shp` directory
 1. Download a darwin core archive (e.g. https://archives.ala.org.au/archives/gbif/dr893/dr893.zip) and expand it into `/data/biocache-load` e.g. `/data/biocache-load/dr893`
 1. Create the following directories
