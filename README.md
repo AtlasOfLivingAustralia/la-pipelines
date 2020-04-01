@@ -68,23 +68,7 @@ These steps will load a dataset in SOLR.
 
 1. Run `git clone https://github.com/djtfmartin/la-pipelines`
 1. Build with maven `mvn clean install`
-1. Run `git clone https://github.com/djtfmartin/ala-namematching-service`
-1. Download name matching index from here:  `https://archives.ala.org.au/archives/nameindexes/latest/namematching-20200214.tgz` and unzip to `/data/lucene` and rename `/data/lucene/namematching-20200214` to `/data/lucene/namematching`
-1. Create directory `/data/ala-namematching-service/config`
-1. Copy JSON files from https://github.com/djtfmartin/ala-namematching-service/tree/master/src/main/resources to this directory
-1. Run with `nohup ala-namematching-service/run.sh  &`
-    
-    1. or Run ala-nameMatching-service on docker [port:9179]
-        la-pipeline nees this webservice running on 9179 port
-        Docker only cannot copy files outside home folder to container, so we need to:
-         
-        1. Using 'mvn package' to generate jar        
-        1. copy jar file to docker folder
-        1. copy ../src/main/resources/subgroups.json to docker folder (improved by using link instead of copy)
-        1. copy ../src/main/resources/groups.json as well
-        1. copy ../config.yml to docker 
-    Use docker-compose to run this image
-    
+1. Run `docker-compose -f ala-nameservice.yml up -d`
 1. Download shape files from [here](https://pipelines-shp.s3-ap-southeast-2.amazonaws.com/pipelines-shapefiles.zip) and expand into `/data/pipelines-shp` directory
 1. Download a darwin core archive (e.g. https://archives.ala.org.au/archives/gbif/dr893/dr893.zip) and expand it into `/data/biocache-load` e.g. `/data/biocache-load/dr893`
 1. Create the following directories
@@ -102,6 +86,22 @@ These steps will load a dataset in SOLR.
     1. Run `docker-compose -f solr8.yml start`
     1. Run `./upload-solr-config.sh`
 1. To index, run `./index.sh dr893`
+
+
+## Integration Tests
+
+Integration testing is supported using docker containers.
+To start the required containers, run the following:
+
+```
+docker-compose -f ala-nameservice.yml up -d
+```
+
+To shutdown, run the following:
+```
+docker-compose -f ala-nameservice.yml up kill
+```
+
 
 ## Code style and tools
 
