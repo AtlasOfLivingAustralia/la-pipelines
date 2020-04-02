@@ -1,7 +1,9 @@
 .DS_Store
-
 .idea
 pipelines/target
 models/target
 models/src/main/java-generated
 solr/conf/config.zip
+models/models.iml
+piplines/pipelines.iml
+la-pipelines.iml

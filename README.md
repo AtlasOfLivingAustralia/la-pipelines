@@ -66,13 +66,24 @@ lookup for all layers. This needs to be supplement with additional work to popul
 In the absence of ansible scripts, here are some instructions for setting up a local development environment for pipelines.
 These steps will load a dataset in SOLR.
 
-Requirements:
+Requirements of softwares:
 Maven needs work on OpenSdk 1.8
 Docker Desktop
 
-
-1. Run `git clone https://github.com/djtfmartin/la-pipelines`
-1. Run `docker-compose -f ala-nameservice.yml up -d`
+### Prerequisite service 
+1. Run ala-namematching-ervice on port 9179
+   There are two ways of running ala-nameservice
+   1. Fetch Dave Martin's dock-compose file via `git clone https://github.com/djtfmartin/la-pipelines`.
+      Run `docker-compose -f ala-nameservice.yml up -d`
+   2. Or we can checkout ala-namematching-service via `git clone https://github.com/AtlasOfLivingAustralia/ala-namematching-service`
+      run `mvn package` to build `ala-namematching-service-1.0-SNAPSHOT.jar`. Jar name may change based on version  
+      Copy jar file from ./target to ./docker
+      `cd ./docker`
+      `docker-compose up`
+      Check docker-compose.yml to get more hints how ala-namematching-service is built
+      
+      
+### Run la-pipeline   
 1. Build with maven `mvn clean install`
 1. Download shape files from [here](https://pipelines-shp.s3-ap-southeast-2.amazonaws.com/pipelines-shapefiles.zip) and expand into `/data/pipelines-shp` directory
 1. Download a darwin core archive (e.g. https://archives.ala.org.au/archives/gbif/dr893/dr893.zip) and expand it into `/data/biocache-load` e.g. `/data/biocache-load/dr893`
