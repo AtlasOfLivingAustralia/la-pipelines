@@ -67,8 +67,10 @@ In the absence of ansible scripts, here are some instructions for setting up a l
 These steps will load a dataset in SOLR.
 
 Requirements of softwares:
-Maven needs work on OpenSdk 1.8
+Maven needs work on OpenSdk 1.8 
+'nano ~/.mavenrc' add 'export JAVA_HOME= [JDK1.8 PATH]'
 Docker Desktop
+lombok plugin for intelliJ needs to be installed for slf4 annotation  
 
 ### Prerequisite service 
 1. Run ala-namematching-ervice on port 9179
