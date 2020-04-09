@@ -101,7 +101,7 @@ lombok plugin for intelliJ needs to be installed for slf4 annotation
 1. To setup SOLR:
     1. Install docker
     1. Follow the instructions in [solr8/docker/README.md](solr/docker/solr8/README.md)
-    1. Run `docker-compose -f solr8.yml start`
+    1. Run `docker-compose -f solr8.yml up`
     1. Run `./upload-solr-config.sh`
 1. To index, run `./index.sh dr893`
 
