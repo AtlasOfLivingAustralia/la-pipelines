@@ -8,7 +8,7 @@ if [ $# -eq 0 ]
     exit 1
 fi
 
-./dwca-arvo.sh $1
+./dwca-avro.sh $1
 ./interpret-spark-embedded.sh $1
 ./export-latlng.sh $1
 ./sample.sh $1

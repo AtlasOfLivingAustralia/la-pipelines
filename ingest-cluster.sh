@@ -7,7 +7,7 @@ if [ $# -eq 0 ]
 fi
 
 SECONDS=0
-./dwca-arvo.sh $1
+./dwca-avro.sh $1
 groovy interpret.groovy $1
 groovy export-latlng.groovy $1
 ./sample.sh $1
