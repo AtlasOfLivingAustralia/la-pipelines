@@ -96,7 +96,7 @@ Requirements of softwares:
     1. `/data/pipelines-cache`  
 1. Build with maven `mvn clean install`
 1. To convert DwCA to AVRO, run `./dwca-avro.sh dr893`
-1. To interpret, run `./interpret.sh dr893`
+1. To interpret, run `./interpret-spark-embedded.sh dr893`
 1. To sample run
     1. ./export-latlng.sh dr893
     1. ./sample.sh dr893
