@@ -84,6 +84,9 @@ Requirements of softwares:
       `cd ./docker`
       `docker-compose up`
       Check docker-compose.yml to get more hints how ala-namematching-service is built
+    
+    You can test it by checking this url: http://localhost:9179/api/search?q=Acacia
+    
       
 ### Run la-pipeline   
 1. Download shape files from [here](https://pipelines-shp.s3-ap-southeast-2.amazonaws.com/pipelines-shapefiles.zip) and expand into `/data/pipelines-shp` directory
@@ -119,7 +122,6 @@ To shutdown, run the following:
 ```
 docker-compose -f ala-nameservice.yml up kill
 ```
-
 
 ## Code style and tools
 
