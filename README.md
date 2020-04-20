@@ -67,23 +67,23 @@ In the absence of ansible scripts, here are some instructions for setting up a l
 These steps will load a dataset in SOLR.
 
 Requirements of softwares:
-Maven needs work on OpenSdk 1.8 
+* Java 8 - this is mandatory (see [GBIF pipelines documentation](https://github.com/gbif/pipelines#about-the-project))
+* Maven needs work on OpenSDK 1.8 
 'nano ~/.mavenrc' add 'export JAVA_HOME= [JDK1.8 PATH]'
-Docker Desktop
-lombok plugin for intelliJ needs to be installed for slf4 annotation  
+* Docker Desktop
+* lombok plugin for intelliJ needs to be installed for slf4 annotation  
 
-### Prerequisite service 
-1. Run ala-namematching-ervice on port 9179
+### Prerequisite services
+1. Run ala-namematching-service on port 9179
    There are two ways of running ala-nameservice
-   1. Fetch Dave Martin's dock-compose file via `git clone https://github.com/djtfmartin/la-pipelines`.
-      Run `docker-compose -f ala-nameservice.yml up -d`
+   1. Use the docker-compose file in the root of this project like so:
+      `docker-compose -f ala-nameservice.yml up -d`
    2. Or we can checkout ala-namematching-service via `git clone https://github.com/AtlasOfLivingAustralia/ala-namematching-service`
       run `mvn package` to build `ala-namematching-service-1.0-SNAPSHOT.jar`. Jar name may change based on version  
       Copy jar file from ./target to ./docker
       `cd ./docker`
       `docker-compose up`
       Check docker-compose.yml to get more hints how ala-namematching-service is built
-      
       
 ### Run la-pipeline   
 1. Download shape files from [here](https://pipelines-shp.s3-ap-southeast-2.amazonaws.com/pipelines-shapefiles.zip) and expand into `/data/pipelines-shp` directory
