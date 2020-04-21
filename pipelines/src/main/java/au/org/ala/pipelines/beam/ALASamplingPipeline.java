@@ -22,7 +22,7 @@ import java.util.function.UnaryOperator;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
 /**
- * Pipeline that adds a sampling AVRO extension to the stored
+ * Pipeline that adds a sampling AVRO extension to the stored interpretation.
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)

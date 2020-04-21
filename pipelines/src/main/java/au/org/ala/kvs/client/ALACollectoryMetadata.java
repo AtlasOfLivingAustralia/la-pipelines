@@ -7,6 +7,9 @@ import lombok.Builder;
 import lombok.ToString;
 import lombok.Value;
 
+import java.util.List;
+import java.util.Map;
+
 @JsonDeserialize(builder = ALACollectoryMetadata.ALACollectoryMetadataBuilder.class)
 @Value
 @Builder
@@ -20,7 +23,11 @@ public class ALACollectoryMetadata {
     String uid;
     String licenseType;
     String licenseVersion;
-    ALAConnectionParameters connectionParameters;
+    String provenance;
+
+    ConnectionParameters connectionParameters;
+    Map<String, String> defaultDarwinCoreValues;
+    List<Map<String, String>> taxonomyCoverageHints;
 
     @JsonPOJOBuilder(withPrefix = "")
     @JsonIgnoreProperties(ignoreUnknown = true)

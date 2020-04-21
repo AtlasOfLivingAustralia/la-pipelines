@@ -3,13 +3,12 @@ package au.org.ala.kvs.cache;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import au.org.ala.kvs.GeocodeShpIntersectService;
+import au.org.ala.kvs.client.GeocodeShpIntersectService;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.geocode.GeocodeService;
-import org.gbif.rest.client.geocode.retrofit.GeocodeServiceSyncClient;
 
 import org.jetbrains.annotations.NotNull;
 import org.mapdb.DB;

@@ -1,7 +1,11 @@
 package au.org.ala.sampling;
 
+import org.junit.Ignore;
+
 import java.util.Map;
 
+@Ignore
+//TODO change this into an integration test.
 public class SamplingTest {
 
 
@@ -12,7 +16,7 @@ public class SamplingTest {
         SamplingCache cache = SamplingCacheFactory.getForDataset(args[0]);
 
         Map<String, String> samples = cache.getSamples(Double.parseDouble(args[1]),Double.parseDouble(args[2]));
-        if(samples != null) {
+        if (samples != null) {
             for (Map.Entry<String, String> entry : samples.entrySet()) {
                 System.out.println(entry.getKey() + " = " + entry.getValue());
             }

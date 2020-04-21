@@ -117,15 +117,12 @@ public class ALAVerbatimToInterpretedPipeline {
     MetadataTransform metadataTransform = MetadataTransform.create(properties, endPointType, attempt, skipRegistryCalls);
     BasicTransform basicTransform =  BasicTransform.create(properties, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId);
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
-
-    ALAAttributionTransform alaAttributionTransform = ALAAttributionTransform.create(properties);
-
     TemporalTransform temporalTransform = TemporalTransform.create();
-
-//    TaxonomyTransform taxonomyTransform = TaxonomyTransform.create(properties);
+    // TaxonomyTransform taxonomyTransform = TaxonomyTransform.create(properties);
     LocationTransform locationTransform = LocationTransform.create(properties);
 
     // ALA specific transforms
+    ALAAttributionTransform alaAttributionTransform = ALAAttributionTransform.create(properties);
     ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.create(properties);
 
     // Extension
@@ -154,6 +151,11 @@ public class ALAVerbatimToInterpretedPipeline {
             .apply("Read occurrences from extension", OccurrenceExtensionTransform.create())
             .apply("Filter duplicates", UniqueIdTransform.create());
 
+    uniqueRecords
+            .apply("Check collection attribution", alaAttributionTransform.check(types))
+            .apply("Interpret collection attribution", alaAttributionTransform.interpret(metadataView))
+            .apply("Write attribution to avro", alaAttributionTransform.write(pathFn));
+
     // Interpret and write all record types
     uniqueRecords
         .apply("Check verbatim transform condition", verbatimTransform.check(types))
@@ -163,11 +165,6 @@ public class ALAVerbatimToInterpretedPipeline {
         .apply("Check basic transform condition", basicTransform.check(types))
         .apply("Interpret basic", basicTransform.interpret())
         .apply("Write basic to avro", basicTransform.write(pathFn));
-
-    uniqueRecords
-          .apply("Check collection attribution", alaAttributionTransform.check(types))
-          .apply("Interpret collection  attribution", alaAttributionTransform.interpret(metadataView))
-          .apply("Write attribution to avro", alaAttributionTransform.write(pathFn));
 
     uniqueRecords
         .apply("Check temporal transform condition", temporalTransform.check(types))

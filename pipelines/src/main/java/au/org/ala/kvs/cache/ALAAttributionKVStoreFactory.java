@@ -10,6 +10,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
+/**
+ * Key value store factory for Attribution
+ */
 public class ALAAttributionKVStoreFactory {
 
     private static final Logger LOG = LoggerFactory.getLogger(ALAAttributionKVStoreFactory.class);
@@ -17,6 +20,7 @@ public class ALAAttributionKVStoreFactory {
     private static KeyValueStore<String, ALACollectoryMetadata> mapDBCache = null;
 
     /**
+     * Retrieve KV Store for Collectory Metadata.
      *
      * @param clientConfiguration
      * @return
@@ -37,7 +41,7 @@ public class ALAAttributionKVStoreFactory {
     }
 
     /**
-     * Builds a KV Store backed by the rest client.
+     * Builds a KV Store for Collectory Metadata backed by a MapDB database.
      */
     private synchronized static KeyValueStore<String, ALACollectoryMetadata> mapDBBackedKVStore(ALACollectoryService service, Command closeHandler) {
 
@@ -48,7 +52,7 @@ public class ALAAttributionKVStoreFactory {
                     try {
                         return service.lookupDataResource(key);
                     } catch (Exception ex) {
-                        throw logAndThrow(ex, "Error contacting the collectory service to retrieve data resource metadata. Has resource been removed ? " + key);
+                        throw logAndThrow(ex,"Error contacting the collectory service to retrieve data resource metadata. Has resource been removed ? " + key);
                     }
                 }
 
@@ -65,6 +69,7 @@ public class ALAAttributionKVStoreFactory {
 
     /**
      * Wraps an exception into a {@link RuntimeException}.
+     *
      * @param throwable to propagate
      * @param message to log and use for the exception wrapper
      * @return a new {@link RuntimeException}

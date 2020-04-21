@@ -1,4 +1,4 @@
-package au.org;
+package au.org.ala.kvs;
 
 import au.org.ala.kvs.client.ALANameUsageMatch;
 import au.org.ala.kvs.client.ALASpeciesMatchRequest;
@@ -50,16 +50,12 @@ public class MapDBTest {
 
         ALASpeciesMatchRequest speciesMatch = ALASpeciesMatchRequest.builder().scientificName("Acacia").build();
         ALANameUsageMatch match = ALANameUsageMatch.builder().taxonConceptID("urn:acacia").build();
-
         map.put(speciesMatch, match);
-
-
 
         ALASpeciesMatchRequest speciesMatch2 = ALASpeciesMatchRequest.builder().scientificName("Acacia").build();
         ALANameUsageMatch match2  = map.get(speciesMatch2);
 
-
-        System.out.println("The match:" + match2.toString());
+        assert match2.toString() != null;
 
         db.close();
     }

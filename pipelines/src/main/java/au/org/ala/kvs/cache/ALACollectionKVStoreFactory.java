@@ -49,8 +49,8 @@ public class ALACollectionKVStoreFactory {
                         return service.lookupCodes(key.getInstitutionCode(), key.getCollectionCode());
                     } catch (Exception ex) {
                         //this is can happen for bad data and this service is suspectible to http 404 due to the fact
-                        // it takes URL parameters from the raw data. So log and carry on for now.we
-                        LOG.error("Error contacting the collectory service with insitutionCode {} and collection code {} Message: {}",
+                        // it takes URL parameters from the raw data. So log and carry on for now.
+                        LOG.error("Error contacting the collectory service with institutionCode {} and collectionCode {} Message: {}",
                                 key.getInstitutionCode(),
                                 key.getCollectionCode(),
                                 ex.getMessage(),
@@ -72,6 +72,7 @@ public class ALACollectionKVStoreFactory {
 
     /**
      * Wraps an exception into a {@link RuntimeException}.
+     *
      * @param throwable to propagate
      * @param message to log and use for the exception wrapper
      * @return a new {@link RuntimeException}

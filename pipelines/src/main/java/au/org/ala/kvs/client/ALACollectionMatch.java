@@ -18,9 +18,9 @@ public class ALACollectionMatch {
 
     String collectionUid;
     String collectionName;
-    List<EntityReference> hubMembership;
     String institutionUid;
     String institutionName;
+    List<EntityReference> hubMembership;
 
     @JsonPOJOBuilder(withPrefix = "")
     @JsonIgnoreProperties(ignoreUnknown = true)

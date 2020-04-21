@@ -1,8 +1,6 @@
 package au.org.ala.sampling;
 
-import au.org.ala.kvs.client.LatLng;
 import lombok.extern.slf4j.Slf4j;
-import org.gbif.kvs.KeyValueStore;
 
 import java.io.File;
 import java.util.HashMap;
@@ -16,9 +14,7 @@ public class SamplingCacheFactory {
 
     static SamplingCacheFactory instance;
 
-    Map<String, KeyValueStore<LatLng, Map<String, String>>> refCache =  new HashMap<String, KeyValueStore<LatLng, Map<String, String>>>();
-
-    Map<String, SamplingCache> refCache2 =  new HashMap<String, SamplingCache>();
+    Map<String, SamplingCache> refCache =  new HashMap<String, SamplingCache>();
 
     private SamplingCacheFactory(){}
 
@@ -37,7 +33,7 @@ public class SamplingCacheFactory {
     public static void setupFor(String datasetID) {
         try {
             SamplingCache cache = openForDataset(datasetID);
-            getInstance().refCache2.put(datasetID, cache);
+            getInstance().refCache.put(datasetID, cache);
         } catch (Exception e){
             log.error(e.getMessage(), e);
             throw new RuntimeException("Unable to add sampling dataset for " + datasetID);
@@ -51,13 +47,13 @@ public class SamplingCacheFactory {
      * @return
      */
     public static SamplingCache getForDataset(String datasetID)  {
-        SamplingCache sc =  getInstance().refCache2.get(datasetID);
+        SamplingCache sc =  getInstance().refCache.get(datasetID);
         if (sc != null) {
             return sc;
         } else {
             try {
                 sc = openForDataset(datasetID);
-                getInstance().refCache2.put(datasetID, sc);
+                getInstance().refCache.put(datasetID, sc);
                 return sc;
             } catch(Exception e){
                 throw new RuntimeException("Unable to open sampling cache for datasetID " + datasetID + " - " + e.getMessage(), e);

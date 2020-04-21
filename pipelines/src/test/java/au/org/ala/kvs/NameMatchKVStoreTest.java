@@ -1,4 +1,4 @@
-package au.org;
+package au.org.ala.kvs;
 
 import au.org.ala.kvs.cache.ALANameMatchKVStoreFactory;
 import au.org.ala.kvs.client.ALANameUsageMatch;
@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.IntStream;
 
-public class KeyValueStoreTest {
+public class NameMatchKVStoreTest {
 
     /**
      * Tests the Get operation on {@link KeyValueCache} that wraps a simple KV store backed by a HashMap.
@@ -27,24 +27,12 @@ public class KeyValueStoreTest {
                 .build();
 
         KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch> kvs = ALANameMatchKVStoreFactory.alaNameMatchKVStore(cc);
-
         ALASpeciesMatchRequest req = ALASpeciesMatchRequest.builder().scientificName("Macropus rufus").build();
-
         ALANameUsageMatch match = kvs.get(req);
+        assert match.getTaxonConceptID() != null;
 
-        System.out.println(match.getTaxonConceptID());
-
-
-
-        ALASpeciesMatchRequest req2 = ALASpeciesMatchRequest.builder().scientificName("Macropus rufus").build();
-
-        ALANameUsageMatch match2 = kvs.get(req);
-
-        System.out.println(match2.getTaxonConceptID());
-
-
-
-
+        ALASpeciesMatchRequest req2 = ALASpeciesMatchRequest.builder().scientificName("Osphranter rufus").build();
+        ALANameUsageMatch match2 = kvs.get(req2);
+        assert match2.getTaxonConceptID() != null;
     }
-
 }

@@ -23,6 +23,11 @@ import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * A SolrWriter based on {@link org.gbif.pipelines.ingest.java.transforms.ElasticsearchWriter}
+ *
+ * @param <T>
+ */
 @Slf4j
 @Builder
 public class SolrWriter<T> {

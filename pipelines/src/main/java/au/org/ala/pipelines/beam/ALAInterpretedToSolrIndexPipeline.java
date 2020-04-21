@@ -36,6 +36,10 @@ import java.util.function.UnaryOperator;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
+/**
+ * ALA Beam pipeline for creating a SOLR index.
+ * This pipeline uses the HTTP SOLR api to index records..
+ */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ALAInterpretedToSolrIndexPipeline {
@@ -195,10 +199,9 @@ public class ALAInterpretedToSolrIndexPipeline {
 
         log.info("Running the pipeline");
         PipelineResult result = p.run();
-        result.waitUntilFinish();
+        org.apache.beam.sdk.PipelineResult.State state = result.waitUntilFinish();
 
         MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
-
 
         log.info("Pipeline has been finished");
     }

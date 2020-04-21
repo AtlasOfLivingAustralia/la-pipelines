@@ -33,8 +33,7 @@ import java.util.function.UnaryOperator;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
 /**
- * Exports a unique set of coordinates for a data resource.
- *
+ * A pipeline that exports a unique set of coordinates for a data resource into CSV.
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)

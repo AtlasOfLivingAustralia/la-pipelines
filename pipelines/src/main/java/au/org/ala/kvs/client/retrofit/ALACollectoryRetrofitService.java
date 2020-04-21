@@ -6,6 +6,9 @@ import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Path;
 
+/**
+ * Collectory retrofit web service interface
+ */
 public interface ALACollectoryRetrofitService {
 
     @GET("/ws/dataResource/{dataResourceUid}")

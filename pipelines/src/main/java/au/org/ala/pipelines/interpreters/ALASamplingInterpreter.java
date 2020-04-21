@@ -29,7 +29,7 @@ public class ALASamplingInterpreter {
                             }
                         }
                     } catch (Exception e){
-                        throw new RuntimeException("Unable to retrieve sampling for point "
+                        throw new RuntimeException("Unable to retrieve sampling for point: "
                                 + lr.getDecimalLatitude()
                                 + ","
                                 + lr.getDecimalLongitude() + "; " + e.getMessage(), e);

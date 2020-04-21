@@ -64,6 +64,8 @@ public class ALASolrDocumentTransform implements Serializable {
     private TupleTag<AustraliaSpatialRecord> asrTag;
 
     private TupleTag<ALAAttributionRecord> aarTag;
+    @NonNull
+    private TupleTag<ALAUUIDRecord> urTag;
 
     @NonNull
     private  PCollectionView<MetadataRecord> metadataView;
@@ -119,7 +121,7 @@ public class ALASolrDocumentTransform implements Serializable {
      * @return
      */
     @NotNull
-    public static SolrInputDocument createSolrDocument(MetadataRecord mdr,  BasicRecord br, TemporalRecord tr, LocationRecord lr, TaxonRecord txr, ALATaxonRecord atxr, ExtendedRecord er, ALAAttributionRecord aar, AustraliaSpatialRecord asr) {
+    public static SolrInputDocument createSolrDocument(MetadataRecord mdr,  BasicRecord br, TemporalRecord tr, LocationRecord lr, TaxonRecord txr, ALATaxonRecord atxr, ExtendedRecord er, ALAAttributionRecord aar, AustraliaSpatialRecord asr, ALAUUIDRecord ur) {
 
         Set<String> skipKeys = new HashSet<String>();
         skipKeys.add("id");
@@ -321,6 +323,7 @@ public class ALASolrDocumentTransform implements Serializable {
                 MeasurementOrFactRecord mfr = v.getOnly(mfrTag, MeasurementOrFactRecord.newBuilder().setId(k).build());
 
                 // ALA specific
+                ALAUUIDRecord ur = v.getOnly(urTag);
                 ALATaxonRecord atxr = v.getOnly(atxrTag, ALATaxonRecord.newBuilder().setId(k).build());
                 ALAAttributionRecord aar = v.getOnly(aarTag, ALAAttributionRecord.newBuilder().setId(k).build());
 
@@ -331,7 +334,7 @@ public class ALASolrDocumentTransform implements Serializable {
 
                 MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
 
-                SolrInputDocument doc = createSolrDocument(mdr, br, tr, lr, txr, atxr, er, aar, asr);
+                SolrInputDocument doc = createSolrDocument(mdr, br, tr, lr, txr, atxr, er, aar, asr, ur);
 
                 c.output(doc);
                 counter.inc();

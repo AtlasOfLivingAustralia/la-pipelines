@@ -1,4 +1,4 @@
-package au.org.ala.kvs;
+package au.org.ala.kvs.client;
 
 import au.org.ala.layers.intersect.SimpleShapeFile;
 import org.gbif.rest.client.geocode.GeocodeService;

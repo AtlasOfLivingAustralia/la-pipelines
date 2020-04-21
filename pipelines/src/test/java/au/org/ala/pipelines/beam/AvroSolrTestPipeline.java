@@ -15,7 +15,11 @@ import org.gbif.pipelines.io.avro.AustraliaSpatialRecord;
 import java.util.Map;
 import java.util.UUID;
 
-public class AvroSolrTest {
+/**
+ * A performance test pipeline that avoids using GroupByKey (a suspected bottleneck).
+ * This is for testing purposes only, and ultimately should be removed (or moved) from the codebase.
+ */
+public class AvroSolrTestPipeline {
 
     public static void main(String[] args){
 
@@ -49,8 +53,7 @@ public class AvroSolrTest {
                 count++;
                 //double up fields
                 s.setField(entry.getKey().toString(), entry.getValue().toString());
-                if(count== 100)
-                    break;
+                s.setField(entry.getKey().toString() + "0", entry.getValue().toString());
             }
             outputReceiver.output(s);
         }
