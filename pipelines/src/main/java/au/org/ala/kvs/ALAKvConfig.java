@@ -17,4 +17,6 @@ public class ALAKvConfig implements Serializable {
     String collectoryBasePath;
     String listsBasePath;
     long timeout;
+
+    String cacheDirectoryPath;
 }

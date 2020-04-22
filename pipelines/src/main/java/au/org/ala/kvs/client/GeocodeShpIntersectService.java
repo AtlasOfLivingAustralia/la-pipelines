@@ -11,8 +11,11 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * This is a port of the functionality in geocode to using ALA's layer store SimpleShapeFile
- * for intersections.
+ * This is a port of the functionality in geocode to using ALA's layer-store (https://github.com/AtlasOfLivingAustralia/layers-store)
+ * SimpleShapeFile for intersections.
+ *
+ * @see SimpleShapeFile
+ *
  */
 public class GeocodeShpIntersectService implements GeocodeService {
 

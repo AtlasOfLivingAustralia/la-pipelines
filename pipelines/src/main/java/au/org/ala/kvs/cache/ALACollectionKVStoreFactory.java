@@ -1,18 +1,17 @@
 package au.org.ala.kvs.cache;
 
+import au.org.ala.kvs.ALAKvConfig;
 import au.org.ala.kvs.client.*;
 import au.org.ala.kvs.client.retrofit.ALACollectoryServiceClient;
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.hbase.Command;
 import org.gbif.rest.client.configuration.ClientConfiguration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
+@Slf4j
 public class ALACollectionKVStoreFactory {
-
-    private static final Logger LOG = LoggerFactory.getLogger(ALACollectionKVStoreFactory.class);
 
     private static KeyValueStore<ALACollectionLookup, ALACollectionMatch> mapDBCache = null;
 
@@ -22,7 +21,7 @@ public class ALACollectionKVStoreFactory {
      * @return
      * @throws IOException
      */
-    public static KeyValueStore<ALACollectionLookup, ALACollectionMatch> alaAttributionKVStore(ClientConfiguration clientConfiguration) throws IOException {
+    public static KeyValueStore<ALACollectionLookup, ALACollectionMatch> alaAttributionKVStore(ClientConfiguration clientConfiguration, ALAKvConfig kvConfig) throws IOException {
 
         ALACollectoryServiceClient wsClient = new ALACollectoryServiceClient(clientConfiguration);
         Command closeHandler = () -> {
@@ -32,14 +31,14 @@ public class ALACollectionKVStoreFactory {
                     logAndThrow(e, "Unable to close");
                 }
         };
-        KeyValueStore<ALACollectionLookup, ALACollectionMatch>  kvs = mapDBBackedKVStore(wsClient, closeHandler);
+        KeyValueStore<ALACollectionLookup, ALACollectionMatch>  kvs = mapDBBackedKVStore(wsClient, closeHandler, kvConfig);
         return kvs;
     }
 
     /**
      * Builds a KV Store backed by the rest client.
      */
-    private synchronized static KeyValueStore<ALACollectionLookup, ALACollectionMatch> mapDBBackedKVStore(ALACollectoryService service, Command closeHandler) {
+    private synchronized static KeyValueStore<ALACollectionLookup, ALACollectionMatch> mapDBBackedKVStore(ALACollectoryService service, Command closeHandler, ALAKvConfig kvConfig) {
 
         if (mapDBCache == null) {
             KeyValueStore kvs = new KeyValueStore<ALACollectionLookup, ALACollectionMatch>() {
@@ -50,7 +49,7 @@ public class ALACollectionKVStoreFactory {
                     } catch (Exception ex) {
                         //this is can happen for bad data and this service is suspectible to http 404 due to the fact
                         // it takes URL parameters from the raw data. So log and carry on for now.
-                        LOG.error("Error contacting the collectory service with institutionCode {} and collectionCode {} Message: {}",
+                        log.error("Error contacting the collectory service with institutionCode {} and collectionCode {} Message: {}",
                                 key.getInstitutionCode(),
                                 key.getCollectionCode(),
                                 ex.getMessage(),
@@ -64,7 +63,7 @@ public class ALACollectionKVStoreFactory {
                     closeHandler.execute();
                 }
             };
-            mapDBCache = MapDBKeyValueStore.cache("/data/pipelines-cache", kvs, ALACollectionLookup.class, ALACollectionMatch.class);
+            mapDBCache = MapDBKeyValueStore.cache(kvConfig.getCacheDirectoryPath(), kvs, ALACollectionLookup.class, ALACollectionMatch.class);
         }
 
         return mapDBCache;
@@ -78,7 +77,7 @@ public class ALACollectionKVStoreFactory {
      * @return a new {@link RuntimeException}
      */
     private static RuntimeException logAndThrow(Throwable throwable, String message) {
-        LOG.error(message, throwable);
+        log.error(message, throwable);
         return new RuntimeException(throwable);
     }
 }

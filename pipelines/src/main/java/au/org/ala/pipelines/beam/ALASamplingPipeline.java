@@ -1,12 +1,14 @@
 package au.org.ala.pipelines.beam;
 
 import au.org.ala.pipelines.transforms.ALASamplingTransform;
+import au.org.ala.utils.ALAFsUtils;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.pipelines.ingest.options.BasePipelineOptions;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
@@ -47,8 +49,7 @@ public class ALASamplingPipeline {
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
     UnaryOperator<String> pathLocationFn = t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
-
-    UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, id);
+    UnaryOperator<String> outputPathFn = t -> ALAFsUtils.buildPathSamplingUsingTargetPath(options, t, id);
 
     log.info("Creating a pipeline from options");
     Pipeline p = Pipeline.create(options);
@@ -60,7 +61,7 @@ public class ALASamplingPipeline {
     log.info("Adding pipeline transforms");
     p.apply("Read Location", locationTransform.read(pathLocationFn))
             .apply("Interpret Sampling", alaSamplingTransform.interpret())
-            .apply("Write sampling to avro", alaSamplingTransform.write(pathFn));
+            .apply("Write sampling to avro", alaSamplingTransform.write(outputPathFn));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();

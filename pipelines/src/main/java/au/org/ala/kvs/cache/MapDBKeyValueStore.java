@@ -1,18 +1,13 @@
 package au.org.ala.kvs.cache;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.io.IOUtils;
 import org.gbif.kvs.KeyValueStore;
 import org.jetbrains.annotations.NotNull;
 import org.mapdb.*;
-import org.xerial.snappy.Snappy;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.Map;
-import java.util.concurrent.ConcurrentMap;
-import java.util.function.BiConsumer;
 
 /**
  * MapDB implementation of key value store.
@@ -89,12 +84,6 @@ public class MapDBKeyValueStore<K,V> implements WarmableCache<K,V> {
     @Override
     public void put(K key, V value) {
         cache.put(key, value);
-        db.commit();
-    }
-
-    @Override
-    public void putAll(Map<K,V> map) {
-        cache.putAll(map);
         db.commit();
     }
 

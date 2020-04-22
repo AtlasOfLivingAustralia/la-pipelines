@@ -3,10 +3,10 @@ package au.org.ala.kvs.cache;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import au.org.ala.kvs.ALAKvConfig;
 import au.org.ala.kvs.client.GeocodeShpIntersectService;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
-import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.geocode.GeocodeService;
 
@@ -27,11 +27,11 @@ public class GeocodeMapDBKeyValueStore implements KeyValueStore<LatLng, GeocodeR
   private final GeocodeService service;
   private final HTreeMap<LatLng, GeocodeResponse> cache;
 
-  private GeocodeMapDBKeyValueStore(ClientConfiguration config) {
+  private GeocodeMapDBKeyValueStore(ALAKvConfig alaKvConfig) {
 
     this.service = GeocodeShpIntersectService.getInstance();
 
-    this.cache = DBMakerFactory.create().hashMap("geocoderesponse")
+    this.cache = DBMakerFactory.create(alaKvConfig.getCacheDirectoryPath()).hashMap("geocoderesponse")
         .keySerializer(new Serializer<LatLng>() {
           @Override
           public void serialize(@NotNull DataOutput2 dataOutput2, @NotNull LatLng latLng) throws IOException {
@@ -63,8 +63,8 @@ public class GeocodeMapDBKeyValueStore implements KeyValueStore<LatLng, GeocodeR
         .createOrOpen();
   }
 
-  public static GeocodeMapDBKeyValueStore create(ClientConfiguration config) {
-    return new GeocodeMapDBKeyValueStore(config);
+  public static GeocodeMapDBKeyValueStore create(ALAKvConfig alaKvConfig) {
+    return new GeocodeMapDBKeyValueStore(alaKvConfig);
   }
 
   @Override
@@ -83,12 +83,12 @@ public class GeocodeMapDBKeyValueStore implements KeyValueStore<LatLng, GeocodeR
     private static volatile DB instance;
     private static final Object MUTEX = new Object();
 
-    private static DB create() {
+    private static DB create(String cacheDir) {
       if (instance == null) {
         synchronized (MUTEX) {
           if (instance == null) {
             instance = DBMaker
-                .fileDB("/data/pipelines-cache/geocoderesponse")
+                .fileDB(cacheDir + "/geocoderesponse")
                 .closeOnJvmShutdown()
                 .fileMmapEnableIfSupported()
                 .make();

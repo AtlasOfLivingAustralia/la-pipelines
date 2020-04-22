@@ -11,6 +11,7 @@ import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.stream.IntStream;
 
 public class NameMatchKVStoreTest {
@@ -25,8 +26,9 @@ public class NameMatchKVStoreTest {
                 .withBaseApiUrl("http://localhost:9179") //GBIF base API url
                 .withTimeOut(10000l) //Geocode service connection time-out
                 .build();
+        ALAKvConfig alaKvConfig = ALAKvConfigFactory.create(new Properties());
 
-        KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch> kvs = ALANameMatchKVStoreFactory.alaNameMatchKVStore(cc);
+        KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch> kvs = ALANameMatchKVStoreFactory.alaNameMatchKVStore(cc, alaKvConfig);
         ALASpeciesMatchRequest req = ALASpeciesMatchRequest.builder().scientificName("Macropus rufus").build();
         ALANameUsageMatch match = kvs.get(req);
         assert match.getTaxonConceptID() != null;

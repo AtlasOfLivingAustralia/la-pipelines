@@ -1,21 +1,21 @@
 package au.org.ala.kvs.cache;
 
+import au.org.ala.kvs.ALAKvConfig;
 import au.org.ala.kvs.client.*;
 import au.org.ala.kvs.client.retrofit.ALACollectoryServiceClient;
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.hbase.Command;
 import org.gbif.rest.client.configuration.ClientConfiguration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
 /**
  * Key value store factory for Attribution
  */
+@Slf4j
 public class ALAAttributionKVStoreFactory {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ALAAttributionKVStoreFactory.class);
 
     private static KeyValueStore<String, ALACollectoryMetadata> mapDBCache = null;
 
@@ -26,7 +26,7 @@ public class ALAAttributionKVStoreFactory {
      * @return
      * @throws IOException
      */
-    public static KeyValueStore<String, ALACollectoryMetadata> alaAttributionKVStore(ClientConfiguration clientConfiguration) throws IOException {
+    public static KeyValueStore<String, ALACollectoryMetadata> alaAttributionKVStore(ClientConfiguration clientConfiguration, ALAKvConfig kvConfig) throws IOException {
 
         ALACollectoryServiceClient wsClient = new ALACollectoryServiceClient(clientConfiguration);
         Command closeHandler = () -> {
@@ -36,14 +36,14 @@ public class ALAAttributionKVStoreFactory {
                     logAndThrow(e, "Unable to close");
                 }
         };
-        KeyValueStore<String, ALACollectoryMetadata>  kvs = mapDBBackedKVStore(wsClient, closeHandler);
+        KeyValueStore<String, ALACollectoryMetadata>  kvs = mapDBBackedKVStore(wsClient, closeHandler, kvConfig);
         return kvs;
     }
 
     /**
      * Builds a KV Store for Collectory Metadata backed by a MapDB database.
      */
-    private synchronized static KeyValueStore<String, ALACollectoryMetadata> mapDBBackedKVStore(ALACollectoryService service, Command closeHandler) {
+    private synchronized static KeyValueStore<String, ALACollectoryMetadata> mapDBBackedKVStore(ALACollectoryService service, Command closeHandler, ALAKvConfig kvConfig) {
 
         if (mapDBCache == null) {
             KeyValueStore kvs = new KeyValueStore<String, ALACollectoryMetadata>() {
@@ -52,7 +52,8 @@ public class ALAAttributionKVStoreFactory {
                     try {
                         return service.lookupDataResource(key);
                     } catch (Exception ex) {
-                        throw logAndThrow(ex,"Error contacting the collectory service to retrieve data resource metadata. Has resource been removed ? " + key);
+                        log.error("Error contacting the collectory service to retrieve data resource metadata. Has resource been removed ? " + key, ex);
+                        return ALACollectoryMetadata.EMPTY;
                     }
                 }
 
@@ -61,7 +62,7 @@ public class ALAAttributionKVStoreFactory {
                     closeHandler.execute();
                 }
             };
-            mapDBCache = MapDBKeyValueStore.cache("/data/pipelines-cache", kvs, String.class, ALACollectoryMetadata.class);
+            mapDBCache = MapDBKeyValueStore.cache(kvConfig.getCacheDirectoryPath(), kvs, String.class, ALACollectoryMetadata.class);
         }
 
         return mapDBCache;
@@ -75,7 +76,7 @@ public class ALAAttributionKVStoreFactory {
      * @return a new {@link RuntimeException}
      */
     private static RuntimeException logAndThrow(Throwable throwable, String message) {
-        LOG.error(message, throwable);
+        log.error(message, throwable);
         return new RuntimeException(throwable);
     }
 }

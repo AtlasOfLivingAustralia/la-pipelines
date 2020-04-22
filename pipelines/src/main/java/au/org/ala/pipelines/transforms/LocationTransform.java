@@ -19,32 +19,33 @@ import au.org.ala.kvs.cache.GeocodeServiceFactory;
 public class LocationTransform extends org.gbif.pipelines.transforms.core.LocationTransform {
 
   KvConfig kvConfig;
+  ALAKvConfig alaKvConfig;
 
-  private LocationTransform(KvConfig kvConfig) {
+  private LocationTransform(KvConfig kvConfig, ALAKvConfig alaKvConfig) {
     super(kvConfig);
     this.kvConfig  = kvConfig;
+    this.alaKvConfig  = alaKvConfig;
   }
 
   public static LocationTransform create(Properties properties) {
-    ALAKvConfig config = ALAKvConfigFactory.create(properties);
+    ALAKvConfig alaKvConfig = ALAKvConfigFactory.create(properties);
     KvConfig kv = KvConfigFactory.create(properties, KvConfigFactory.GEOCODE_PREFIX);
-    KvConfig kvConfig = KvConfig.create(config.getGeocodeBasePath(), kv.getTimeout(), kv.getCacheSizeMb(), kv.getTableName(), kv.getZookeeperUrl(), kv.getNumOfKeyBuckets(), true,  kv.getImagePath());
-    return new LocationTransform(kvConfig);
+    KvConfig kvConfig = KvConfig.create(alaKvConfig.getGeocodeBasePath(), kv.getTimeout(), kv.getCacheSizeMb(), kv.getTableName(), kv.getZookeeperUrl(), kv.getNumOfKeyBuckets(), true,  kv.getImagePath());
+    return new LocationTransform(kvConfig, alaKvConfig);
   }
 
   @Override
   /** Initializes resources using singleton factory can be useful in case of non-Beam pipeline */
   public LocationTransform init() {
-    setService(GeocodeServiceFactory.create(kvConfig));
+    setService(GeocodeServiceFactory.create(kvConfig, alaKvConfig));
     return this;
   }
 
   @Setup
   @Override
   public void setup() {
-    KvConfig config = this.getKvConfig();
-    if (config != null) {
-      this.setService(GeocodeServiceFactory.create(config));
+    if (kvConfig != null) {
+      this.setService(GeocodeServiceFactory.create(kvConfig, alaKvConfig));
     }
   }
 

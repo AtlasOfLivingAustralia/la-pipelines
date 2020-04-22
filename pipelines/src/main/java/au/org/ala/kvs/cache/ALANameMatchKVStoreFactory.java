@@ -1,20 +1,19 @@
 package au.org.ala.kvs.cache;
 
+import au.org.ala.kvs.ALAKvConfig;
 import au.org.ala.kvs.client.ALANameMatchService;
 import au.org.ala.kvs.client.ALANameUsageMatch;
 import au.org.ala.kvs.client.ALASpeciesMatchRequest;
 import au.org.ala.kvs.client.retrofit.ALANameUsageMatchServiceClient;
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.cache.KeyValueCache;
 import org.gbif.kvs.hbase.Command;
 import org.gbif.rest.client.configuration.ClientConfiguration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import java.io.IOException;
 
+@Slf4j
 public class ALANameMatchKVStoreFactory {
-
-    private static final Logger LOG = LoggerFactory.getLogger(ALANameMatchKVStoreFactory.class);
 
     private static KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch> mapDBCache = null;
 
@@ -24,7 +23,7 @@ public class ALANameMatchKVStoreFactory {
      * @return
      * @throws IOException
      */
-    public static KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch> alaNameMatchKVStore(ClientConfiguration clientConfiguration) throws IOException {
+    public static KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch> alaNameMatchKVStore(ClientConfiguration clientConfiguration, ALAKvConfig kvConfig) throws IOException {
 
         ALANameUsageMatchServiceClient wsClient = new ALANameUsageMatchServiceClient(clientConfiguration);
         Command closeHandler = () -> {
@@ -34,7 +33,7 @@ public class ALANameMatchKVStoreFactory {
                     logAndThrow(e, "Unable to close");
                 }
         };
-        KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch>  kvs = mapDBBackedKVStore(wsClient, closeHandler);
+        KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch>  kvs = mapDBBackedKVStore(wsClient, closeHandler, kvConfig);
         return kvs;
     }
 
@@ -64,7 +63,7 @@ public class ALANameMatchKVStoreFactory {
     /**
      * Builds a KV Store backed by the rest client.
      */
-    private synchronized static KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch> mapDBBackedKVStore(ALANameMatchService nameMatchService, Command closeHandler) {
+    private synchronized static KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch> mapDBBackedKVStore(ALANameMatchService nameMatchService, Command closeHandler, ALAKvConfig kvConfig) {
 
         if (mapDBCache == null) {
             KeyValueStore kvs = new KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch>() {
@@ -82,7 +81,7 @@ public class ALANameMatchKVStoreFactory {
                     closeHandler.execute();
                 }
             };
-            mapDBCache = MapDBKeyValueStore.cache("/data/pipelines-cache", kvs, ALASpeciesMatchRequest.class, ALANameUsageMatch.class);
+            mapDBCache = MapDBKeyValueStore.cache(kvConfig.getCacheDirectoryPath(), kvs, ALASpeciesMatchRequest.class, ALANameUsageMatch.class);
         }
 
         return mapDBCache;
@@ -95,7 +94,7 @@ public class ALANameMatchKVStoreFactory {
      * @return a new {@link RuntimeException}
      */
     private static RuntimeException logAndThrow(Throwable throwable, String message) {
-        LOG.error(message, throwable);
+        log.error(message, throwable);
         return new RuntimeException(throwable);
     }
 }

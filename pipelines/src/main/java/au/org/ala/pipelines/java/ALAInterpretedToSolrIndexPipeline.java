@@ -8,16 +8,19 @@ import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
+import au.org.ala.pipelines.common.ALARecordTypes;
 import au.org.ala.pipelines.options.ALASolrPipelineOptions;
 import au.org.ala.pipelines.transforms.ALAAttributionTransform;
 import au.org.ala.pipelines.transforms.ALASolrDocumentTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
+import au.org.ala.utils.ALAFsUtils;
 import org.apache.solr.common.SolrInputDocument;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.core.converters.MultimediaConverter;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetrics;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
 import org.gbif.pipelines.ingest.java.transforms.AvroReader;
+import org.gbif.pipelines.ingest.options.BasePipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
@@ -110,6 +113,7 @@ public class ALAInterpretedToSolrIndexPipeline {
         run(options, executor);
     }
 
+
     @SneakyThrows
     public static void run(ALASolrPipelineOptions options, ExecutorService executor) {
 
@@ -118,7 +122,10 @@ public class ALAInterpretedToSolrIndexPipeline {
         MDC.put("step", StepType.INTERPRETED_TO_INDEX.name());
 
         log.info("Options");
+
         UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
+        UnaryOperator<String> identifiersPathFn = t -> ALAFsUtils.buildPathIdentifiersUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
+        UnaryOperator<String> samplingPathFn = t -> ALAFsUtils.buildPathSamplingUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
 
         String hdfsSiteConfig = options.getHdfsSiteConfig();
 
@@ -129,11 +136,6 @@ public class ALAInterpretedToSolrIndexPipeline {
         VerbatimTransform verbatimTransform = VerbatimTransform.create();
         TemporalTransform temporalTransform = TemporalTransform.create();
         TaxonomyTransform taxonomyTransform = TaxonomyTransform.create();
-        ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.create();
-        ALAAttributionTransform alaAttributionTransform = ALAAttributionTransform.create();
-        AustraliaSpatialTransform spatialTransform = AustraliaSpatialTransform.create();
-        LocationTransform locationTransform = LocationTransform.create();
-        ALAUUIDTransform alauuidTransform = ALAUUIDTransform.create();
 //        TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.create();
 
         // Extension
@@ -142,12 +144,16 @@ public class ALAInterpretedToSolrIndexPipeline {
         AudubonTransform audubonTransform = AudubonTransform.create();
         ImageTransform imageTransform = ImageTransform.create();
 
+        // ALA Specific transforms
+        ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.create();
+        ALAAttributionTransform alaAttributionTransform = ALAAttributionTransform.create();
+        AustraliaSpatialTransform spatialTransform = AustraliaSpatialTransform.create();
+        LocationTransform locationTransform = LocationTransform.create();
+
         log.info("Init metrics");
         IngestMetrics metrics = IngestMetricsBuilder.createInterpretedToEsIndexMetrics();
 
         log.info("Creating pipeline");
-        log.info("Reading avro files...");
-
         // Reading all avro files in parallel
         CompletableFuture<Map<String, MetadataRecord>> metadataMapFeature = CompletableFuture.supplyAsync(
                 () -> AvroReader.readRecords(hdfsSiteConfig, MetadataRecord.class, pathFn.apply(metadataTransform.getBaseName())),
@@ -155,10 +161,6 @@ public class ALAInterpretedToSolrIndexPipeline {
 
         CompletableFuture<Map<String, ExtendedRecord>> verbatimMapFeature = CompletableFuture.supplyAsync(
                 () -> AvroReader.readRecords(hdfsSiteConfig, ExtendedRecord.class, pathFn.apply(verbatimTransform.getBaseName())),
-                executor);
-
-        CompletableFuture<Map<String, ALAUUIDRecord>> uuidFeature = CompletableFuture.supplyAsync(
-                () -> AvroReader.readRecords(hdfsSiteConfig, ALAUUIDRecord.class, pathFn.apply(alauuidTransform.getBaseName())),
                 executor);
 
 //        CompletableFuture<Map<String, TaggedValueRecord>> taggedValuesMapFeature = CompletableFuture.supplyAsync(
@@ -176,22 +178,13 @@ public class ALAInterpretedToSolrIndexPipeline {
         CompletableFuture<Map<String, LocationRecord>> locationMapFeature = CompletableFuture.supplyAsync(
                 () -> AvroReader.readRecords(hdfsSiteConfig, LocationRecord.class, pathFn.apply(locationTransform.getBaseName())),
                 executor);
-        if(options.getIncludeGbifTaxonomy()) {
-            CompletableFuture<Map<String, TaxonRecord>> taxonMapFeature = CompletableFuture.supplyAsync(
+
+        CompletableFuture<Map<String, TaxonRecord>> taxonMapFeature = null;
+        if (options.getIncludeGbifTaxonomy()) {
+            taxonMapFeature = CompletableFuture.supplyAsync(
                     () -> AvroReader.readRecords(hdfsSiteConfig, TaxonRecord.class, pathFn.apply(taxonomyTransform.getBaseName())),
                     executor);
         }
-        CompletableFuture<Map<String, ALATaxonRecord>> alaTaxonMapFeature = CompletableFuture.supplyAsync(
-                () -> AvroReader.readRecords(hdfsSiteConfig, ALATaxonRecord.class, pathFn.apply(alaTaxonomyTransform.getBaseName())),
-                executor);
-
-        CompletableFuture<Map<String, ALAAttributionRecord>> alaAttributionMapFeature = CompletableFuture.supplyAsync(
-                () -> AvroReader.readRecords(hdfsSiteConfig, ALAAttributionRecord.class, pathFn.apply(alaAttributionTransform.getBaseName())),
-                executor);
-
-        CompletableFuture<Map<String, AustraliaSpatialRecord>> australiaSpatialMapFeature = CompletableFuture.supplyAsync(
-                () -> AvroReader.readRecords(hdfsSiteConfig, AustraliaSpatialRecord.class, pathFn.apply(spatialTransform.getBaseName())),
-                executor);
 
         CompletableFuture<Map<String, MultimediaRecord>> multimediaMapFeature = CompletableFuture.supplyAsync(
                 () -> AvroReader.readRecords(hdfsSiteConfig, MultimediaRecord.class, pathFn.apply(multimediaTransform.getBaseName())),
@@ -212,17 +205,35 @@ public class ALAInterpretedToSolrIndexPipeline {
         CompletableFuture.allOf(metadataMapFeature, verbatimMapFeature, basicMapFeature, temporalMapFeature,
                 locationMapFeature, multimediaMapFeature, imageMapFeature, audubonMapFeature, measurementMapFeature);
 
+        // ALA Specific
+        CompletableFuture<Map<String, ALAUUIDRecord>> alaUuidMapFeature = CompletableFuture.supplyAsync(
+                () -> AvroReader.readRecords(hdfsSiteConfig, ALAUUIDRecord.class, identifiersPathFn.apply(ALARecordTypes.ALA_UUID.name().toLowerCase())),
+                executor);
+
+        CompletableFuture<Map<String, ALATaxonRecord>> alaTaxonMapFeature = CompletableFuture.supplyAsync(
+                () -> AvroReader.readRecords(hdfsSiteConfig, ALATaxonRecord.class, pathFn.apply(alaTaxonomyTransform.getBaseName())),
+                executor);
+
+        CompletableFuture<Map<String, ALAAttributionRecord>> alaAttributionMapFeature = CompletableFuture.supplyAsync(
+                () -> AvroReader.readRecords(hdfsSiteConfig, ALAAttributionRecord.class, pathFn.apply(alaAttributionTransform.getBaseName())),
+                executor);
+
+        CompletableFuture<Map<String, AustraliaSpatialRecord>> australiaSpatialMapFeature = CompletableFuture.supplyAsync(
+                () -> AvroReader.readRecords(hdfsSiteConfig, AustraliaSpatialRecord.class, samplingPathFn.apply(spatialTransform.getBaseName())),
+                executor);
+
         MetadataRecord metadata = metadataMapFeature.get().values().iterator().next();
         Map<String, BasicRecord> basicMap = basicMapFeature.get();
         Map<String, ExtendedRecord> verbatimMap = verbatimMapFeature.get();
-        Map<String, ALAUUIDRecord> uuidMap = uuidFeature.get();
         Map<String, TemporalRecord> temporalMap = temporalMapFeature.get();
         Map<String, LocationRecord> locationMap = locationMapFeature.get();
 
-//        if(options.getIncludeGbifTaxonomy()){
-//            Map<String, TaxonRecord> taxonMap = taxonMapFeature.get();
-//        }
+        Map<String, TaxonRecord> taxonMap = null;
+        if (options.getIncludeGbifTaxonomy()){
+            taxonMap = taxonMapFeature.get();
+        }
 
+        Map<String, ALAUUIDRecord> aurMap = alaUuidMapFeature.get();
         Map<String, ALATaxonRecord> alaTaxonMap = alaTaxonMapFeature.get();
         Map<String, ALAAttributionRecord> alaAttributionMap = alaAttributionMapFeature.get();
         Map<String, AustraliaSpatialRecord> australiaSpatialMap = australiaSpatialMapFeature.get();
@@ -237,14 +248,19 @@ public class ALAInterpretedToSolrIndexPipeline {
         Function<BasicRecord, SolrInputDocument> indexRequestFn = br -> {
 
             String k = br.getId();
+
             // Core
             ExtendedRecord er = verbatimMap.getOrDefault(k, ExtendedRecord.newBuilder().setId(k).build());
             TemporalRecord tr = temporalMap.getOrDefault(k, TemporalRecord.newBuilder().setId(k).build());
             LocationRecord lr = locationMap.getOrDefault(k, LocationRecord.newBuilder().setId(k).build());
-//            TaxonRecord txr = taxonMap.getOrDefault(k, TaxonRecord.newBuilder().setId(k).build());
+            TaxonRecord txr = null;
+
+//            if (options.getIncludeGbifTaxonomy()) {
+//                txr = taxonMap.getOrDefault(k, TaxonRecord.newBuilder().setId(k).build());
+//            }
 
             //ALA specific
-            ALAUUIDRecord ur = uuidMap.get(k);
+            ALAUUIDRecord aur = aurMap.getOrDefault(k, ALAUUIDRecord.newBuilder().setId(k).build());
             ALATaxonRecord atxr = alaTaxonMap.getOrDefault(k, ALATaxonRecord.newBuilder().setId(k).build());
             ALAAttributionRecord aar = alaAttributionMap.getOrDefault(k, ALAAttributionRecord.newBuilder().setId(k).build());
             AustraliaSpatialRecord asr = australiaSpatialMap.getOrDefault(k, AustraliaSpatialRecord.newBuilder().setId(k).build());
@@ -257,14 +273,14 @@ public class ALAInterpretedToSolrIndexPipeline {
 
             MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
 
-            SolrInputDocument doc = ALASolrDocumentTransform.createSolrDocument(metadata, br, tr, lr, null, atxr, er, aar, asr, ur);
+            SolrInputDocument doc = ALASolrDocumentTransform.createSolrDocument(metadata, br, tr, lr, txr, atxr, er, aar, asr, aur);
 
             return doc;
         };
 
         boolean useSyncMode = options.getSyncThreshold() > basicMap.size();
 
-        log.info("Pushing data into Elasticsearch");
+        log.info("Pushing data into SOLR");
         SolrWriter.<BasicRecord>builder()
                 .executor(executor)
                 .zkHost(options.getZkHost())
@@ -278,6 +294,5 @@ public class ALAInterpretedToSolrIndexPipeline {
 
         MetricsHandler.saveCountersToTargetPathFile(options, metrics.getMetricsResult());
         log.info("Pipeline has been finished - {}", LocalDateTime.now());
-
     }
 }

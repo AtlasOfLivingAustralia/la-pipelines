@@ -91,8 +91,8 @@ public class ALAAttributionTransform extends Transform<ExtendedRecord, ALAAttrib
                     .withTimeOut(kvConfig.getTimeout()) //Geocode service connection time-out
                     .build();
 
-            this.dataResourceKvStore = ALAAttributionKVStoreFactory.alaAttributionKVStore(clientConfiguration);
-            this.collectionKvStore = ALACollectionKVStoreFactory.alaAttributionKVStore(clientConfiguration);
+            this.dataResourceKvStore = ALAAttributionKVStoreFactory.alaAttributionKVStore(clientConfiguration, kvConfig);
+            this.collectionKvStore = ALACollectionKVStoreFactory.alaAttributionKVStore(clientConfiguration, kvConfig);
         }
     }
 

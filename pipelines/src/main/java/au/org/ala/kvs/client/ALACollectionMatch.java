@@ -9,6 +9,9 @@ import lombok.Value;
 
 import java.util.List;
 
+/**
+ * An ALA Collection Match response object.
+ */
 @JsonDeserialize(builder = ALACollectionMatch.ALACollectionMatchBuilder.class)
 @Value
 @Builder

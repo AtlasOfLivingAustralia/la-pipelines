@@ -4,6 +4,7 @@ import au.org.ala.kvs.ALAKvConfig;
 import au.org.ala.kvs.ALAKvConfigFactory;
 import au.org.ala.kvs.cache.ALAAttributionKVStoreFactory;
 import au.org.ala.kvs.client.ALACollectoryMetadata;
+import au.org.ala.pipelines.common.ALARecordTypes;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +33,16 @@ import java.io.File;
 import java.util.*;
 
 /**
- * Pipeline responsible for minting UUIDs on records.
+ * Pipeline responsible for minting UUIDs on records. This works by:
+ *
+ * 1. Creating a map from ExtendedRecord of UniqueKey -> ExtendedRecord.getId(). The UniqueKey
+ * is constructed using the unique terms specified in the collectory.
+ *
+ * 2. Creating a map from source of UniqueKey -> UUID from previous ingestions (this will be blank for newly imported datasets)
+ *
+ * 3. Joining the two maps
+ *
+ * 4. Writing out ALAUUIRecords containing ExtendedRecord.getId() -> UUID. These records are then used in SOLR index generation.
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -50,10 +60,10 @@ public class ALAUUIDMintingPipeline {
     public static void run(InterpretationPipelineOptions options) throws Exception {
 
         Pipeline p = Pipeline.create(options);
-
-        String alaRecordDirectoryPath = options.getTargetPath() + "/" + options.getDatasetId().trim() + "/1/UUID/ala_uuid_record";
-
         Properties properties = FsUtils.readPropertiesFile(options.getHdfsSiteConfig(), options.getProperties());
+
+        //build the directory path for existing identifiers
+        String alaRecordDirectoryPath = options.getTargetPath() + "/" + options.getDatasetId().trim() + "/1/identifiers/" + ALARecordTypes.ALA_UUID.name().toLowerCase();
 
         //create client configuration
         ALAKvConfig kvConfig = ALAKvConfigFactory.create(properties);
@@ -63,11 +73,16 @@ public class ALAUUIDMintingPipeline {
                 .build();
 
         //create key value store for data resource metadata
-        KeyValueStore<String, ALACollectoryMetadata> dataResourceKvStore = ALAAttributionKVStoreFactory.alaAttributionKVStore(clientConfiguration);
+        KeyValueStore<String, ALACollectoryMetadata> dataResourceKvStore = ALAAttributionKVStoreFactory.alaAttributionKVStore(clientConfiguration, kvConfig);
 
+        //lookup collectory metadata for this data resource
         ALACollectoryMetadata collectoryMetadata = dataResourceKvStore.get(options.getDatasetId());
-        List<String> uniqueTerms = collectoryMetadata.getConnectionParameters().getTermsForUniqueKey();
+        if (collectoryMetadata.equals(ALACollectoryMetadata.EMPTY)){
+            throw new RuntimeException("Unable to retrieve dataset metadata for dataset: " + options.getDatasetId());
+        }
 
+        //construct unique list of darwin core terms
+        List<String> uniqueTerms = collectoryMetadata.getConnectionParameters().getTermsForUniqueKey();
         List<DwcTerm> uniqueDwcTerms = new ArrayList<DwcTerm>();
         for (String uniqueTerm : uniqueTerms){
             Optional<DwcTerm> dwcTerm = getDwcTerm(uniqueTerm);
@@ -78,6 +93,7 @@ public class ALAUUIDMintingPipeline {
             }
         }
 
+        //initialise UniqueKey ->  ExtendedRecord.getId() function
         ExtendedRecordKVFcn extendedRecordKVFcn = new ExtendedRecordKVFcn();
         extendedRecordKVFcn.setup(uniqueDwcTerms);
 
@@ -93,14 +109,14 @@ public class ALAUUIDMintingPipeline {
 
         if (alaRecordDirectory.exists() && alaRecordDirectory.isDirectory()){
 
-            log.info("Transform 2: Previous ALAUUIDRecord records not found - will mint new ones......");
             alaUuids = p.apply(AvroIO.read(ALAUUIDRecord.class)
                             .from(alaRecordDirectory + "/*.avro"))
                             .apply(ParDo.of(new ALAUUIDRecordKVFcn()));
         } else {
 
             TypeDescriptor<KV<String,String>> td = new TypeDescriptor<KV<String,String>>() {};
-            log.info("Transform 2: Previous ALAUUIDRecord records not found - will mint new ones......");
+            log.warn("[WARNING] Previous ALAUUIDRecord records where not found. This is expected for new datasets, but is a problem" +
+                    "for previously loaded datasets - will mint new ones......");
             alaUuids = p.apply(Create.empty(td));
         }
 
@@ -135,6 +151,7 @@ public class ALAUUIDMintingPipeline {
      * Function to create ALAUUIDRecords.
      */
     static class CreateALAUUIDRecordFcn extends DoFn<KV<String, KV<String, String>>, ALAUUIDRecord> {
+
         @ProcessElement
         public void processElement(@Element KV<String, KV<String, String>> uniqueKeyMap, OutputReceiver<ALAUUIDRecord> out) {
             String uniqueKey = uniqueKeyMap.getKey();
