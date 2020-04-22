@@ -105,7 +105,7 @@ Requirements of softwares:
     1. Install docker
     1. Follow the instructions in [solr8/docker/README.md](solr/docker/solr8/README.md)
     1. Run `docker-compose -f solr8.yml up`
-    1. Run `./upload-solr-config.sh`
+    1. Run `./update-solr-config.sh`
 1. To index, run `./index.sh dr893`
 
 
