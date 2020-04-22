@@ -101,6 +101,7 @@ Requirements of softwares:
     1. ./export-latlng.sh dr893
     1. ./sample.sh dr893
     1. ./sample-cache.sh dr893
+    1. ./add-sampling-avro.sh dr893
 1. To setup SOLR:
     1. Install docker
     1. Follow the instructions in [solr8/docker/README.md](solr/docker/solr8/README.md)
