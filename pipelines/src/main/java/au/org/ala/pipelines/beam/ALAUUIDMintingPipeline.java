@@ -33,7 +33,9 @@ import java.io.File;
 import java.util.*;
 
 /**
- * Pipeline responsible for minting UUIDs on records. This works by:
+ * Pipeline responsible for minting UUIDs on new records and rematching existing UUIDs to records that have been previously loaded.
+ *
+ * This works by:
  *
  * 1. Creating a map from ExtendedRecord of UniqueKey -> ExtendedRecord.getId(). The UniqueKey
  * is constructed using the unique terms specified in the collectory.
@@ -42,7 +44,11 @@ import java.util.*;
  *
  * 3. Joining the two maps
  *
- * 4. Writing out ALAUUIRecords containing ExtendedRecord.getId() -> UUID. These records are then used in SOLR index generation.
+ * 4. Writing out ALAUUIDRecords containing ExtendedRecord.getId() -> UUID. These records are then used in SOLR index generation.
+ *
+ * The end result is a AVRO export ALAUUIDRecords which are then used in the generation of the SOLR index.
+ *
+ * @see ALAUUIDRecord
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -82,8 +88,8 @@ public class ALAUUIDMintingPipeline {
         }
 
         //construct unique list of darwin core terms
-        List<String> uniqueTerms = collectoryMetadata.getConnectionParameters().getTermsForUniqueKey();
-        List<DwcTerm> uniqueDwcTerms = new ArrayList<DwcTerm>();
+        final List<String> uniqueTerms = collectoryMetadata.getConnectionParameters().getTermsForUniqueKey();
+        final List<DwcTerm> uniqueDwcTerms = new ArrayList<DwcTerm>();
         for (String uniqueTerm : uniqueTerms){
             Optional<DwcTerm> dwcTerm = getDwcTerm(uniqueTerm);
             if(!dwcTerm.isPresent()){
@@ -93,14 +99,15 @@ public class ALAUUIDMintingPipeline {
             }
         }
 
-        //initialise UniqueKey ->  ExtendedRecord.getId() function
-        ExtendedRecordKVFcn extendedRecordKVFcn = new ExtendedRecordKVFcn();
-        extendedRecordKVFcn.setup(uniqueDwcTerms);
-
         log.info("Transform 1: ExtendedRecord er ->  <uniqueKey, er.getId()> - this generates the UniqueKey.....");
         PCollection<KV<String, String>> extendedRecords =
                 p.apply(AvroIO.read(ExtendedRecord.class).from("/data/pipelines-data/" + options.getDatasetId().trim() + "/1/interpreted/verbatim/*.avro"))
-                .apply(ParDo.of(extendedRecordKVFcn));
+                .apply(ParDo.of(new DoFn<ExtendedRecord, KV<String, String>>() {
+                    @ProcessElement
+                    public void processElement(@Element ExtendedRecord source, OutputReceiver<KV<String, String>> out, ProcessContext c) {
+                        out.output(KV.of(generateUniqueKey(source, uniqueDwcTerms), source.getId()));
+                    }
+        }));
 
         PCollection<KV<String, String>> alaUuids = null;
 
@@ -148,6 +155,28 @@ public class ALAUUIDMintingPipeline {
     }
 
     /**
+     * Generate a unique key based on the darwin core fields. This works the same was unique keys where generated
+     * in the biocache-store. This is repeated to maintain backwards compatibility with existing data holdings.
+     *
+     * @param source
+     * @param uniqueDwcTerms
+     * @return
+     * @throws RuntimeException
+     */
+    public static String generateUniqueKey(@Element ExtendedRecord source, List<DwcTerm> uniqueDwcTerms) throws RuntimeException {
+        List<String> uniqueValues = new ArrayList<String>();
+        for (DwcTerm dwcTerm : uniqueDwcTerms) {
+            String value = ModelUtils.extractNullAwareValue(source, dwcTerm);
+            if (value == null || StringUtils.trimToNull(value) == null) {
+                throw new RuntimeException("Unable to load dataset. Unique term empty for record term: " + dwcTerm);
+            }
+            uniqueValues.add(value.trim());
+        }
+        //create the unique key
+        return String.join("|", uniqueValues);
+    }
+
+    /**
      * Function to create ALAUUIDRecords.
      */
     static class CreateALAUUIDRecordFcn extends DoFn<KV<String, KV<String, String>>, ALAUUIDRecord> {
@@ -166,39 +195,6 @@ public class ALAUUIDMintingPipeline {
     }
 
     /**
-     * Transform 1: ExtendedRecord er ->  <uniqueKey, er.getId()> - this generates the composite unique key from the
-     * specified darwin core terms in the collectory.
-     *
-     * This will construct the unique keys from source data and pass back as a Map(uniqueKey -> ID)
-     * where ID is the ExtendedRecord.getId() which only unique within the scope of this
-     * dataset.
-     */
-    static class ExtendedRecordKVFcn extends DoFn<ExtendedRecord, KV<String, String>> {
-
-        public static List<DwcTerm> dwcTermList;
-
-        @ProcessElement
-        public void processElement(@Element ExtendedRecord source, OutputReceiver<KV<String, String>> out, ProcessContext c) {
-
-            List<String> uniqueValues = new ArrayList<String>();
-            for (DwcTerm dwcTerm : dwcTermList){
-                String value = ModelUtils.extractNullAwareValue(source, dwcTerm);
-                if (value == null || StringUtils.trimToNull(value) == null){
-                    throw new RuntimeException("Unable to load dataset. Unique term empty for record term: " + dwcTerm);
-                }
-                uniqueValues.add(value.trim());
-            }
-            //create the unique key
-            String uniqueKey = String.join("|", uniqueValues);
-            out.output(KV.of(uniqueKey, source.getId()));
-        }
-
-        public void setup(List<DwcTerm> dwcTermList){
-            this.dwcTermList = dwcTermList;
-        }
-    }
-
-    /**
      * Transform to create a map of unique keys built from previous runs and UUID.
      */
     static class ALAUUIDRecordKVFcn extends DoFn<ALAUUIDRecord, KV<String, String>> {
@@ -208,6 +204,12 @@ public class ALAUUIDMintingPipeline {
         }
     }
 
+    /**
+     * Match the darwin core term which has been supplied in simple camel case format e.g. catalogNumber.
+     *
+     * @param name
+     * @return
+     */
     static Optional<DwcTerm> getDwcTerm(String name){
         try {
             return Optional.of(DwcTerm.valueOf(name));
