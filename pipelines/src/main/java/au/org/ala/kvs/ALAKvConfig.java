@@ -6,6 +6,9 @@ import lombok.Value;
 
 import java.io.Serializable;
 
+/**
+ * @TODO consolidate with KvConfig in GBIF's codebase.
+ */
 @Value
 @Builder
 @AllArgsConstructor

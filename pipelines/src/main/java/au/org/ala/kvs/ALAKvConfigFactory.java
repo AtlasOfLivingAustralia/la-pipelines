@@ -12,7 +12,7 @@ public class ALAKvConfigFactory {
     public static final String ALA_COLLECTORY_PREFIX = "ala_collectory";
     public static final String ALA_LISTS_PREFIX = "ala_lists";
     private static final String WS_API_BASE_PATH_PROP = ".api.url";
-    private static final String CACHE_DIRECTORY_PATH_PROP = "cache_directory";
+    private static final String KV_CACHE_DIRECTORY_PATH_PROP = "kv_cache_directory";
 
     public static ALAKvConfig create(@NonNull Properties props) {
 
@@ -24,7 +24,7 @@ public class ALAKvConfigFactory {
         String geocodeBasePath = props.getProperty(GEOCODE_PREFIX + WS_API_BASE_PATH_PROP);
 
         //Cache directory
-        String cacheDirectoryPath = props.getProperty(CACHE_DIRECTORY_PATH_PROP, "/data/pipelines-cache");
+        String cacheDirectoryPath = props.getProperty(KV_CACHE_DIRECTORY_PATH_PROP, "/data/pipelines-cache");
 
         return ALAKvConfig.builder()
                 .taxonomyBasePath(taxonomyBasePath)

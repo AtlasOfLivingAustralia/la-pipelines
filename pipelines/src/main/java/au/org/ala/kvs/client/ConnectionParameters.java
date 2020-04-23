@@ -10,6 +10,9 @@ import lombok.Value;
 
 import java.util.List;
 
+/**
+ * DTO for ALA collectory connection parameters.
+ */
 @JsonDeserialize(builder = ConnectionParameters.ConnectionParametersBuilder.class)
 @Value
 @Builder

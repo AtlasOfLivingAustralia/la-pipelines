@@ -163,7 +163,7 @@ public class ALAUUIDMintingPipeline {
      * @return
      * @throws RuntimeException
      */
-    public static String generateUniqueKey(@Element ExtendedRecord source, List<DwcTerm> uniqueDwcTerms) throws RuntimeException {
+    public static String generateUniqueKey(ExtendedRecord source, List<DwcTerm> uniqueDwcTerms) throws RuntimeException {
         List<String> uniqueValues = new ArrayList<String>();
         for (DwcTerm dwcTerm : uniqueDwcTerms) {
             String value = ModelUtils.extractNullAwareValue(source, dwcTerm);
