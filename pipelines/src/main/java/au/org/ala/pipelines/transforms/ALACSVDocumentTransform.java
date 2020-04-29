@@ -35,6 +35,6 @@ public class ALACSVDocumentTransform implements Serializable {
             }
         };
 
-        return ParDo.of(fn); //.withSideInputs(metadataView);
+        return ParDo.of(fn);
     }
 }

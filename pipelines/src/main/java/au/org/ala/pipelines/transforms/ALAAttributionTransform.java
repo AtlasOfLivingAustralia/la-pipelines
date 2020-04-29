@@ -32,10 +32,10 @@ import static au.org.ala.pipelines.common.ALARecordTypes.ALA_ATTRIBUTION;
  * ALA attribution transform for adding ALA attribution retrieved from the collectory to interpreted occurrence data.
  *
  * Beam level transformations for the DWC Taxon, reads an avro, writes an avro, maps from value to keyValue and
- * transforms form {@link ExtendedRecord} to {@link TaxonRecord}.
+ * transforms form {@link ExtendedRecord} to {@link ALAAttributionRecord}.
  * <p>
- * ParDo runs sequence of interpretations for {@link TaxonRecord} using {@link ExtendedRecord} as
- * a source and {@link TaxonomyInterpreter} as interpretation steps
+ * ParDo runs sequence of interpretations for {@link ALAAttributionRecord} using {@link ExtendedRecord} as
+ * a source and {@link ALAAttributionInterpreter} as interpretation steps
  *
  * @see <a href="https://dwc.tdwg.org/terms/#taxon</a>
  */

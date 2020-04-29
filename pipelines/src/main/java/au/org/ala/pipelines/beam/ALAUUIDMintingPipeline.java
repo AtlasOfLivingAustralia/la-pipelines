@@ -92,16 +92,16 @@ public class ALAUUIDMintingPipeline {
         final List<DwcTerm> uniqueDwcTerms = new ArrayList<DwcTerm>();
         for (String uniqueTerm : uniqueTerms){
             Optional<DwcTerm> dwcTerm = getDwcTerm(uniqueTerm);
-            if(!dwcTerm.isPresent()){
-                throw new RuntimeException("Unrecognised unique term configured for datasource " + options.getDatasetId() + ", term: " + uniqueTerm);
-            } else {
+            if(dwcTerm.isPresent()){
                 uniqueDwcTerms.add(dwcTerm.get());
+            } else {
+                throw new RuntimeException("Unrecognised unique term configured for datasource " + options.getDatasetId() + ", term: " + uniqueTerm);
             }
         }
 
         log.info("Transform 1: ExtendedRecord er ->  <uniqueKey, er.getId()> - this generates the UniqueKey.....");
         PCollection<KV<String, String>> extendedRecords =
-                p.apply(AvroIO.read(ExtendedRecord.class).from("/data/pipelines-data/" + options.getDatasetId().trim() + "/1/interpreted/verbatim/*.avro"))
+                p.apply(AvroIO.read(ExtendedRecord.class).from(options.getTargetPath() + "/" + options.getDatasetId().trim() + "/1/interpreted/verbatim/*.avro"))
                 .apply(ParDo.of(new DoFn<ExtendedRecord, KV<String, String>>() {
                     @ProcessElement
                     public void processElement(@Element ExtendedRecord source, OutputReceiver<KV<String, String>> out, ProcessContext c) {

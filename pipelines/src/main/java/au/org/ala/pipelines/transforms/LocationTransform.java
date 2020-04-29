@@ -34,8 +34,10 @@ public class LocationTransform extends org.gbif.pipelines.transforms.core.Locati
     return new LocationTransform(kvConfig, alaKvConfig);
   }
 
+  /**
+   * Initializes resources using singleton factory can be useful in case of non-Beam pipeline
+   */
   @Override
-  /** Initializes resources using singleton factory can be useful in case of non-Beam pipeline */
   public LocationTransform init() {
     setService(GeocodeServiceFactory.create(kvConfig, alaKvConfig));
     return this;
@@ -80,12 +82,4 @@ public class LocationTransform extends org.gbif.pipelines.transforms.core.Locati
 
     return result;
   }
-
-
-  @Teardown
-  @Override
-  public void tearDown() {
-//    this.service.close();
-  }
-
 }

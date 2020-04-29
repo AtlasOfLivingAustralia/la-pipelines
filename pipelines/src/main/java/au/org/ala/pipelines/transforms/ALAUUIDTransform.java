@@ -26,7 +26,6 @@ import static au.org.ala.pipelines.common.ALARecordTypes.ALA_UUID;
 
 public class ALAUUIDTransform extends Transform<ExtendedRecord, ALAUUIDRecord> {
 
-
     private ALAUUIDTransform(){
         super(ALAUUIDRecord.class, ALA_UUID, ALAUUIDTransform.class.getName(), "alaUuidCount");
     }
@@ -52,9 +51,5 @@ public class ALAUUIDTransform extends Transform<ExtendedRecord, ALAUUIDRecord> {
     @Override
     public Optional<ALAUUIDRecord> convert(ExtendedRecord extendedRecord) {
         throw new IllegalArgumentException("Method is not implemented!");
-    }
-
-    public Optional<ALAUUIDRecord> processElement(ExtendedRecord source, MetadataRecord mdr) {
-        throw new RuntimeException("Not implemented !!");
     }
 }

@@ -33,7 +33,9 @@ import java.util.function.UnaryOperator;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
 /**
- * A pipeline that exports a unique set of coordinates for a data resource into CSV.
+ * A pipeline that exports a unique set of coordinates for a dataset into CSV.
+ * This pipeline can only be ran after the {@link ALAVerbatimToInterpretedPipeline} has been ran
+ * as it relies on the output of the LocationTransform.
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -52,12 +54,11 @@ public class ALAInterpretedToLatLongCSVPipeline {
         log.info("Adding step 1: Options");
         UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
 
+        // Initialise pipeline
         Pipeline p = Pipeline.create(options);
 
-        log.info("Adding step 2: Creating transformations");
-
-        // Core
-        MetadataTransform metadataTransform = MetadataTransform.create();
+        // Use pre-processed coordinates from location transform outputs
+        log.info("Adding step 2: Initialise location transform");
         LocationTransform locationTransform = LocationTransform.create();
 
         log.info("Adding step 3: Creating beam pipeline");
@@ -65,7 +66,7 @@ public class ALAInterpretedToLatLongCSVPipeline {
                 p.apply("Read Location", locationTransform.read(pathFn))
                         .apply("Map Location to KV", locationTransform.toKv());
 
-        log.info("Adding step 3: Converting into a json object");
+        log.info("Adding step 3: Converting into a CSV object");
         ParDo.SingleOutput<KV<String, CoGbkResult>, String> alaCSVrDoFn =
                 ALACSVDocumentTransform.create(locationTransform.getTag()).converter();
 
@@ -75,10 +76,9 @@ public class ALAInterpretedToLatLongCSVPipeline {
                         .apply("Grouping objects", CoGroupByKey.create())
                         .apply("Merging to CSV doc", alaCSVrDoFn);
 
-
         String outputPath = FsUtils.buildDatasetAttemptPath(options, "latlng", true);
 
-        System.out.println("Output path = " + outputPath);
+        log.info("Output path = " + outputPath);
         FileUtils.forceMkdir(new File(outputPath));
 
         csvCollection
