@@ -48,6 +48,7 @@ import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
+import  org.gbif.pipelines.io.avro.*;
 import static org.gbif.converters.converter.FsUtils.createParentDirectories;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALL;

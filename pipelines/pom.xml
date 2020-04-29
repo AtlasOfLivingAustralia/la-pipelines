@@ -4,7 +4,7 @@
 
   <groupId>au.org.ala</groupId>
   <artifactId>pipelines</artifactId>
-  <packaging>jar</packaging>
+  <packaging>pom</packaging>
   <version>1.0-SNAPSHOT</version>
 
   <name>Living Atlas Pipelines</name>
@@ -30,6 +30,10 @@
       <url>https://nexus.ala.org.au/content/repositories/releases/</url>
     </repository>
   </repositories>
+
+  <modules>
+    <module>../models</module>
+  </modules>
 
   <build>
     <plugins>
@@ -707,11 +711,6 @@
     <dependency>
       <groupId>com.fasterxml.jackson.dataformat</groupId>
       <artifactId>jackson-dataformat-avro</artifactId>
-      <version>${jackson.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
       <version>${jackson.version}</version>
     </dependency>
 

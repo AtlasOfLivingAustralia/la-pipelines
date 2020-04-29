@@ -6,6 +6,8 @@ import java.util.Properties;
 
 import au.org.ala.kvs.ALAKvConfig;
 import au.org.ala.kvs.ALAKvConfigFactory;
+import org.gbif.api.vocabulary.Country;
+import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.LocationInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -15,6 +17,8 @@ import org.gbif.pipelines.parsers.config.factory.KvConfigFactory;
 import org.gbif.pipelines.parsers.config.model.KvConfig;
 
 import au.org.ala.kvs.cache.GeocodeServiceFactory;
+import org.gbif.pipelines.parsers.parsers.location.GeocodeService;
+import org.gbif.rest.client.geocode.GeocodeResponse;
 
 public class LocationTransform extends org.gbif.pipelines.transforms.core.LocationTransform {
 
@@ -86,5 +90,6 @@ public class LocationTransform extends org.gbif.pipelines.transforms.core.Locati
   public void tearDown() {
 //    this.service.close();
   }
+
 
 }
