@@ -1,5 +1,6 @@
 package au.org.ala.pipelines.parser;
 
+import au.org.ala.pipelines.vocabulary.ALAOccurrenceIssue;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.gbif.api.vocabulary.OccurrenceIssue;
@@ -78,9 +79,7 @@ public class CoordinatesParser {
             }
             issues.addAll(result.getIssues());
         }
-
-        issues.add("LOCATION_NOT_SUPPLIED");
-
+        issues.add(ALAOccurrenceIssue.LOCATION_NOT_SUPPLIED.name());
         return ParsedField.fail(issues);
     }
 }

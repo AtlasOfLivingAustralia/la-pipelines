@@ -1,6 +1,8 @@
 package au.org.ala.pipelines;
 
+import au.org.ala.pipelines.vocabulary.ALAOccurrenceIssue;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
@@ -150,7 +152,7 @@ public class AlaLocationInterpreterTest {
         state.setType("State");
 
         KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
-        kvStore.put(new LatLng(-35d, 149d), new GeocodeResponse(Collections.singletonList(state)));
+        kvStore.put(new LatLng(-31.25d, 146.921099d), new GeocodeResponse(Collections.singletonList(state)));
 
         GeocodeService service = GeocodeService.create(kvStore);
 
@@ -158,15 +160,14 @@ public class AlaLocationInterpreterTest {
         Map<String, String> coreMap = new HashMap<>();
 
         ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
-        coreMap.put(DwcTerm.decimalLatitude.qualifiedName(), "-135d");
-        coreMap.put(DwcTerm.decimalLongitude.qualifiedName(), "-149d");
-        coreMap.put(DwcTerm.verbatimLongitude.qualifiedName(), "-35d");
-        coreMap.put(DwcTerm.verbatimLatitude.qualifiedName(), "149d");
+        coreMap.put(DwcTerm.verbatimLatitude.qualifiedName(), "146.921099d");
+        coreMap.put(DwcTerm.verbatimLongitude.qualifiedName(), "-31.25d");
+
 
         ALALocationInterpreter.interpretStateProvince(service,er,lr);
 
         assertEquals(lr.getStateProvince(), "New South Wales");
-        assertArrayEquals(lr.getIssues().getIssueList().toArray(),new String[]{ "PRESUMED_SWAPPED_COORDINATE"});
+        assertArrayEquals(lr.getIssues().getIssueList().toArray(),new String[]{ALAOccurrenceIssue.COORDINATES_CENTRE_OF_STATEPROVINCE.name(), OccurrenceIssue.PRESUMED_SWAPPED_COORDINATE.name()});
 
     }
 
@@ -177,7 +178,7 @@ public class AlaLocationInterpreterTest {
         state.setType("State");
 
         KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
-        kvStore.put(new LatLng(-35d, 149d), new GeocodeResponse(Collections.singletonList(state)));
+        kvStore.put(new LatLng(-31.2532183d, 146.921099d), new GeocodeResponse(Collections.singletonList(state)));
 
         GeocodeService service = GeocodeService.create(kvStore);
 
@@ -188,7 +189,7 @@ public class AlaLocationInterpreterTest {
 
         ALALocationInterpreter.interpretStateProvince(service,er,lr);
 
-        assertArrayEquals(lr.getIssues().getIssueList().toArray(),new String[]{ "LOCATION_NOT_SUPPLIED"});
+        assertArrayEquals(lr.getIssues().getIssueList().toArray(),new String[]{ALAOccurrenceIssue.LOCATION_NOT_SUPPLIED.name()});
 
     }
 

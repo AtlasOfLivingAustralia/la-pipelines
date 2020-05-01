@@ -1,0 +1,70 @@
+package au.org.ala.pipelines.vocabulary;
+
+import com.google.common.collect.ImmutableSet;
+import org.gbif.api.vocabulary.InterpretationRemark;
+import org.gbif.api.vocabulary.InterpretationRemarkSeverity;
+import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.GbifTerm;
+import org.gbif.dwc.terms.Term;
+import org.gbif.utils.AnnotationUtils;
+
+import java.util.Collections;
+import java.util.Set;
+
+public enum ALAOccurrenceIssue implements InterpretationRemark {
+    LOCATION_NOT_SUPPLIED(InterpretationRemarkSeverity.WARNING, TermsGroup.COORDINATES_TERMS_NO_DATUM),
+    COORDINATES_CENTRE_OF_STATEPROVINCE(InterpretationRemarkSeverity.WARNING, TermsGroup.COORDINATES_TERMS_NO_DATUM);
+
+    private final Set<Term> relatedTerms;
+    private final InterpretationRemarkSeverity severity;
+    private final boolean isDeprecated;
+
+    private ALAOccurrenceIssue(InterpretationRemarkSeverity severity) {
+        this.severity = severity;
+        this.relatedTerms = Collections.emptySet();
+        this.isDeprecated = AnnotationUtils.isFieldDeprecated(org.gbif.api.vocabulary.OccurrenceIssue.class, this.name());
+    }
+
+    private ALAOccurrenceIssue(InterpretationRemarkSeverity severity, Term[] relatedTerms) {
+        this.severity = severity;
+        this.relatedTerms = ImmutableSet.copyOf(relatedTerms);
+        this.isDeprecated = AnnotationUtils.isFieldDeprecated(org.gbif.api.vocabulary.OccurrenceIssue.class, this.name());
+    }
+
+    public String getId() {
+        return this.name();
+    }
+
+    public Set<Term> getRelatedTerms() {
+        return this.relatedTerms;
+    }
+
+    public InterpretationRemarkSeverity getSeverity() {
+        return this.severity;
+    }
+
+    public boolean isDeprecated() {
+        return this.isDeprecated;
+    }
+
+    private static class TermsGroup {
+        static final Term[] COORDINATES_TERMS_NO_DATUM;
+        static final Term[] COORDINATES_TERMS;
+        static final Term[] COUNTRY_TERMS;
+        static final Term[] COORDINATES_COUNTRY_TERMS;
+        static final Term[] RECORDED_DATE_TERMS;
+        static final Term[] TAXONOMY_TERMS;
+
+        private TermsGroup() {
+        }
+
+        static {
+            COORDINATES_TERMS_NO_DATUM = new Term[]{DwcTerm.decimalLatitude, DwcTerm.decimalLongitude, DwcTerm.verbatimLatitude, DwcTerm.verbatimLongitude, DwcTerm.verbatimCoordinates};
+            COORDINATES_TERMS = new Term[]{DwcTerm.decimalLatitude, DwcTerm.decimalLongitude, DwcTerm.verbatimLatitude, DwcTerm.verbatimLongitude, DwcTerm.verbatimCoordinates, DwcTerm.geodeticDatum};
+            COUNTRY_TERMS = new Term[]{DwcTerm.country, DwcTerm.countryCode};
+            COORDINATES_COUNTRY_TERMS = new Term[]{DwcTerm.decimalLatitude, DwcTerm.decimalLongitude, DwcTerm.verbatimLatitude, DwcTerm.verbatimLongitude, DwcTerm.verbatimCoordinates, DwcTerm.geodeticDatum, DwcTerm.country, DwcTerm.countryCode};
+            RECORDED_DATE_TERMS = new Term[]{DwcTerm.eventDate, DwcTerm.year, DwcTerm.month, DwcTerm.day};
+            TAXONOMY_TERMS = new Term[]{DwcTerm.kingdom, DwcTerm.phylum, DwcTerm.class_, DwcTerm.order, DwcTerm.family, DwcTerm.genus, DwcTerm.scientificName, DwcTerm.scientificNameAuthorship, GbifTerm.genericName, DwcTerm.specificEpithet, DwcTerm.infraspecificEpithet};
+        }
+    }
+}
