@@ -15,7 +15,7 @@ import java.io.IOException;
  * @param <K>
  * @param <V>
  */
-public class MapDBKeyValueStore<K,V> implements WarmableCache<K,V> {
+public class MapDBKeyValueStore<K,V> implements KeyValueStore<K,V> {
 
     //Wrapped KeyValueStore
     private final KeyValueStore<K, V> keyValueStore;
@@ -77,14 +77,8 @@ public class MapDBKeyValueStore<K,V> implements WarmableCache<K,V> {
      * @param <V1>          type of value elements
      * @return a new instance of KeyValueStore cache
      */
-    public static <K1, V1> WarmableCache<K1, V1> cache(String baseDirectory, KeyValueStore<K1, V1> keyValueStore,  Class<K1> keyClass, Class<V1> valueClass) {
+    public static <K1, V1> KeyValueStore<K1, V1> cache(String baseDirectory, KeyValueStore<K1, V1> keyValueStore,  Class<K1> keyClass, Class<V1> valueClass) {
         return new MapDBKeyValueStore<>(baseDirectory, keyValueStore, keyClass, valueClass);
-    }
-
-    @Override
-    public void put(K key, V value) {
-        cache.put(key, value);
-        db.commit();
     }
 
     @Override

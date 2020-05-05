@@ -37,6 +37,8 @@ import java.util.zip.ZipInputStream;
 /**
  * A utility to crawl the ALA layers. Requires an input csv containing lat, lng (no header)
  * and an output directory.
+ *
+ * TODO This needs improvement to make it a more useable commandline tool with options.
  */
 @Slf4j
 public class LayerCrawler {
@@ -79,6 +81,13 @@ public class LayerCrawler {
             //list file in directory
             LayerCrawler lc = new LayerCrawler();
 
+            //delete existing sampling output
+            File samplingDir = new File(baseDir + dataSetID + "/1/sampling");
+            if (samplingDir.exists()){
+                FileUtils.forceDelete(samplingDir);
+            }
+
+            //(re)create sampling output directories
             File samples = new File(baseDir + dataSetID + "/1/sampling/downloads");
             FileUtils.forceMkdir(samples);
 
@@ -136,8 +145,10 @@ public class LayerCrawler {
         log.info("Retrieving layer list from sampling service");
         List<String> requiredEls = Arrays.asList(SELECTED_ELS.split(","));
         String layers = service.getLayers().execute().body().stream()
+                .filter(l -> l.getEnabled())
                 .map(l -> String.valueOf(l.getId()))
-                .filter(s -> s.startsWith("cl") || requiredEls.contains(s))
+
+//                .filter(s -> s.startsWith("cl") || requiredEls.contains(s))
                 .collect(Collectors.joining(","));
 
         log.info("Required layer count {}",  layers.split(",").length);
@@ -270,7 +281,9 @@ public class LayerCrawler {
 
         @JsonIgnoreProperties(ignoreUnknown = true)
         class Layer {
+
             private String id;
+            private Boolean enabled;
 
             public String getId() {
                 return id;
@@ -278,6 +291,15 @@ public class LayerCrawler {
 
             public void setId(String id) {
                 this.id = id;
+            }
+
+
+            public Boolean getEnabled() {
+                return enabled;
+            }
+
+            public void setEnabled(Boolean enabled) {
+                this.enabled = enabled;
             }
         }
 

@@ -54,7 +54,7 @@ public class ALASamplingToAvroPipeline {
 
         // Path equivalent to /data/pipelines-data/dr893/1/sampling/australia_spatial
         String outputPath = ALAFsUtils.buildPathSamplingOutputUsingTargetPath(options);
-        log.info("Outputing results to " + outputPath);
+        log.info("Outputting results to " + outputPath);
 
         // Read column headers
         final String[] columnHeaders = getColumnHeaders(samplingPath);

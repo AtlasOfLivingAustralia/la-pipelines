@@ -1,7 +1,5 @@
 package au.org.ala.pipelines.transforms;
 
-import au.org.ala.sampling.SamplingCache;
-import au.org.ala.sampling.SamplingCacheFactory;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.Schema;

@@ -12,6 +12,8 @@ import org.apache.avro.file.CodecFactory;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.AvroIO;
+import org.apache.beam.sdk.metrics.Counter;
+import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -25,6 +27,7 @@ import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
+import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.parsers.utils.ModelUtils;
 import org.gbif.rest.client.configuration.ClientConfiguration;
@@ -33,20 +36,26 @@ import java.io.File;
 import java.util.*;
 
 /**
- * Pipeline responsible for minting UUIDs on new records and rematching existing UUIDs to records that have been previously loaded.
+ * Pipeline responsible for minting UUIDs on new records and rematching existing UUIDs to records that have been
+ * previously loaded.
  *
  * This works by:
  *
  * 1. Creating a map from ExtendedRecord of UniqueKey -> ExtendedRecord.getId(). The UniqueKey
  * is constructed using the unique terms specified in the collectory.
  *
- * 2. Creating a map from source of UniqueKey -> UUID from previous ingestions (this will be blank for newly imported datasets)
+ * 2. Creating a map from source of UniqueKey -> UUID from previous ingestions (this will be blank for newly imported
+ * datasets)
  *
- * 3. Joining the two maps
+ * 3. Joining the two maps by the UniqueKey.
  *
- * 4. Writing out ALAUUIDRecords containing ExtendedRecord.getId() -> UUID. These records are then used in SOLR index generation.
+ * 4. Writing out ALAUUIDRecords containing ExtendedRecord.getId() -> (UUID, UniqueKey). These records are then used in
+ * SOLR index generation.
  *
- * The end result is a AVRO export ALAUUIDRecords which are then used in the generation of the SOLR index.
+ * 5. Backing up previous AVRO ALAUUIDRecords.
+ *
+ * The end result is a AVRO export ALAUUIDRecords which are then used as a mandatory extension in the generation of the
+ * SOLR index.
  *
  * @see ALAUUIDRecord
  */
@@ -111,11 +120,10 @@ public class ALAUUIDMintingPipeline {
 
         PCollection<KV<String, String>> alaUuids = null;
 
-        log.info("Transform 2: ALAUUIDRecord ur ->  <uniqueKey, uuid>  (assume incomplete)");
+        log.info("Transform 2: ALAUUIDRecord ur ->  <uniqueKey, uuid> (assume incomplete)");
         File alaRecordDirectory = new File(alaRecordDirectoryPath);
 
         if (alaRecordDirectory.exists() && alaRecordDirectory.isDirectory()){
-
             alaUuids = p.apply(AvroIO.read(ALAUUIDRecord.class)
                             .from(alaRecordDirectory + "/*.avro"))
                             .apply(ParDo.of(new ALAUUIDRecordKVFcn()));
@@ -129,7 +137,7 @@ public class ALAUUIDMintingPipeline {
 
         log.info("Create join collection");
         PCollection<KV<String, KV<String, String>>> joinedPcollection =
-                org.apache.beam.sdk.extensions.joinlibrary.Join.leftOuterJoin(extendedRecords, alaUuids, NO_ID_MARKER);
+                org.apache.beam.sdk.extensions.joinlibrary.Join.fullOuterJoin(extendedRecords, alaUuids, NO_ID_MARKER, NO_ID_MARKER);
 
         log.info("Create ALAUUIDRecords and write out to AVRO");
         joinedPcollection
@@ -142,8 +150,9 @@ public class ALAUUIDMintingPipeline {
         log.info("Running the pipeline");
         PipelineResult result = p.run();
         result.waitUntilFinish();
+        MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
 
-        //TODO duplicate check of ALAUUIDRecord entries.....
+        //TODO duplicate check of ALAUUIDRecord entries and report them.....
 
         //rename existing
         if (new File(alaRecordDirectoryPath).exists()){
@@ -181,14 +190,32 @@ public class ALAUUIDMintingPipeline {
      */
     static class CreateALAUUIDRecordFcn extends DoFn<KV<String, KV<String, String>>, ALAUUIDRecord> {
 
+        private Counter orphanedUniqueKeys = Metrics.counter(CreateALAUUIDRecordFcn.class, "orphanedUniqueKeys");
+        private Counter newUuids = Metrics.counter(CreateALAUUIDRecordFcn.class, "newUuids");
+        private Counter preservedUuids = Metrics.counter(CreateALAUUIDRecordFcn.class, "preservedUuids");
+
         @ProcessElement
         public void processElement(@Element KV<String, KV<String, String>> uniqueKeyMap, OutputReceiver<ALAUUIDRecord> out) {
+
+            // get the constructed key
             String uniqueKey = uniqueKeyMap.getKey();
+
+            //get the matched ExtendedRecord.getId()
             String id = uniqueKeyMap.getValue().getKey();
+
+            //get the UUID
             String uuid = uniqueKeyMap.getValue().getValue();
+
+            //if UUID == NO_ID_MARKER, we have a new record so we need a new UUID.
             if (uuid.equals(NO_ID_MARKER)){
+                newUuids.inc();
                 uuid = UUID.randomUUID().toString();
+            } else if(id.equals(NO_ID_MARKER)){
+                orphanedUniqueKeys.inc();
+            } else {
+                preservedUuids.inc();
             }
+
             ALAUUIDRecord aur = ALAUUIDRecord.newBuilder().setUniqueKey(uniqueKey).setUuid(uuid).setId(id).build();
             out.output(aur);
         }
