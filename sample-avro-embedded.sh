@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-echo "Ingest DwCA - Converts DwCA to verbatim.arvo file."
+echo "Add sampling to dataset"
 
 if [ $# -eq 0 ]
   then

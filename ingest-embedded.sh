@@ -12,6 +12,5 @@ fi
 ./interpret-spark-embedded.sh $1
 ./export-latlng.sh $1
 ./sample.sh $1
-./sample-cache.sh $1
-./add-sampling-avro.sh $1
-./index.sh $1
+./sample-avro-embedded.sh $1
+./index-spark-embedded.sh $1

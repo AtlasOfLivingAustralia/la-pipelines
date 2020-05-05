@@ -23,10 +23,12 @@ SECONDS=0
 
 /data/spark/bin/spark-submit \
 --name "add-sampling $1" \
---num-executors 8 \
+--conf spark.default.parallelism=192 \
+--conf spark.yarn.submit.waitAppCompletion=false \
+--num-executors 24 \
 --executor-cores 8 \
---executor-memory 16G \
---driver-memory 4G \
+--executor-memory 7G \
+--driver-memory 1G \
 --class au.org.ala.pipelines.beam.ALASamplingToAvroPipeline \
 --master spark://172.30.2.127:7077 \
 --driver-java-options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
