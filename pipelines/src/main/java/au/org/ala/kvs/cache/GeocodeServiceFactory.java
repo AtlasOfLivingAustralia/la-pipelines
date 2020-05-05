@@ -2,6 +2,7 @@ package au.org.ala.kvs.cache;
 
 import au.org.ala.kvs.ALAKvConfig;
 import org.gbif.kvs.KeyValueStore;
+import org.gbif.kvs.cache.KeyValueCache;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.kv.BitmapFactory;
 import org.gbif.pipelines.parsers.config.model.KvConfig;
@@ -25,6 +26,12 @@ public class GeocodeServiceFactory {
     if (config == null) {
       return null;
     }
-    return GeocodeMapDBKeyValueStore.create(config);
+    if (config.isMapDBCacheEnabled()){
+      return GeocodeMapDBKeyValueStore.create(config);
+    } else {
+      GeocodeCache2kKeyValueStore geocodeCache2kKeyValueStore = GeocodeCache2kKeyValueStore.create();
+      //return the cache2k version
+      return KeyValueCache.cache(geocodeCache2kKeyValueStore, 50000l, LatLng.class, GeocodeResponse.class);
+    }
   }
 }

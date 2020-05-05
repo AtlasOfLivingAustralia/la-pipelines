@@ -15,7 +15,6 @@ import java.util.List;
  * SimpleShapeFile for intersections.
  *
  * @see SimpleShapeFile
- *
  */
 public class GeocodeShpIntersectService implements GeocodeService {
 

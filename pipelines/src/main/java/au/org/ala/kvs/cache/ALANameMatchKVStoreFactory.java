@@ -33,8 +33,12 @@ public class ALANameMatchKVStoreFactory {
                     logAndThrow(e, "Unable to close");
                 }
         };
-        KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch>  kvs = mapDBBackedKVStore(wsClient, closeHandler, kvConfig);
-        return kvs;
+
+        if(kvConfig.isMapDBCacheEnabled()){
+            return mapDBBackedKVStore(wsClient, closeHandler, kvConfig);
+        } else {
+            return cache2kBackedKVStore(wsClient, closeHandler);
+        }
     }
 
     /**

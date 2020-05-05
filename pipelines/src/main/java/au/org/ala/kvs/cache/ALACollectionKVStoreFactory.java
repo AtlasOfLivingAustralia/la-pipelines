@@ -5,6 +5,7 @@ import au.org.ala.kvs.client.*;
 import au.org.ala.kvs.client.retrofit.ALACollectoryServiceClient;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.kvs.KeyValueStore;
+import org.gbif.kvs.cache.KeyValueCache;
 import org.gbif.kvs.hbase.Command;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 
@@ -31,8 +32,12 @@ public class ALACollectionKVStoreFactory {
                     logAndThrow(e, "Unable to close");
                 }
         };
-        KeyValueStore<ALACollectionLookup, ALACollectionMatch>  kvs = mapDBBackedKVStore(wsClient, closeHandler, kvConfig);
-        return kvs;
+
+        if (kvConfig.isMapDBCacheEnabled()){
+            return mapDBBackedKVStore(wsClient, closeHandler, kvConfig);
+        } else {
+            return cache2kBackedKVStore(wsClient, closeHandler);
+        }
     }
 
     /**
@@ -67,6 +72,36 @@ public class ALACollectionKVStoreFactory {
         }
 
         return mapDBCache;
+    }
+
+    /**
+     * Builds a KV Store backed by the rest client.
+     */
+    private static KeyValueStore<ALACollectionLookup, ALACollectionMatch> cache2kBackedKVStore(ALACollectoryService service, Command closeHandler) {
+
+        KeyValueStore kvs = new KeyValueStore<ALACollectionLookup, ALACollectionMatch>() {
+            @Override
+            public ALACollectionMatch get(ALACollectionLookup key) {
+                try {
+                    return service.lookupCodes(key.getInstitutionCode(), key.getCollectionCode());
+                } catch (Exception ex) {
+                    //this is can happen for bad data and this service is suspectible to http 404 due to the fact
+                    // it takes URL parameters from the raw data. So log and carry on for now.
+                    log.error("Error contacting the collectory service with institutionCode {} and collectionCode {} Message: {}",
+                            key.getInstitutionCode(),
+                            key.getCollectionCode(),
+                            ex.getMessage(),
+                            ex);
+                }
+                return ALACollectionMatch.EMPTY;
+            }
+
+            @Override
+            public void close() throws IOException {
+                closeHandler.execute();
+            }
+        };
+        return KeyValueCache.cache(kvs, 100000l, ALACollectionLookup.class, ALACollectionMatch.class);
     }
 
     /**

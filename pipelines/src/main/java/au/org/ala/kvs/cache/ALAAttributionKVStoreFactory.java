@@ -5,6 +5,7 @@ import au.org.ala.kvs.client.*;
 import au.org.ala.kvs.client.retrofit.ALACollectoryServiceClient;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.kvs.KeyValueStore;
+import org.gbif.kvs.cache.KeyValueCache;
 import org.gbif.kvs.hbase.Command;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 
@@ -35,8 +36,12 @@ public class ALAAttributionKVStoreFactory {
                     logAndThrow(e, "Unable to close");
                 }
         };
-        KeyValueStore<String, ALACollectoryMetadata>  kvs = mapDBBackedKVStore(wsClient, closeHandler, kvConfig);
-        return kvs;
+
+        if (kvConfig.isMapDBCacheEnabled()){
+            return mapDBBackedKVStore(wsClient, closeHandler, kvConfig);
+        } else {
+            return cache2kBackedKVStore(wsClient, closeHandler);
+        }
     }
 
     /**
@@ -65,6 +70,30 @@ public class ALAAttributionKVStoreFactory {
         }
 
         return mapDBCache;
+    }
+
+    /**
+     * Builds a KV Store backed by the rest client.
+     */
+    private static KeyValueStore<String, ALACollectoryMetadata> cache2kBackedKVStore(ALACollectoryService service, Command closeHandler) {
+
+        KeyValueStore kvs = new KeyValueStore<String, ALACollectoryMetadata>() {
+            @Override
+            public ALACollectoryMetadata get(String key) {
+                try {
+                    return service.lookupDataResource(key);
+                } catch (Exception ex) {
+                    log.error("Error contacting the collectory service to retrieve data resource metadata. Has resource been removed ? " + key, ex);
+                    return ALACollectoryMetadata.EMPTY;
+                }
+            }
+
+            @Override
+            public void close() throws IOException {
+                closeHandler.execute();
+            }
+        };
+        return KeyValueCache.cache(kvs, 100000l, String.class, ALACollectoryMetadata.class);
     }
 
     /**
