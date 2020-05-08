@@ -7,9 +7,9 @@ import lombok.Builder;
 import lombok.ToString;
 import lombok.Value;
 
-import java.util.List;
-import java.util.Map;
-
+/**
+ * An ALA Collection Lookup request object.
+ */
 @JsonDeserialize(builder = ALACollectionLookup.ALACollectionLookupBuilder.class)
 @Value
 @Builder

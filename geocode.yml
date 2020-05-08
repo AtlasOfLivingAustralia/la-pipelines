@@ -1,8 +1,0 @@
-version: "3.2"
-
-services:
-  geocode:
-    image: gbif/geocode-ws
-    container_name: gbif-geocode-ws
-    ports:
-      - 4444:8080

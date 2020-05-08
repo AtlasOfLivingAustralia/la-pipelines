@@ -31,7 +31,7 @@ public class ALAAttributionInterpreter {
                         aar.setLicenseType(m.getLicenseType());
                         aar.setLicenseVersion(m.getLicenseVersion());
                     } else {
-                        log.warn("Metadata is null for {}", mr.getId());
+                        throw new RuntimeException("Unable to retrieve connection parameters for dataset: " + mr.getId());
                     }
                 }
             }

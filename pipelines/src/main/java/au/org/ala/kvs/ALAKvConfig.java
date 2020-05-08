@@ -6,6 +6,9 @@ import lombok.Value;
 
 import java.io.Serializable;
 
+/**
+ * @TODO consolidate with KvConfig in GBIF's codebase.
+ */
 @Value
 @Builder
 @AllArgsConstructor
@@ -18,5 +21,20 @@ public class ALAKvConfig implements Serializable {
     String listsBasePath;
     long timeout;
 
-    public static class ALAKvConfigBuilder {}
+    long geocodeCacheMaxSize;
+    long taxonomyCacheMaxSize;
+    long collectionCacheMaxSize;
+    long metadataCacheMaxSize;
+
+    boolean geocodeCachePersistEnabled;
+    boolean taxonomyCachePersistEnabled;
+    boolean collectionCachePersistEnabled;
+    boolean metadataCachePersistEnabled;
+
+    String geocodeCacheFileName;
+    String taxonomyCacheFileName;
+    String collectionCacheFileName;
+    String metadataCacheFileName;
+
+    String cacheDirectoryPath;
 }

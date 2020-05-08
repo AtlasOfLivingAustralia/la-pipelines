@@ -4,7 +4,6 @@ import au.org.ala.kvs.client.*;
 import okhttp3.OkHttpClient;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.gbif.rest.client.retrofit.RetrofitClientFactory;
-import org.gbif.rest.client.species.NameMatchService;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,6 +15,9 @@ import java.util.stream.Stream;
 
 import static org.gbif.rest.client.retrofit.SyncCall.syncCall;
 
+/**
+ * Collectory service client implementation.
+ */
 public class ALACollectoryServiceClient implements ALACollectoryService {
 
     private final ALACollectoryRetrofitService alaCollectoryService;
@@ -34,11 +36,14 @@ public class ALACollectoryServiceClient implements ALACollectoryService {
     }
 
     /**
-     * See {@link NameMatchService#match(String, String, String, String, String, String, String, String, boolean, boolean)}
+     * Retrieve collectory metadata
+     *
+     * @param dataResourceUid data resource UID
+     * @return
      */
     @Override
-    public ALACollectoryMetadata lookupDataResource(String key) {
-        return syncCall(alaCollectoryService.lookupDataResource(key));
+    public ALACollectoryMetadata lookupDataResource(String dataResourceUid) {
+        return syncCall(alaCollectoryService.lookupDataResource(dataResourceUid));
     }
 
     @Override

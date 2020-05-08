@@ -18,26 +18,31 @@ then
     exit 1
 fi
 
+echo $(date)
+SECONDS=0
+
 /data/spark/bin/spark-submit \
---name "interpret $1" \
---conf spark.default.parallelism=192 \
---conf spark.yarn.submit.waitAppCompletion=false \
+--name "uuid-minting $1" \
 --num-executors 24 \
 --executor-cores 8 \
 --executor-memory 7G \
 --driver-memory 1G \
---class au.org.ala.pipelines.beam.ALAVerbatimToInterpretedPipeline \
+--class au.org.ala.pipelines.beam.ALAUUIDMintingPipeline \
 --master spark://172.30.2.127:7077 \
 --driver-java-options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
 /efs-mount-point/pipelines.jar \
---appName="Interpretation for $1" \
+--appName="UUID minting for $1" \
 --datasetId=$1 \
 --attempt=1 \
 --interpretationTypes=ALL \
 --runner=SparkRunner \
 --targetPath=/data/pipelines-data \
 --inputPath=/data/pipelines-data/$1/1/verbatim.avro \
---metaFileName=interpretation-metrics.yml \
+--metaFileName=uuid-metrics.yml \
 --properties=/efs-mount-point/pipelines.properties \
 --useExtendedRecordId=true \
 --skipRegisrtyCalls=true
+
+echo $(date)
+duration=$SECONDS
+echo "Adding uuids to $1 took $(($duration / 60)) minutes and $(($duration % 60)) seconds."

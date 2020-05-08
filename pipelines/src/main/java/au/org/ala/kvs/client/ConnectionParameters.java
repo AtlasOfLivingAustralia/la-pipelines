@@ -4,24 +4,27 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import lombok.Builder;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.Value;
 
+import java.util.List;
+
 /**
- * Reuseable entity reference DTO for use with collectory webservices
+ * DTO for ALA collectory connection parameters.
  */
-@JsonDeserialize(builder = EntityReference.EntityReferenceBuilder.class)
+@JsonDeserialize(builder = ConnectionParameters.ConnectionParametersBuilder.class)
 @Value
 @Builder
 @ToString
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class EntityReference {
+public class ConnectionParameters {
 
-    String uid;
-    String name;
-    String uri;
+    String protocol;
+    String url;
+    List<String> termsForUniqueKey;
 
     @JsonPOJOBuilder(withPrefix = "")
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class EntityReferenceBuilder {}
+    public static class ConnectionParametersBuilder {}
 }

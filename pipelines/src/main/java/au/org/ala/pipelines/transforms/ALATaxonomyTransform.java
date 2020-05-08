@@ -92,7 +92,7 @@ public class ALATaxonomyTransform extends Transform<ExtendedRecord, ALATaxonReco
               .withTimeOut(kvConfig.getTimeout()) //Geocode service connection time-out
               .build();
 
-      kvStore = ALANameMatchKVStoreFactory.alaNameMatchKVStore(clientConfiguration);
+      kvStore = ALANameMatchKVStoreFactory.alaNameMatchKVStore(clientConfiguration, kvConfig);
     }
   }
 

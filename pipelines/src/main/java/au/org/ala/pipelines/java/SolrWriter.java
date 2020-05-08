@@ -1,11 +1,6 @@
 package au.org.ala.pipelines.java;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
@@ -23,6 +18,11 @@ import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * A SolrWriter based on {@link org.gbif.pipelines.ingest.java.transforms.ElasticsearchWriter}
+ *
+ * @param <T>
+ */
 @Slf4j
 @Builder
 public class SolrWriter<T> {
@@ -55,10 +55,14 @@ public class SolrWriter<T> {
             Consumer<UpdateRequest> clientIndexFn = updateRequest -> {
                 try {
                     NamedList<Object> updateResponse = client.request(updateRequest);
-//                    if (updateResponse.getStatus() != 200 && updateResponse.getStatus() !=201 ) {
-//                        log.error("Solr indexing failed with error code: " + updateResponse.getStatus());
-//                        throw new RuntimeException("Solr indexing failed with error code: " + updateResponse.getStatus());
-//                    }
+                    Iterator<Map.Entry<String,Object>> iter = updateResponse.iterator();
+                    while(iter.hasNext()){
+                        Map.Entry<String, Object> entry = iter.next();
+                        if (entry.getKey().equals("status") && entry.getValue().toString().equals("0")){
+                           //status "0" is equivalent to HTTP 200
+                            log.warn("SOLR returned status: " + entry.getValue());
+                        }
+                    }
                 } catch (Exception ex) {
                     log.error(ex.getMessage(), ex);
                     throw new RuntimeException(ex.getMessage(), ex);
