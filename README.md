@@ -125,3 +125,9 @@ docker-compose -f ala-nameservice.yml up kill
 ## Code style and tools
 
 For code style and tool see the [recommendations](https://github.com/gbif/pipelines#codestyle-and-tools-recommendations) on the GBIF pipelines project. In particular, note the project uses Project Lombok, please install Lombok plugin for Intellij IDEA.
+
+`avro-tools` is recommended to aid to development for quick views of AVRO outputs. This can be install on Macs with `brew`
+
+`
+brew install avro-tools
+`
