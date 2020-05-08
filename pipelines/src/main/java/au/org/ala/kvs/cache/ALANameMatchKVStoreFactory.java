@@ -15,9 +15,9 @@ import java.io.IOException;
 @Slf4j
 public class ALANameMatchKVStoreFactory {
 
-    private static KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch> mapDBCache = null;
 
     /**
+     * Returns ala name matching key value store.
      *
      * @param clientConfiguration
      * @return
@@ -34,17 +34,13 @@ public class ALANameMatchKVStoreFactory {
                 }
         };
 
-        if(kvConfig.isMapDBCacheEnabled()){
-            return mapDBBackedKVStore(wsClient, closeHandler, kvConfig);
-        } else {
-            return cache2kBackedKVStore(wsClient, closeHandler);
-        }
+        return cache2kBackedKVStore(wsClient, closeHandler, kvConfig);
     }
 
     /**
      * Builds a KV Store backed by the rest client.
      */
-    private static KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch> cache2kBackedKVStore(ALANameMatchService nameMatchService, Command closeHandler) {
+    private static KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch> cache2kBackedKVStore(ALANameMatchService nameMatchService, Command closeHandler, ALAKvConfig kvConfig) {
 
 
         KeyValueStore kvs = new KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch>() {
@@ -61,34 +57,7 @@ public class ALANameMatchKVStoreFactory {
                 closeHandler.execute();
             }
         };
-        return KeyValueCache.cache(kvs, 100000l, ALASpeciesMatchRequest.class, ALANameUsageMatch.class);
-    }
-
-    /**
-     * Builds a KV Store backed by the rest client.
-     */
-    private synchronized static KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch> mapDBBackedKVStore(ALANameMatchService nameMatchService, Command closeHandler, ALAKvConfig kvConfig) {
-
-        if (mapDBCache == null) {
-            KeyValueStore kvs = new KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch>() {
-                @Override
-                public ALANameUsageMatch get(ALASpeciesMatchRequest key) {
-                    try {
-                        return nameMatchService.match(key);
-                    } catch (Exception ex) {
-                        throw logAndThrow(ex, "Error contacting the species match service");
-                    }
-                }
-
-                @Override
-                public void close() throws IOException {
-                    closeHandler.execute();
-                }
-            };
-            mapDBCache = MapDBKeyValueStore.cache(kvConfig.getCacheDirectoryPath(), kvs, ALASpeciesMatchRequest.class, ALANameUsageMatch.class);
-        }
-
-        return mapDBCache;
+        return KeyValueCache.cache(kvs, kvConfig.getTaxonomyCacheMaxSize(), ALASpeciesMatchRequest.class, ALANameUsageMatch.class);
     }
 
     /**

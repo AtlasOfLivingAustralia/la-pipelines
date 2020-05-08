@@ -20,7 +20,21 @@ public class ALAKvConfig implements Serializable {
     String collectoryBasePath;
     String listsBasePath;
     long timeout;
-    boolean mapDBCacheEnabled;
+
+    long geocodeCacheMaxSize;
+    long taxonomyCacheMaxSize;
+    long collectionCacheMaxSize;
+    long metadataCacheMaxSize;
+
+    boolean geocodeCachePersistEnabled;
+    boolean taxonomyCachePersistEnabled;
+    boolean collectionCachePersistEnabled;
+    boolean metadataCachePersistEnabled;
+
+    String geocodeCacheFileName;
+    String taxonomyCacheFileName;
+    String collectionCacheFileName;
+    String metadataCacheFileName;
 
     String cacheDirectoryPath;
 }

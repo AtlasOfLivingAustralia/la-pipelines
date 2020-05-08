@@ -17,7 +17,6 @@ import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.core.Interpretation;
-import org.gbif.pipelines.core.interpreters.core.TaxonomyInterpreter;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
@@ -92,7 +91,7 @@ public class ALAAttributionTransform extends Transform<ExtendedRecord, ALAAttrib
                     .build();
 
             this.dataResourceKvStore = ALAAttributionKVStoreFactory.alaAttributionKVStore(clientConfiguration, kvConfig);
-            this.collectionKvStore = ALACollectionKVStoreFactory.alaAttributionKVStore(clientConfiguration, kvConfig);
+            this.collectionKvStore = ALACollectionKVStoreFactory.alaCollectionKVStore(clientConfiguration, kvConfig);
         }
     }
 

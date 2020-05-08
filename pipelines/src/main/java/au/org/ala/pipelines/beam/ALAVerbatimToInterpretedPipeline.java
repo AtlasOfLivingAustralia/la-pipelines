@@ -126,12 +126,10 @@ public class ALAVerbatimToInterpretedPipeline {
     AudubonTransform audubonTransform = AudubonTransform.create();
     ImageTransform imageTransform = ImageTransform.create();
 
-
     // ALA specific transforms
     ALAAttributionTransform alaAttributionTransform = ALAAttributionTransform.create(properties);
     ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.create(properties);
     LocationTransform locationTransform = LocationTransform.create(properties);
-
 
     log.info("Creating beam pipeline");
     // Create and write metadata
@@ -146,7 +144,6 @@ public class ALAVerbatimToInterpretedPipeline {
         metadataRecord
             .apply("Check verbatim transform condition", metadataTransform.checkMetadata(types))
             .apply("Convert into view", View.asSingleton());
-
 
     // Interpret and write all record types
     PCollection<ExtendedRecord> uniqueRecords = metadataTransform.metadataOnly(types) ?

@@ -53,7 +53,7 @@ public class AttributionKVStoreTest {
 
         ClientConfiguration cc = ClientConfiguration.builder().withBaseApiUrl("https://collections.ala.org.au").build();
         ALAKvConfig alaKvConfig = ALAKvConfigFactory.create(new Properties());
-        KeyValueStore<ALACollectionLookup, ALACollectionMatch> kvs = ALACollectionKVStoreFactory.alaAttributionKVStore(cc, alaKvConfig);
+        KeyValueStore<ALACollectionLookup, ALACollectionMatch> kvs = ALACollectionKVStoreFactory.alaCollectionKVStore(cc, alaKvConfig);
         ALACollectionLookup lookup = ALACollectionLookup.builder().institutionCode("CSIRO").collectionCode("ANIC").build();
         ALACollectionMatch m = kvs.get(lookup);
         assert m.getCollectionUid() != null;
@@ -65,7 +65,7 @@ public class AttributionKVStoreTest {
 
         ClientConfiguration cc = ClientConfiguration.builder().withBaseApiUrl("https://collections.ala.org.au").build();
         ALAKvConfig alaKvConfig = ALAKvConfigFactory.create(new Properties());
-        KeyValueStore<ALACollectionLookup, ALACollectionMatch> kvs = ALACollectionKVStoreFactory.alaAttributionKVStore(cc, alaKvConfig);
+        KeyValueStore<ALACollectionLookup, ALACollectionMatch> kvs = ALACollectionKVStoreFactory.alaCollectionKVStore(cc, alaKvConfig);
         ALACollectionLookup lookup = ALACollectionLookup.builder().institutionCode("CSIROCXXX").collectionCode("ANIC").build();
         ALACollectionMatch m = kvs.get(lookup);
         assert m.getCollectionUid() == null;

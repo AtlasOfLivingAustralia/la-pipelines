@@ -1,6 +1,5 @@
 package au.org.ala.kvs.cache;
 
-import au.org.ala.kvs.ALAKvConfig;
 import au.org.ala.kvs.client.GeocodeShpIntersectService;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
@@ -26,6 +25,6 @@ public class GeocodeCache2kKeyValueStore implements KeyValueStore<LatLng, Geocod
 
     @Override
     public GeocodeResponse get(LatLng latLng) {
-        return  new GeocodeResponse(service.reverse(latLng.getLatitude(), latLng.getLongitude()));
+        return new GeocodeResponse(service.reverse(latLng.getLatitude(), latLng.getLongitude()));
     }
 }

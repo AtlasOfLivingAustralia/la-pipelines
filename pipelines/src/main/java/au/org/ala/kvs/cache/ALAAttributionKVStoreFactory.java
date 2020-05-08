@@ -37,45 +37,13 @@ public class ALAAttributionKVStoreFactory {
                 }
         };
 
-        if (kvConfig.isMapDBCacheEnabled()){
-            return mapDBBackedKVStore(wsClient, closeHandler, kvConfig);
-        } else {
-            return cache2kBackedKVStore(wsClient, closeHandler);
-        }
-    }
-
-    /**
-     * Builds a KV Store for Collectory Metadata backed by a MapDB database.
-     */
-    private synchronized static KeyValueStore<String, ALACollectoryMetadata> mapDBBackedKVStore(ALACollectoryService service, Command closeHandler, ALAKvConfig kvConfig) {
-
-        if (mapDBCache == null) {
-            KeyValueStore kvs = new KeyValueStore<String, ALACollectoryMetadata>() {
-                @Override
-                public ALACollectoryMetadata get(String key) {
-                    try {
-                        return service.lookupDataResource(key);
-                    } catch (Exception ex) {
-                        log.error("Error contacting the collectory service to retrieve data resource metadata. Has resource been removed ? " + key, ex);
-                        return ALACollectoryMetadata.EMPTY;
-                    }
-                }
-
-                @Override
-                public void close() throws IOException {
-                    closeHandler.execute();
-                }
-            };
-            mapDBCache = MapDBKeyValueStore.cache(kvConfig.getCacheDirectoryPath(), kvs, String.class, ALACollectoryMetadata.class);
-        }
-
-        return mapDBCache;
+        return cache2kBackedKVStore(wsClient, closeHandler, kvConfig);
     }
 
     /**
      * Builds a KV Store backed by the rest client.
      */
-    private static KeyValueStore<String, ALACollectoryMetadata> cache2kBackedKVStore(ALACollectoryService service, Command closeHandler) {
+    private static KeyValueStore<String, ALACollectoryMetadata> cache2kBackedKVStore(ALACollectoryService service, Command closeHandler, ALAKvConfig kvConfig) {
 
         KeyValueStore kvs = new KeyValueStore<String, ALACollectoryMetadata>() {
             @Override
@@ -93,7 +61,7 @@ public class ALAAttributionKVStoreFactory {
                 closeHandler.execute();
             }
         };
-        return KeyValueCache.cache(kvs, 100000l, String.class, ALACollectoryMetadata.class);
+        return KeyValueCache.cache(kvs, kvConfig.getMetadataCacheMaxSize(), String.class, ALACollectoryMetadata.class);
     }
 
     /**

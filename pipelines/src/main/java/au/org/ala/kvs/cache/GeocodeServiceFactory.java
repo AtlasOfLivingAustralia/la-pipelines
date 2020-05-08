@@ -26,12 +26,6 @@ public class GeocodeServiceFactory {
     if (config == null) {
       return null;
     }
-    if (config.isMapDBCacheEnabled()){
-      return GeocodeMapDBKeyValueStore.create(config);
-    } else {
-      GeocodeCache2kKeyValueStore geocodeCache2kKeyValueStore = GeocodeCache2kKeyValueStore.create();
-      //return the cache2k version
-      return KeyValueCache.cache(geocodeCache2kKeyValueStore, 50000l, LatLng.class, GeocodeResponse.class);
-    }
+    return GeocodeCache2kKeyValueStore.create();
   }
 }
