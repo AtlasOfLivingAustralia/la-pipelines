@@ -2,7 +2,7 @@ version: "3.2"
 
 services:
   ala-namematching-service:
-    image: djtfmartin/ala-namematching-service:v20200214-1
+    image: djtfmartin/ala-namematching-service:v20200214-2
     container_name: ala-namematching-service
     ports:
       - 9180:9180
