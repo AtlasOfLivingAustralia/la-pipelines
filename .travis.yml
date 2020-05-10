@@ -16,7 +16,7 @@ branches:
   - "/^feature\\/.*$/"
   - "/^hotfix\\/.*$/"
 before_install:
-- docker-compose -f ala-nameservice.yml -d
+- docker-compose -f ala-nameservice.yml up -d
 script:
 - '[ "${TRAVIS_PULL_REQUEST}" = "false" ] && mvn -P travis clean deploy'
 after_script:
