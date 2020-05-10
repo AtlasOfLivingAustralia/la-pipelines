@@ -1,0 +1,27 @@
+sudo: true
+language: java
+cache:
+  directories:
+  - ".docker"
+  - ".autoconf"
+  - "$HOME/.m2"
+services:
+- docker
+jdk:
+- openjdk8
+branches:
+  only:
+  - master
+  - develop
+  - "/^feature\\/.*$/"
+  - "/^hotfix\\/.*$/"
+before_install:
+- docker-compose -f ala-nameservice.yml -d
+script:
+- '[ "${TRAVIS_PULL_REQUEST}" = "false" ] && mvn -P travis clean deploy'
+after_script:
+- docker-compose -f ala-nameservice.yml kill
+env:
+  global:
+  - secure: tN3g2PRECwZGP9V6M3GveTNNL/i575jqnaauZHDPzVeTLJHxYjIJRxtmCa/ENFb2qyCCipsVdSD4QS7CxEbLt+0bAPsfs2uEauyTpoUbtbBL9gMFWaKkc0/g7k626KUuimEum4ziFMoms3qJXzzNDVHKDEKeaa191RIHA7cECBfZyJLZGy5HKvD63ZsmlrmbRhtHs/+iAVYK6LjHRHVs540OuA06zBjnSpoH10lyXaLpJKn0gVrU3yDT1b/YNb8l7k0Z7RgUYj0uTVvrnO160qVxkq5yiaqJkOnKssR4YSufYMLdc8CH/MxRGWCyRScF2UYkPleb/gMp69s5JVmNDtBjLHBRsn3JasVoc56MntYOQ+IKOLfIDwu9VNN8aR25wKaPlFBD32sRgk/TRz0UsgrZ9+v/sCWKyab0IVju/KLG4qP8wnvD+rWGlxZQGiLGEa72RoQJUSIqwSZGiNyravgrDL07Roz01NpzJX0S9EpwzfRcpP9/n8xfsYwnxjYnD5VGzwbJa+gX0pUOADIX/mUvmp4gHkB3oDbMukXklluDTk+QehU7OWzI4IVjBFZ0kyfXA+P1CiX+Vx/jp0CuURnBkkGKSEZyclehrcaVkLAFO4Ky3hZ0qQxLcxx04CjIG4JFEWvIcX7Ocakws2kohjB5eEjhGshHSUNsUrPJWpI=
+  - secure: nKEVQgyowAVIqeawBzrn2smV7AZlxCbLz951L8Y+PfWC7C6boNpdmyT33XLFT/AE1Ano3bI+peCSzcMkTHDO24ty9aDuB593tlGEtIA5M1VBKs2cGkxvjlxDVdyJFZqq5wIbrhrAtUM0oX10/YYq8UXHfEdUyZMuZsK2e5dolKWpjM/lAkq0ck/xAbIerUuhEnquZf7OlYTULEQWU0vWnoSNymPRPFo5xjRbCSoBc1M0SG7BQO8MtvfBcmMuAB/dFBoOzjkONzx8H4gUXpT9kgFPSVKALIgs1TGDLGyZWNA0i+tgPq3FgJ/HMYY/9fQMcrGP437s4ObMXHP29bUJPvg9sO9NHA9VsWXpilTpyjpWV4IQQ2r9BmYuvPRL+zTGuyRpbdqquoBzGnERLhJ5rmiO8ZwW28nI9EGDQGvYX055VYX5fdnu0yRqIwOBVPqj8TPqiAZdOsekZSBk6Q6/Tk7hZ1771FO1mDpqZ2rZeluGUlvVPCTVM1x8AhjRpyvXluO6+qLvVCnzFjZ3hiZtk4vgOl5hWgbmZImF6kqTyo9NHLbUU7xkD9NrYjD0gOpmDnV0RlM7TDtL6ynFMy8dRdLSJ5hCuVdche/YVC72FS8gPsALfFtk7iSsdzXVUwXfXUMyRKrcuI5c+Crs2QYUUx1+fOfJ0/AB0iHmaoZ3dI8=

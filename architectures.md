@@ -17,7 +17,7 @@ This is page is intended to document changes in the architecture of biocache to 
 
 #### Notes on the diagram
 * Cassandra is not used by pipelines processing. 
-* Cassandra still required by biocache-service to store
+* Cassandra still required by biocache-service to store:
   * Assertions
   * QID - query IDs, persisted SOLR queries stored in JSON.
   * Sandbox metadata
