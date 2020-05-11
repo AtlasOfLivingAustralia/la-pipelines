@@ -2,6 +2,7 @@ package au.org.ala.pipelines.java;
 
 import au.org.ala.pipelines.options.ALAInterpretationPipelineOptions;
 import au.org.ala.pipelines.transforms.ALAAttributionTransform;
+import au.org.ala.pipelines.transforms.ALADefaultValuesTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import au.org.ala.pipelines.transforms.LocationTransform;
 import lombok.AccessLevel;
@@ -14,9 +15,9 @@ import org.apache.hadoop.fs.Path;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.converters.converter.SyncDataFileWriter;
 import org.gbif.converters.converter.SyncDataFileWriterBuilder;
+import org.gbif.pipelines.ingest.java.io.AvroReader;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetrics;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
-import org.gbif.pipelines.ingest.java.transforms.AvroReader;
 import org.gbif.pipelines.ingest.java.transforms.UniqueGbifIdTransform;
 import org.gbif.pipelines.ingest.java.utils.PropertiesFactory;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
@@ -162,7 +163,7 @@ public class ALAVerbatimToInterpretedPipeline {
 
         // Extra
         OccurrenceExtensionTransform occExtensionTransform = OccurrenceExtensionTransform.create().counterFn(incMetricFn);
-        DefaultValuesTransform defaultValuesTransform = DefaultValuesTransform.create(properties, datasetId, skipRegistryCalls);
+        ALADefaultValuesTransform defaultValuesTransform = ALADefaultValuesTransform.create(properties, datasetId);
 
         // ALA specific
 //        ALAUUIDTransform alaUuidTransform = ALAUUIDTransform.create(properties).counterFn(incMetricFn).init();
@@ -225,7 +226,6 @@ public class ALAVerbatimToInterpretedPipeline {
                 measurementTransform.processElement(er).ifPresent(measurementWriter::append);
                 locationTransform.processElement(er, mdr).ifPresent(locationWriter::append);
                 //ALA specific
-//                alaUuidTransform.processElement(er, mdr).ifPresent(alaUuidWriter::append);
                 alaTaxonomyTransform.processElement(er).ifPresent(alaTaxonWriter::append);
                 alaAttributionTransform.processElement(er, mdr).ifPresent(alaAttributionWriter::append);
             };
