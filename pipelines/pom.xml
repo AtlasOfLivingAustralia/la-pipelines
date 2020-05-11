@@ -29,6 +29,10 @@
       <id>ala-releases</id>
       <url>https://nexus.ala.org.au/content/repositories/releases/</url>
     </repository>
+    <repository>
+      <id>osgeo</id>
+      <url>https://repo.osgeo.org/repository/release/</url>
+    </repository>    
   </repositories>
 
   <build>
