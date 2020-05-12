@@ -4,8 +4,8 @@
 
   <parent>
     <groupId>au.org.ala</groupId>
-    <artifactId>la-pipelines</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <artifactId>ala-parent-pom</artifactId>
+    <version>11</version>
   </parent>
 
   <groupId>au.org.ala</groupId>
@@ -28,10 +28,6 @@
     <repository>
       <id>osgeo</id>
       <url>https://repo.osgeo.org/repository/release/</url>
-    </repository>
-    <repository>
-      <id>ala-releases</id>
-      <url>https://nexus.ala.org.au/content/repositories/releases/</url>
     </repository>
   </repositories>
 
@@ -172,7 +168,7 @@
     <hbase.version>1.2.0-cdh5.16.2</hbase.version>
     <curator.version>2.9.0</curator.version>
 
-    <geotools.version>21.1</geotools.version>
+    <geotools.version>20.5</geotools.version>
     <commons-lang3.version>3.4</commons-lang3.version>
     <guava.version>20.0</guava.version>
     <!-- Guava version required by HBase libraries -->
@@ -465,21 +461,21 @@
         </exclusion>
       </exclusions>
     </dependency>
-    <dependency>
-      <groupId>org.gbif</groupId>
-      <artifactId>hbase-utils</artifactId>
-      <version>${hbase-utils.version}</version>
-      <exclusions>
-        <exclusion>
-          <artifactId>org.apache.hbase</artifactId>
-          <groupId>hbase</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>org.apache.hadoop</artifactId>
-          <groupId>hadoop-core</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
+<!--    <dependency>-->
+<!--      <groupId>org.gbif</groupId>-->
+<!--      <artifactId>hbase-utils</artifactId>-->
+<!--      <version>${hbase-utils.version}</version>-->
+<!--      <exclusions>-->
+<!--        <exclusion>-->
+<!--          <artifactId>org.apache.hbase</artifactId>-->
+<!--          <groupId>hbase</groupId>-->
+<!--        </exclusion>-->
+<!--        <exclusion>-->
+<!--          <artifactId>org.apache.hadoop</artifactId>-->
+<!--          <groupId>hadoop-core</groupId>-->
+<!--        </exclusion>-->
+<!--      </exclusions>-->
+<!--    </dependency>-->
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-wrangler</artifactId>
@@ -566,48 +562,48 @@
     </dependency>
 
     <!-- HBase -->
-    <dependency>
-      <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-client</artifactId>
-      <version>${hbase.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>log4j</groupId>
-          <artifactId>log4j</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-log4j12</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-common</artifactId>
-      <version>${hbase.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>commons-logging</groupId>
-          <artifactId>commons-logging</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-core</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>commons-logging</groupId>
-          <artifactId>commons-logging</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-log4j12</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>log4j</groupId>
-          <artifactId>log4j</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
+<!--    <dependency>-->
+<!--      <groupId>org.apache.hbase</groupId>-->
+<!--      <artifactId>hbase-client</artifactId>-->
+<!--      <version>${hbase.version}</version>-->
+<!--      <exclusions>-->
+<!--        <exclusion>-->
+<!--          <groupId>log4j</groupId>-->
+<!--          <artifactId>log4j</artifactId>-->
+<!--        </exclusion>-->
+<!--        <exclusion>-->
+<!--          <groupId>org.slf4j</groupId>-->
+<!--          <artifactId>slf4j-log4j12</artifactId>-->
+<!--        </exclusion>-->
+<!--      </exclusions>-->
+<!--    </dependency>-->
+<!--    <dependency>-->
+<!--      <groupId>org.apache.hbase</groupId>-->
+<!--      <artifactId>hbase-common</artifactId>-->
+<!--      <version>${hbase.version}</version>-->
+<!--      <exclusions>-->
+<!--        <exclusion>-->
+<!--          <groupId>commons-logging</groupId>-->
+<!--          <artifactId>commons-logging</artifactId>-->
+<!--        </exclusion>-->
+<!--        <exclusion>-->
+<!--          <groupId>org.apache.hadoop</groupId>-->
+<!--          <artifactId>hadoop-core</artifactId>-->
+<!--        </exclusion>-->
+<!--        <exclusion>-->
+<!--          <groupId>commons-logging</groupId>-->
+<!--          <artifactId>commons-logging</artifactId>-->
+<!--        </exclusion>-->
+<!--        <exclusion>-->
+<!--          <groupId>org.slf4j</groupId>-->
+<!--          <artifactId>slf4j-log4j12</artifactId>-->
+<!--        </exclusion>-->
+<!--        <exclusion>-->
+<!--          <groupId>log4j</groupId>-->
+<!--          <artifactId>log4j</artifactId>-->
+<!--        </exclusion>-->
+<!--      </exclusions>-->
+<!--    </dependency>-->
 
     <!-- Utils -->
     <dependency>
