@@ -186,7 +186,7 @@
     <elasticsearch.version>6.5.4</elasticsearch.version>
     <apache.httpcomponents.version>4.4.5</apache.httpcomponents.version>
 
-    <jackson.version>[2.9.10.3,)</jackson.version>
+    <jackson.version>[2.9.10.3,2.11)</jackson.version>
 
     <retrofit.version>2.6.2</retrofit.version>
     <okhttp.version>4.3.1</okhttp.version>
@@ -241,6 +241,13 @@
     <sonar.sources>src/main/java</sonar.sources>
 
   </properties>
+
+  <scm>
+    <connection>scm:git:git@github.com:AtlasOfLivingAustralia/la-pipelines.git</connection>
+    <url>https://github.com/AtlasOfLivingAustralia/la-pipelines</url>
+    <developerConnection>scm:git:git@github.com:AtlasOfLivingAustralia/la-pipelines.git</developerConnection>
+    <tag>HEAD</tag>
+  </scm>
 
   <dependencies>
 
