@@ -43,19 +43,19 @@ public enum ALAOccurrenceIssue implements InterpretationRemark {
         this.relatedTerms = ImmutableSet.copyOf(relatedTerms);
         this.isDeprecated = AnnotationUtils.isFieldDeprecated(org.gbif.api.vocabulary.OccurrenceIssue.class, this.name());
     }
-
+    @Override
     public String getId() {
         return this.name();
     }
-
+    @Override
     public Set<Term> getRelatedTerms() {
         return this.relatedTerms;
     }
-
+    @Override
     public InterpretationRemarkSeverity getSeverity() {
         return this.severity;
     }
-
+    @Override
     public boolean isDeprecated() {
         return this.isDeprecated;
     }

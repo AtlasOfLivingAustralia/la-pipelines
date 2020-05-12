@@ -11,12 +11,12 @@ public class KeyValuePair <K, V> implements Map.Entry<K, V>{
         this.key = key;
         this.value = value;
     }
-
+    @Override
     public K getKey()
     {
         return this.key;
     }
-
+    @Override
     public V getValue()
     {
         return this.value;
@@ -26,7 +26,7 @@ public class KeyValuePair <K, V> implements Map.Entry<K, V>{
     {
         return this.key = key;
     }
-
+    @Override
     public V setValue(V value)
     {
         return this.value = value;
