@@ -4,7 +4,7 @@ cache:
   directories:
   - ".docker"
   - ".autoconf"
-  - "$HOME/.m2"
+#  - "$HOME/.m2"
 services:
 - docker
 jdk:
@@ -15,6 +15,7 @@ branches:
   - develop
   - "/^hotfix\\/.*$/"
 before_install:
+- rm -Rf $HOME/.m2
 - docker-compose -f ala-nameservice.yml up -d
 - mkdir -p ~/.m2; cp settings.xml  ~/.m2/settings.xml
 - sudo mkdir -p /data/pipelines-shp; sudo wget -O /data/pipelines-shp/pipelines-shapefiles.zip https://pipelines-shp.s3-ap-southeast-2.amazonaws.com/pipelines-shapefiles.zip
