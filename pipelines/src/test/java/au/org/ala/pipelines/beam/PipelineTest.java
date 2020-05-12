@@ -7,10 +7,20 @@ import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.pipelines.DwcaToVerbatimPipeline;
 import org.junit.Test;
 
+import java.io.File;
+
 public class PipelineTest {
 
     @Test
     public void testDwCaPipeline() throws Exception {
+
+
+        String path = "src/test/resources";
+
+        File file = new File(path);
+        String absolutePath = file.getAbsolutePath();
+
+
 
         System.out.println("############## Load DWCA -> VERBATIM");
         DwcaPipelineOptions dwcaOptions = PipelinesOptionsFactory.create(DwcaPipelineOptions.class, new String[]{
@@ -19,7 +29,7 @@ public class PipelineTest {
                 "--runner=SparkRunner",
                 "--metaFileName=dwca-metrics.yml",
                 "--targetPath=/tmp",
-                "--inputPath=/Users/mar759/dev/la-pipelines/pipelines/src/test/resources/dr893"
+                "--inputPath=" + absolutePath + "/dr893"
         });
         DwcaToVerbatimPipeline.run(dwcaOptions);
 
@@ -32,7 +42,7 @@ public class PipelineTest {
                 "--metaFileName=interpretation-metrics.yml",
                 "--targetPath=/tmp",
                 "--inputPath=/tmp/dr893/1/verbatim.avro",
-                "--properties=/Users/mar759/dev/la-pipelines/pipelines.properties",
+                "--properties="+ path +"/pipelines.properties",
                 "--useExtendedRecordId=true",
                 "--skipRegisrtyCalls=true"
         });
@@ -46,7 +56,7 @@ public class PipelineTest {
                 "--metaFileName=uuid-metrics.yml",
                 "--targetPath=/tmp",
                 "--inputPath=/tmp/dr893/1/verbatim.avro",
-                "--properties=/Users/mar759/dev/la-pipelines/pipelines.properties",
+                "--properties="+ path +"/pipelines.properties",
                 "--useExtendedRecordId=true",
                 "--skipRegisrtyCalls=true"
         });
