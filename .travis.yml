@@ -24,7 +24,7 @@ before_install:
 - ls -laF
 - cd $TRAVIS_BUILD_DIR
 script:
-- '[ "${TRAVIS_PULL_REQUEST}" = "false" ] && mvn clean deploy'
+- '[ "${TRAVIS_PULL_REQUEST}" = "false" ] && mvn clean deploy -U'
 after_script:
 - docker-compose -f ala-nameservice.yml kill
 env:
