@@ -6,13 +6,8 @@ import au.org.ala.kvs.client.ALASpeciesMatchRequest;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.cache.KeyValueCache;
 import org.gbif.rest.client.configuration.ClientConfiguration;
-import org.junit.Assert;
 import org.junit.Test;
-
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
-import java.util.stream.IntStream;
 
 public class NameMatchKVStoreTest {
 
