@@ -2,12 +2,6 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <parent>
-    <groupId>au.org.ala</groupId>
-    <artifactId>ala-parent-pom</artifactId>
-    <version>11</version>
-  </parent>
-
   <groupId>au.org.ala</groupId>
   <artifactId>pipelines</artifactId>
   <packaging>jar</packaging>
@@ -29,6 +23,11 @@
       <id>osgeo</id>
       <url>https://repo.osgeo.org/repository/release/</url>
     </repository>
+    <repository>
+      <id>ALA</id>
+      <url>https://nexus.ala.org.au/content/groups/public/</url>
+    </repository>
+
   </repositories>
 
   <build>
