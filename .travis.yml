@@ -4,7 +4,7 @@ cache:
   directories:
   - ".docker"
   - ".autoconf"
-#  - "$HOME/.m2"
+  - "$HOME/.m2"
 services:
 - docker
 jdk:
@@ -16,9 +16,8 @@ branches:
   - "/^feature\\/.*$/"
   - "/^hotfix\\/.*$/"
 before_install:
-- rm -Rf $HOME/.m2
 - docker-compose -f ala-nameservice.yml up -d
-- mkdir -p ~/.m2; wget -q -O ~/.m2/settings.xml https://raw.githubusercontent.com/AtlasOfLivingAustralia/travis-build-configuration/master/travis_maven_settings.xml
+- mkdir -p ~/.m2; cp settings.xml  ~/.m2/settings.xml
 - sudo mkdir -p /data/pipelines-shp; sudo wget -O /data/pipelines-shp/pipelines-shapefiles.zip https://pipelines-shp.s3-ap-southeast-2.amazonaws.com/pipelines-shapefiles.zip
 - cd /data/pipelines-shp
 - sudo unzip pipelines-shapefiles.zip
