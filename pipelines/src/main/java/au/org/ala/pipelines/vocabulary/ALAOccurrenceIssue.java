@@ -13,7 +13,20 @@ import java.util.Set;
 
 public enum ALAOccurrenceIssue implements InterpretationRemark {
     LOCATION_NOT_SUPPLIED(InterpretationRemarkSeverity.WARNING, TermsGroup.COORDINATES_TERMS_NO_DATUM),
-    COORDINATES_CENTRE_OF_STATEPROVINCE(InterpretationRemarkSeverity.WARNING, TermsGroup.COORDINATES_TERMS_NO_DATUM);
+    COORDINATES_CENTRE_OF_STATEPROVINCE(InterpretationRemarkSeverity.WARNING, TermsGroup.COORDINATES_TERMS_NO_DATUM),
+    MISSING_COORDINATEPRECISION(InterpretationRemarkSeverity.WARNING, TermsGroup.COORDINATES_TERMS),
+    UNCERTAINTY_IN_PRECISION(InterpretationRemarkSeverity.WARNING, TermsGroup.COORDINATES_TERMS),
+    UNCERTAINTY_NOT_SPECIFIED(InterpretationRemarkSeverity.WARNING, TermsGroup.COORDINATES_TERMS),
+    STATE_COORDINATE_MISMATCH(InterpretationRemarkSeverity.WARNING, TermsGroup.COORDINATES_COUNTRY_TERMS),
+    UNKNOWN_COUNTRY_NAME(InterpretationRemarkSeverity.WARNING, TermsGroup.COORDINATES_COUNTRY_TERMS),
+    COORDINATES_CENTRE_OF_COUNTRY(InterpretationRemarkSeverity.WARNING, TermsGroup.COORDINATES_COUNTRY_TERMS),
+
+    MISSING_GEODETICDATUM(InterpretationRemarkSeverity.WARNING, TermsGroup.GEODETIC),
+    MISSING_GEOREFERENCE_DATE(InterpretationRemarkSeverity.WARNING, TermsGroup.GEODETIC),
+    MISSING_GEOREFERNCEDBY(InterpretationRemarkSeverity.WARNING, TermsGroup.GEODETIC),
+    MISSING_GEOREFERENCEPROTOCOL(InterpretationRemarkSeverity.WARNING, TermsGroup.GEODETIC),
+    MISSING_GEOREFERENCESOURCES(InterpretationRemarkSeverity.WARNING, TermsGroup.GEODETIC),
+    MISSING_GEOREFERENCEVERIFICATIONSTATUS(InterpretationRemarkSeverity.WARNING, TermsGroup.GEODETIC);
 
     private final Set<Term> relatedTerms;
     private final InterpretationRemarkSeverity severity;
@@ -54,6 +67,7 @@ public enum ALAOccurrenceIssue implements InterpretationRemark {
         static final Term[] COORDINATES_COUNTRY_TERMS;
         static final Term[] RECORDED_DATE_TERMS;
         static final Term[] TAXONOMY_TERMS;
+        static final Term[] GEODETIC;
 
         private TermsGroup() {
         }
@@ -61,6 +75,7 @@ public enum ALAOccurrenceIssue implements InterpretationRemark {
         static {
             COORDINATES_TERMS_NO_DATUM = new Term[]{DwcTerm.decimalLatitude, DwcTerm.decimalLongitude, DwcTerm.verbatimLatitude, DwcTerm.verbatimLongitude, DwcTerm.verbatimCoordinates};
             COORDINATES_TERMS = new Term[]{DwcTerm.decimalLatitude, DwcTerm.decimalLongitude, DwcTerm.verbatimLatitude, DwcTerm.verbatimLongitude, DwcTerm.verbatimCoordinates, DwcTerm.geodeticDatum};
+            GEODETIC = new Term[]{DwcTerm.georeferencedBy, DwcTerm.georeferencedDate, DwcTerm.georeferencedBy, DwcTerm.georeferenceRemarks, DwcTerm.georeferenceProtocol, DwcTerm.georeferenceSources, DwcTerm.georeferenceVerificationStatus, DwcTerm.geodeticDatum};
             COUNTRY_TERMS = new Term[]{DwcTerm.country, DwcTerm.countryCode};
             COORDINATES_COUNTRY_TERMS = new Term[]{DwcTerm.decimalLatitude, DwcTerm.decimalLongitude, DwcTerm.verbatimLatitude, DwcTerm.verbatimLongitude, DwcTerm.verbatimCoordinates, DwcTerm.geodeticDatum, DwcTerm.country, DwcTerm.countryCode};
             RECORDED_DATE_TERMS = new Term[]{DwcTerm.eventDate, DwcTerm.year, DwcTerm.month, DwcTerm.day};
