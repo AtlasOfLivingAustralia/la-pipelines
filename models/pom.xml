@@ -69,6 +69,7 @@
       <plugin>
         <groupId>org.gbif.pipelines</groupId>
         <artifactId>pipelines-maven-plugin</artifactId>
+        <version>2.4.1</version>
         <executions>
           <execution>
             <goals>
@@ -85,6 +86,7 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
+        <version>3.1.0</version>
         <executions>
           <execution>
             <phase>generate-sources</phase>
