@@ -29,6 +29,10 @@
             <id>osgeo</id>
             <url>https://repo.osgeo.org/repository/release/</url>
         </repository>
+        <repository>
+            <id>boundless</id>
+            <url>https://repo.osgeo.org/repository/release/</url>
+        </repository>
     </repositories>
 
   <build>
