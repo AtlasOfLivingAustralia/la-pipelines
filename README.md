@@ -97,13 +97,13 @@ Requirements of softwares:
 1. To interpret, run `./interpret-spark-embedded.sh dr893`
 1. To mint UUIDs, run `./uuid-spark-embedded.sh dr893`
 1. To sample run
-    1. ./export-latlng.sh dr893
-    1. ./sample.sh dr893
-    1. ./sample-avro-embedded.sh dr893
+    1. `./export-latlng.sh dr893`
+    1. `./sample.sh dr893`
+    1. `./sample-avro-embedded.sh dr893`
 1. To setup SOLR:
     1. Install docker
     1. Follow the instructions in [solr8/docker/README.md](solr/docker/solr8/README.md)
-    1. Run `docker-compose -f solr8.yml up`
+    1. Run `docker-compose -f solr8.yml up -d`
     1. Run `./update-solr-config.sh`
 1. To index, run `./index.sh dr893`
 
