@@ -29,7 +29,7 @@ SECONDS=0
 --metaFileName=indexing-metrics.yml \
 --properties=pipelines.properties \
 --includeSampling=true \
---zkHost=aws-quoll-zoo-1.ala:2181,aws-quoll-zoo-2.ala:2181,aws-quoll-zoo-3.ala:2181,aws-quoll-zoo-4.ala:2181,aws-quoll-zoo-5.ala:2181 \
+--zkHost=aws-zoo-quoll-1.ala:2181,aws-zoo-quoll-2.ala:2181,aws-zoo-quoll-3.ala:2181,aws-zoo-quoll-4.ala:2181,aws-zoo-quoll-5.ala:2181 \
 --solrCollection=biocache
 
 echo $(date)
