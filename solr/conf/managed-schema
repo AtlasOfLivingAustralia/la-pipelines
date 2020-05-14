@@ -351,6 +351,10 @@
   <field name="waterBody"  type="string" docValues="true" indexed="true"/>
   <field name="year"  type="tint" docValues="true" indexed="true"/>
 
+  <!-- recent GBIF additions -->
+  <field name="identifiedByIds"  type="string" docValues="true" indexed="true"/>
+  <field name="recordedByIds"  type="string" docValues="true" indexed="true"/>
+
   <!-- ALA 'DWC' additional fields -->
   <field name="species"    type="string" docValues="true" indexed="true"/>
   <field name="speciesID"  type="string" docValues="true" indexed="true"/>
