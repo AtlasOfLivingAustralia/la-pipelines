@@ -4,7 +4,7 @@
 
   <groupId>au.org.ala</groupId>
   <artifactId>pipelines</artifactId>
-  <packaging>pom</packaging>
+  <packaging>jar</packaging>
   <version>1.0-SNAPSHOT</version>
 
   <name>Living Atlas Pipelines</name>

@@ -1,7 +1,7 @@
 package au.org.ala.pipelines.vocabulary;
 
 public class CountryMatch {
-    private static String countryFile = "./src/main/resources/countries.txt";
+    private static String countryFile = "/data/pipelines-data/resources/countries.txt";
     private static CountryMatch cm;
 
 

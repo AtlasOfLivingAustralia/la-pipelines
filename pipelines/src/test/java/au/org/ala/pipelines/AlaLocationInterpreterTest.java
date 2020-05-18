@@ -19,10 +19,7 @@ import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.junit.Test;
 
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_ROUNDED;
 import static org.gbif.api.vocabulary.OccurrenceIssue.GEODETIC_DATUM_ASSUMED_WGS84;
@@ -96,7 +93,7 @@ public class AlaLocationInterpreterTest {
         assertEquals(lr.getCoordinatePrecision(), Double.valueOf(0.5d));
         assertEquals(lr.getCoordinateUncertaintyInMeters(), Double.valueOf(1d));
 
-        ALALocationInterpreter.checkGeodetic(lr, er);
+        ALALocationInterpreter.checkGeodetic(er, lr);
         assertEquals(lr.getIssues().getIssueList().size(), 5);
 
 
@@ -157,7 +154,7 @@ public class AlaLocationInterpreterTest {
         coreMap.put(DwcTerm.verbatimLongitude.qualifiedName(), "-31.25d");
 
 
-        ALALocationInterpreter.interpretStateProvince(service,er,lr);
+        ALALocationInterpreter.interpretStateProvince(service).accept(er,lr);
 
         assertEquals(lr.getStateProvince(), "New South Wales");
 
@@ -187,7 +184,7 @@ public class AlaLocationInterpreterTest {
 
         ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
 
-        ALALocationInterpreter.interpretStateProvince(service,er,lr);
+        ALALocationInterpreter.interpretStateProvince(service).accept(er,lr);
 
         assertArrayEquals(lr.getIssues().getIssueList().toArray(),new String[]{ALAOccurrenceIssue.LOCATION_NOT_SUPPLIED.name()});
 
@@ -211,7 +208,8 @@ public class AlaLocationInterpreterTest {
         coreMap.put(DwcTerm.decimalLongitude.qualifiedName(), "0");
         ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
 
-        ALALocationInterpreter.interpretStateProvince(service,er,lr);
+        ALALocationInterpreter.interpretStateProvince(service).accept(er,lr);
+
 
         assertArrayEquals(lr.getIssues().getIssueList().toArray(),new String[]{OccurrenceIssue.ZERO_COORDINATE.name()});
 
@@ -224,29 +222,27 @@ public class AlaLocationInterpreterTest {
     @Test
     public void assertCountryCoordinateTest(){
 
+
         KeyValueTestStoreStub store = new KeyValueTestStoreStub();
         store.put(new LatLng(15.958333d, -85.908333d), toGeocodeResponse(Country.HONDURAS));
-        store.put(new LatLng(35.891353d, -99.721925d), toGeocodeResponse(Country.UNITED_STATES));
-        store.put(new LatLng(34.69545d, -94.65836d), toGeocodeResponse(Country.UNITED_STATES));
-        store.put(new LatLng(-2.752778d, -58.653057d), toGeocodeResponse(Country.BRAZIL));
-        store.put(new LatLng(-6.623889d, -45.869164d), toGeocodeResponse(Country.BRAZIL));
-        store.put(new LatLng(-17.05d, -66d), toGeocodeResponse(Country.BOLIVIA));
-        store.put(new LatLng(-8.023319, 110.279078), toGeocodeResponse(Country.INDONESIA));
+
+        store.put(new LatLng(-2.752778d, -58.653057d),toGeocodeResponse("San Luise"));
+
         GeocodeService SERVICE = GeocodeService.create(store);
         MetadataRecord mdr = MetadataRecord.newBuilder().setId(ID).build();
 
 
 
         Map<String, String> coreMap = new HashMap<>();
-        coreMap.put(DwcTerm.country.qualifiedName(), Country.BRAZIL.getTitle());
-        coreMap.put(DwcTerm.countryCode.qualifiedName(), Country.BRAZIL.getIso2LetterCode());
         coreMap.put(DwcTerm.verbatimLatitude.qualifiedName(), "-2.752778d");
         coreMap.put(DwcTerm.verbatimLongitude.qualifiedName(), "-58.653057d");
-        coreMap.put(DwcTerm.decimalLatitude.qualifiedName(),"-2.752778d");
-        coreMap.put(DwcTerm.decimalLatitude.qualifiedName(),"-58.653057d");
+//        coreMap.put(DwcTerm.decimalLatitude.qualifiedName(),"-2.752778d");
+//        coreMap.put(DwcTerm.decimalLatitude.qualifiedName(),"-58.653057d");
         coreMap.put(DwcTerm.geodeticDatum.qualifiedName(), "EPSG:4326");
 
         ExtendedRecord source = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+
 
         Optional<LocationRecord> lrResult = Interpretation.from(source)
                 .to(er -> LocationRecord.newBuilder().setId(er.getId()).build())
@@ -257,19 +253,49 @@ public class AlaLocationInterpreterTest {
         //country matches
         LocationRecord lr = lrResult.get();
         assertEquals(lr.getIssues().getIssueList().size(), 0);
+        assertEquals(lr.getCountryCode(), "BR");
+        assertEquals(lr.getCountry(), "BRAZIL");
 
         //Validate assertion Country not match
         lr.setCountry("Test");
-        ALALocationInterpreter.checkForCountryMismatch(lr);
+
+        ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+        ALALocationInterpreter.checkForCountryMismatch(er,lr);
         assertArrayEquals(lr.getIssues().getIssueList().toArray(),new String[]{ ALAOccurrenceIssue.UNKNOWN_COUNTRY_NAME.name()});
 
     }
 
-
+    /**
+     * Only works for country
+     * @param country
+     * @return
+     */
     private static GeocodeResponse toGeocodeResponse(Country country) {
         Location location = new Location();
         location.setIsoCountryCode2Digit(country.getIso2LetterCode());
+        location.setType("Political");
         return new GeocodeResponse(Collections.singletonList(location));
+    }
+
+    /**
+     * Only test for returning state and country
+     * @param state
+     * @return
+     */
+    private static GeocodeResponse toGeocodeResponse(String state) {
+        Location location = new Location();
+        location.setCountryName(state);
+        location.setType("State");
+
+        Location location1 = new Location();
+        location1.setIsoCountryCode2Digit("BR");
+        location1.setType("Political");
+
+        Collection<Location> locations =  Arrays.asList(location, location1);
+
+
+        return new GeocodeResponse(locations);
     }
 
     private class KeyValueTestStoreStub<K, V> implements KeyValueStore<K, V>, Serializable {

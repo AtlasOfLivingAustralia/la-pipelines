@@ -1,11 +1,20 @@
 package au.org.ala.pipelines.vocabulary;
 
-public class StateCentrePoints {
-    static String stateFile = "./src/main/resources/stateProvinceCentrePoints.txt";
+import lombok.extern.slf4j.Slf4j;
 
-    public static boolean coordinatesMatchCentre(String state, double decimalLatitude,  double decimalLongitude){
-        CentrePoints cp = CentrePoints.getInstance(stateFile);
-        return cp.coordinatesMatchCentre(state, decimalLatitude, decimalLongitude);
+@Slf4j
+public class StateCentrePoints {
+    static String stateFile = "/data/pipelines-data/resources/stateProvinceCentrePoints.txt";
+
+    private static CentrePoints cp ;
+
+    public static CentrePoints getInstance(){
+        if(cp == null){
+            cp = CentrePoints.getInstance(stateFile);
+            log.info( stateFile + " contains " + cp.size() + " state centres");
+        }
+        return cp;
     }
+
 
 }

@@ -2,6 +2,7 @@ package au.org.ala.pipelines.interpreters;
 
 import java.util.Collection;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
@@ -9,7 +10,9 @@ import java.util.function.Consumer;
 
 import au.org.ala.pipelines.vocabulary.*;
 import com.google.common.base.Strings;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.OccurrenceIssue;
+import org.gbif.common.parsers.CountryParser;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.geospatial.MeterRangeParser;
 import org.gbif.dwc.terms.DwcTerm;
@@ -23,9 +26,12 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.parsers.parsers.SimpleTypeParser;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 import org.gbif.pipelines.parsers.parsers.location.GeocodeService;
+import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.pipelines.parsers.parsers.location.parser.CoordinateParseUtils;
 
 
+import org.gbif.pipelines.parsers.parsers.location.parser.LocationParser;
+import org.gbif.pipelines.parsers.parsers.location.parser.ParsedLocation;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.geocode.Location;
 
@@ -55,34 +61,38 @@ public class ALALocationInterpreter {
     /**
      *
      * @param service Provided by ALA coutry/state SHP file
-     * @param er
-     * @param lr
+
      */
-    public static void interpretStateProvince(org.gbif.pipelines.parsers.parsers.location.GeocodeService service, ExtendedRecord er, LocationRecord lr){
+    public static BiConsumer<ExtendedRecord, LocationRecord> interpretStateProvince(org.gbif.pipelines.parsers.parsers.location.GeocodeService service){
+        return(er,lr) -> {
+            ParsedField<LatLng> parsedLatLon = CoordinatesParser.parseCoords(er);
 
-        ParsedField<LatLng> parsedLatLon = CoordinatesParser.parseCoords(er);
+            if (parsedLatLon.isSuccessful()) {
+                // coords parsing failed
+                org.gbif.kvs.geocode.LatLng latlng = parsedLatLon.getResult();
 
-        if (parsedLatLon.isSuccessful()) {
-            // coords parsing failed
-            org.gbif.kvs.geocode.LatLng latlng = parsedLatLon.getResult();
+                GeocodeResponse gr = service.get(latlng);
+                if (gr != null) {
+                    Collection<Location> locations = gr.getLocations();
 
-            GeocodeResponse gr = service.get(latlng);
-            if(gr != null){
-                Collection<Location> locations = gr.getLocations();
+                    Optional<Location> state = locations.stream().filter(location -> location.getType().equalsIgnoreCase("State")).findFirst();
+                    if (state.isPresent()) {
+                        lr.setStateProvince(state.get().getCountryName());
+                        //Check centre of State
+                        if (StateCentrePoints.getInstance().coordinatesMatchCentre(lr.getStateProvince(), latlng.getLatitude(), latlng.getLongitude()))
+                            addIssue(lr, ALAOccurrenceIssue.COORDINATES_CENTRE_OF_STATEPROVINCE.name());
+                        else{
+                            log.warn(lr.getStateProvince() + " has wrong centre of " + latlng.getLatitude() +" " + latlng.getLongitude());
+                        }
 
-                Optional<Location> state = locations.stream().filter(location->location.getType().equalsIgnoreCase("State")).findFirst();
-                if(state.isPresent()){
-                    lr.setStateProvince(state.get().getCountryName());
-                    //Check centre of State
-                    if(StateCentrePoints.coordinatesMatchCentre(lr.getStateProvince(), latlng.getLatitude(),latlng.getLongitude()))
-                        addIssue(lr, ALAOccurrenceIssue.COORDINATES_CENTRE_OF_STATEPROVINCE.name());
+                    }
+                } else {
+                    log.warn("No state is found on this cooridnate: " + parsedLatLon.getResult().getLatitude() + ' ' + parsedLatLon.getResult().getLongitude());
                 }
-            }else{
-                log.warn( "No state is found on this cooridnate: " + parsedLatLon.getResult().getLatitude() +' ' + parsedLatLon.getResult().getLongitude());
             }
-        }
-        Set<String> issues = parsedLatLon.getIssues();
-        addIssue(lr, issues);
+            Set<String> issues = parsedLatLon.getIssues();
+            addIssue(lr, issues);
+        };
     }
 
     /**
@@ -97,12 +107,44 @@ public class ALALocationInterpreter {
     public static BiConsumer<ExtendedRecord, LocationRecord> interpretCountryAndCoordinates(
             GeocodeService service, MetadataRecord mdr){
         return (er, lr) -> {
-            LocationInterpreter.interpretCountryAndCoordinates(service,mdr).accept(er, lr);
-            //check country name
-            if(lr.getCountry() !=null && lr.getHasCoordinate() ){
-                if(CountryCentrePoints.coordinatesMatchCentre(lr.getCountry(),lr.getDecimalLatitude(),lr.getDecimalLongitude()))
-                    addIssue(lr, ALAOccurrenceIssue.COORDINATES_CENTRE_OF_COUNTRY.name());
-            }
+            if (service != null) {
+                ParsedField<LatLng> parsedLatLon = CoordinatesParser.parseCoords(er);
+
+                if (parsedLatLon.isSuccessful()) {
+                    org.gbif.kvs.geocode.LatLng latlng = parsedLatLon.getResult();
+                    lr.setDecimalLatitude(latlng.getLatitude());
+                    lr.setDecimalLongitude(latlng.getLongitude());
+                    lr.setHasCoordinate(true);
+
+                    GeocodeResponse gr = service.get(latlng);
+                    if (gr != null) {
+                        Collection<Location> locations = gr.getLocations();
+                        Optional<Location> countryLocation = locations.stream().filter(location -> location.getType().equalsIgnoreCase("Political")).findFirst();
+                        if (countryLocation.isPresent()){
+                            //SHP file supplied by ALA only contains country iso code.
+                            String countryIsoCode = countryLocation.get().getIsoCountryCode2Digit();
+                            ParseResult<Country> parsedCountry = CountryParser.getInstance().parse(countryIsoCode);
+                            if (parsedCountry.isSuccessful()){
+                                lr.setCountry(parsedCountry.getPayload().name());
+                                lr.setCountryCode(countryIsoCode);
+                                if(CountryCentrePoints.getInstance().coordinatesMatchCentre(lr.getCountry(),lr.getDecimalLatitude(),lr.getDecimalLongitude()))
+                                    addIssue(lr, ALAOccurrenceIssue.COORDINATES_CENTRE_OF_COUNTRY.name());
+                            }else{
+                                log.warn("Country iso code " + countryIsoCode +" not found!");
+                            }
+                        }else{
+                            log.warn("Country at "+latlng.getLatitude() +","+latlng.getLongitude() +" is not found in SHP file.");
+                        }
+
+                    }
+
+                }
+                Set<String> latLonIssues = parsedLatLon.getIssues();
+                addIssue(lr, latLonIssues);
+
+                }else{
+                 log.error("Geoservice for Country is not initialized!");
+                }
 
         };
     }
@@ -117,7 +159,8 @@ public class ALALocationInterpreter {
             MISSING_GEOREFERENCEVERIFICATIONSTATUS
 */
 
-    public static void checkGeodetic(LocationRecord lr, ExtendedRecord er){
+    public static void checkGeodetic( ExtendedRecord er, LocationRecord lr){
+
         //check for missing geodeticDatum
         if ( Strings.isNullOrEmpty(extractNullAwareValue(er, DwcTerm.geodeticDatum)))
              addIssue(lr, ALAOccurrenceIssue.MISSING_GEODETICDATUM.name());
@@ -147,7 +190,7 @@ public class ALALocationInterpreter {
      * Check if country name matches inlist
      * @param lr
      */
-    public static void checkForCountryMismatch(LocationRecord lr){
+    public static void checkForCountryMismatch(ExtendedRecord er,LocationRecord lr){
        if(lr.getCountry() != null)
             if(!CountryMatch.matched(lr.getCountry()))
                 addIssue(lr, ALAOccurrenceIssue.UNKNOWN_COUNTRY_NAME.name());

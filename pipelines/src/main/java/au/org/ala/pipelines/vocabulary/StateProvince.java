@@ -1,5 +1,6 @@
 package au.org.ala.pipelines.vocabulary;
 import au.org.ala.pipelines.util.Stemmer;
+import com.google.common.base.Strings;
 import lombok.extern.slf4j.Slf4j;
 import java.io.File;
 import java.nio.file.Files;
@@ -10,7 +11,7 @@ import java.util.List;
 public class StateProvince {
 
     private static StateProvince sp;
-    private static String filePath="./src/main/resources/stateProvinces.txt";
+    private static String filePath="/data/pipelines-data/resources/stateProvinces.txt";
     private List<String> states = new ArrayList<String>();
 
 
@@ -41,12 +42,16 @@ public class StateProvince {
     }
 
     public static boolean matchTerm(String state){
+        if(!Strings.isNullOrEmpty(state)){
+            sp = StateProvince.getInstance(filePath);
 
-        sp = StateProvince.getInstance(filePath);
+            String stemmed = new Stemmer().stem(state.toLowerCase());
 
-        String stemmed = new Stemmer().stem(state.toLowerCase());
+            return sp.states.contains(stemmed);
+        }else
+            return false;
 
-        return sp.states.contains(stemmed);
+
     }
 
     public static void main(String[] args){

@@ -59,7 +59,7 @@ public class GeocodeShpIntersectService implements GeocodeService {
             String eezValue = eez.intersect(longitude, latitude);
             if (eezValue != null) {
                 Location l = new Location();
-                l.setType("EEZ");
+                l.setType("Political");
                 l.setSource( "http://vliz.be/vmdcdata/marbound/");
                 l.setCountryName(eezValue);
                 l.setIsoCountryCode2Digit(eezValue);

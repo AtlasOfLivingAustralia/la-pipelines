@@ -1,11 +1,9 @@
 package au.org.ala.pipelines.vocabulary;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.map.HashedMap;
-import org.eclipse.collections.impl.bimap.mutable.HashBiMap;
+
 import org.gbif.kvs.geocode.LatLng;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.ArrayList;
@@ -13,6 +11,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * CentrePoints is used by coutryCentres and stateCentres, so it can be a singleton
+ * Singleton should be implememend in a conconcrete class like, countryCentres / StateCentres
+ *
  * Simulate CentrePoints.scala
  * Compare with predefined state centres in file
  * Format: New South Wales	-31.2532183	146.921099	-28.1561921	153.903718	-37.5052772	140.9992122
@@ -33,9 +34,8 @@ public class CentrePoints {
     }
 
     public static CentrePoints getInstance(String filePath){
-        if(cp == null){
+        cp = new CentrePoints();
             try {
-                cp = new CentrePoints();
                 Files.lines(new File(filePath).getAbsoluteFile().toPath())
                         .map(s -> s.trim())
                         .filter( l -> l.split("\t").length == 7)
@@ -47,11 +47,10 @@ public class CentrePoints {
                             cp.statesCentre.put(state,centre);
                             cp.statesBBox.put(state,bbox);
                         });
-                log.info("Coordinates of " + cp.statesCentre.size() + " state(s) have been loaded.");
             }catch(Exception e){
                 log.warn(e.getMessage());
             }
-        }
+
         return cp;
     }
 
@@ -65,6 +64,7 @@ public class CentrePoints {
      * @return
      */
     public boolean coordinatesMatchCentre(String state, double decimalLatitude,  double decimalLongitude){
+
         LatLng supposedCentre = statesCentre.get(state.toLowerCase());
         if(supposedCentre != null){
             int latDecPlaces = noOfDecimalPlace(decimalLatitude);
@@ -75,9 +75,20 @@ public class CentrePoints {
             double approximatedLong = round(supposedCentre.getLongitude(),longDecPlaces);
 
             //compare approximated centre point with supplied coordinates
+            log.debug(decimalLatitude +" "+  decimalLongitude + " VS "+ approximatedLat +" " + approximatedLong );
             return approximatedLat == decimalLatitude && approximatedLong == decimalLongitude;
-        }else
+        }else{
+            log.error(state + "is not found in records");
             return false;
+        }
+    }
+
+    /**
+     *
+     * @return size of centres
+     */
+    public int size(){
+        return statesCentre.size();
     }
 
     private double round(double number, int decimalPlaces){
@@ -85,7 +96,7 @@ public class CentrePoints {
             int x = 1;
             for (int i=0 ; i< decimalPlaces; i++)
                 x= x *10;
-            return ((double)((int)(number*x)))/x;
+            return ((double)(Math.round(number*x)))/x;
         }else{
             return Math.round(number);
         }

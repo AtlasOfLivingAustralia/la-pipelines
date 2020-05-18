@@ -6,6 +6,7 @@ import java.util.Properties;
 
 import au.org.ala.kvs.ALAKvConfig;
 import au.org.ala.kvs.ALAKvConfigFactory;
+import au.org.ala.pipelines.interpreters.ALALocationInterpreter;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.core.Interpretation;
@@ -60,7 +61,7 @@ public class LocationTransform extends org.gbif.pipelines.transforms.core.Locati
             .setCreated(Instant.now().toEpochMilli())
             .build();
 
-    Optional<LocationRecord> result = Interpretation.from(source)
+/*    Optional<LocationRecord> result = Interpretation.from(source)
             .to(lr)
             .when(er -> !er.getCoreTerms().isEmpty())
             .via(LocationInterpreter.interpretCountryAndCoordinates(getService(), mdr))
@@ -77,6 +78,29 @@ public class LocationTransform extends org.gbif.pipelines.transforms.core.Locati
             .via(LocationInterpreter::interpretMaximumDistanceAboveSurfaceInMeters)
             .via(LocationInterpreter::interpretCoordinatePrecision)
             .via(LocationInterpreter::interpretCoordinateUncertaintyInMeters)
+            .get();*/
+
+    Optional<LocationRecord> result = Interpretation.from(source)
+            .to(lr)
+            .when(er -> !er.getCoreTerms().isEmpty())
+            .via(ALALocationInterpreter.interpretCountryAndCoordinates(getService(),mdr))
+            .via(ALALocationInterpreter.interpretStateProvince(getService()))
+            .via(LocationInterpreter::interpretContinent)
+            .via(LocationInterpreter::interpretWaterBody)
+            .via(LocationInterpreter::interpretMinimumElevationInMeters)
+            .via(LocationInterpreter::interpretMaximumElevationInMeters)
+            .via(LocationInterpreter::interpretElevation)
+            .via(LocationInterpreter::interpretMinimumDepthInMeters)
+            .via(LocationInterpreter::interpretMaximumDepthInMeters)
+            .via(LocationInterpreter::interpretDepth)
+            .via(LocationInterpreter::interpretMinimumDistanceAboveSurfaceInMeters)
+            .via(LocationInterpreter::interpretMaximumDistanceAboveSurfaceInMeters)
+            .via(LocationInterpreter::interpretCoordinatePrecision)
+            .via(LocationInterpreter::interpretCoordinateUncertaintyInMeters)
+            .via(ALALocationInterpreter::checkForStateMismatch)
+            .via(ALALocationInterpreter::checkForCountryMismatch)
+            //.via(ALALocationInterpreter::checkGeodetic)
+            .via(ALALocationInterpreter::checkCoordinateUncertainty)
             .get();
 
     result.ifPresent(r -> this.incCounter());
