@@ -7,7 +7,7 @@ do
     if [[ -d $file ]]; then
         datasetID=$(basename $file)
         echo "[DWCA-AVRO] Starting dwca avro conversion for $datasetID....."
-        ./dwca-arvo.sh $datasetID
+        ./dwca-avro.sh $datasetID
         echo "[DWCA-AVRO] Finished dwca avro conversion for $datasetID."
     fi
 done

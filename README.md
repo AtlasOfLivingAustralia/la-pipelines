@@ -1,4 +1,4 @@
-# Living Atlas Pipelines extensions
+# Living Atlas Pipelines extensions [![Build Status](https://travis-ci.org/AtlasOfLivingAustralia/la-pipelines.svg?branch=master)](http://travis-ci.org/AtlasOfLivingAustralia/la-pipelines)
 
 This project is **proof of concept quality code** aimed at identifying work required
  to use of pipelines as a replacement to [biocache-store](https://github.com/AtlasOfLivingAustralia/biocache-store)
@@ -67,42 +67,44 @@ In the absence of ansible scripts, here are some instructions for setting up a l
 These steps will load a dataset in SOLR.
 
 Requirements of softwares:
-Maven needs work on OpenSdk 1.8 
+* Java 8 - this is mandatory (see [GBIF pipelines documentation](https://github.com/gbif/pipelines#about-the-project))
+* Maven needs work on OpenSDK 1.8 
 'nano ~/.mavenrc' add 'export JAVA_HOME= [JDK1.8 PATH]'
-Docker Desktop
-lombok plugin for intelliJ needs to be installed for slf4 annotation  
+* Docker Desktop
+* lombok plugin for intelliJ needs to be installed for slf4 annotation  
 
-### Prerequisite service 
-1. Run ala-namematching-ervice on port 9179
+### Prerequisite services
+1. Run ala-namematching-service on port 9179
    There are two ways of running ala-nameservice
-   1. Fetch Dave Martin's dock-compose file via `git clone https://github.com/djtfmartin/la-pipelines`.
-      Run `docker-compose -f ala-nameservice.yml up -d`
+   1. Use the docker-compose file in the root of this project like so:
+      `docker-compose -f ala-nameservice.yml up -d`
    2. Or we can checkout ala-namematching-service via `git clone https://github.com/AtlasOfLivingAustralia/ala-namematching-service`
       run `mvn package` to build `ala-namematching-service-1.0-SNAPSHOT.jar`. Jar name may change based on version  
       Copy jar file from ./target to ./docker
       `cd ./docker`
       `docker-compose up`
       Check docker-compose.yml to get more hints how ala-namematching-service is built
-      
+    
+    You can test it by checking this url: http://localhost:9179/api/search?q=Acacia
+    
       
 ### Run la-pipeline   
 1. Download shape files from [here](https://pipelines-shp.s3-ap-southeast-2.amazonaws.com/pipelines-shapefiles.zip) and expand into `/data/pipelines-shp` directory
 1. Download a darwin core archive (e.g. https://archives.ala.org.au/archives/gbif/dr893/dr893.zip) and expand it into `/data/biocache-load` e.g. `/data/biocache-load/dr893`
-1. Create the following directories
-    1. `/data/pipelines-data`
-    1. `/data/pipelines-cache`  
+1. Create the following directory `/data/pipelines-data`
 1. Build with maven `mvn clean install`
 1. To convert DwCA to AVRO, run `./dwca-avro.sh dr893`
-1. To interpret, run `./interpret.sh dr893`
+1. To interpret, run `./interpret-spark-embedded.sh dr893`
+1. To mint UUIDs, run `./uuid-spark-embedded.sh dr893`
 1. To sample run
-    1. ./export-latlng.sh dr893
-    1. ./sample.sh dr893
-    1. ./sample-cache.sh dr893
+    1. `./export-latlng.sh dr893`
+    1. `./sample.sh dr893`
+    1. `./sample-avro-embedded.sh dr893`
 1. To setup SOLR:
     1. Install docker
     1. Follow the instructions in [solr8/docker/README.md](solr/docker/solr8/README.md)
-    1. Run `docker-compose -f solr8.yml start`
-    1. Run `./upload-solr-config.sh`
+    1. Run `docker-compose -f solr8.yml up -d`
+    1. Run `./update-solr-config.sh`
 1. To index, run `./index.sh dr893`
 
 
@@ -120,7 +122,12 @@ To shutdown, run the following:
 docker-compose -f ala-nameservice.yml up kill
 ```
 
-
 ## Code style and tools
 
 For code style and tool see the [recommendations](https://github.com/gbif/pipelines#codestyle-and-tools-recommendations) on the GBIF pipelines project. In particular, note the project uses Project Lombok, please install Lombok plugin for Intellij IDEA.
+
+`avro-tools` is recommended to aid to development for quick views of AVRO outputs. This can be install on Macs with `brew`
+
+`
+brew install avro-tools
+`

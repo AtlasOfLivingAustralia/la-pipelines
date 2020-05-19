@@ -37,15 +37,25 @@ import java.util.zip.ZipInputStream;
 /**
  * A utility to crawl the ALA layers. Requires an input csv containing lat, lng (no header)
  * and an output directory.
+ *
+ * TODO This needs improvement to make it a more useable commandline tool with options.
  */
 @Slf4j
 public class LayerCrawler {
 
+    // TODO: make this configurable
     private static final String BASE_URL = "https://sampling.ala.org.au/";
+    // TODO: make this configurable
     private static final String SELECTED_ELS  = "el674,el874,el774,el715,el1020,el713,el893,el598,el1006,el996,el814,el881,el1081,el705,el725,el1038,el728,el882,el889,el843,el726,el747,el793,el891,el737,el894,el1011,el720,el887,el708,el899,el681,el718,el766,el788,el810,el890,el830,el673,el898,el663,el668,el730,el669,el1019,el729,el1023,el721,el865,el879,el683,el680,el867,el892,el740,el816,el711,el845,el1003,el1078,el1079,el862,el591,el860,el866,el886,el995,el819,el772,el1013,el1073,el836,el838,el1007,el1040,el586,el704,el878,el1021,el1037,el1077,el670,el827,el1017,el1055,el876,el682,el746,el760,el787,el844,el1010,el2119,el1012,el719,el870,el672,el789,el948,el1036";
-    public static final int BATCH_SIZE = 100000;
+    // TODO: make this configurable
+    public static final int BATCH_SIZE = 25000;
+    // TODO: make this configurable
     public static final int BATCH_STATUS_SLEEP_TIME = 1000;
+    // TODO: make this configurable
     public static final int DOWNLOAD_RETRIES = 5;
+    public static final String UNKNOWN_STATUS = "unknown";
+    public static final String FINISHED_STATUS = "finished";
+    public static final String ERROR_STATUS = "error";
 
     SamplingService service;
 
@@ -58,6 +68,10 @@ public class LayerCrawler {
 
     public static void main(String[] args) throws Exception  {
 
+
+        String baseDir = "/data/pipelines-data/";
+        String samplingAllDir = "/data/pipelines-sampling/";
+
         if (args.length == 1) {
 
             String dataSetID = args[0];
@@ -67,12 +81,22 @@ public class LayerCrawler {
             //list file in directory
             LayerCrawler lc = new LayerCrawler();
 
-            File samples = new File("/data/pipelines-data/" + dataSetID + "/1/sampling");
+            //delete existing sampling output
+            File samplingDir = new File(baseDir + dataSetID + "/1/sampling");
+            if (samplingDir.exists()){
+                FileUtils.forceDelete(samplingDir);
+            }
+
+            //(re)create sampling output directories
+            File samples = new File(baseDir + dataSetID + "/1/sampling/downloads");
             FileUtils.forceMkdir(samples);
 
-            Stream<File> latLngFiles = Stream.of(
-                    new File("/data/pipelines-data/" + dataSetID + "/1/latlng").listFiles()
-            );
+            File latLngExportDir = new File(baseDir + dataSetID + "/1/latlng");
+            if (!latLngExportDir.exists()){
+                throw new RuntimeException("LatLng export unavailable. Has LatLng export pipeline been ran ? " + latLngExportDir.getAbsolutePath());
+            }
+
+            Stream<File> latLngFiles = Stream.of(latLngExportDir.listFiles());
 
             String layerList = lc.getRequiredLayers();
 
@@ -91,11 +115,11 @@ public class LayerCrawler {
             //list file in directory
             LayerCrawler lc = new LayerCrawler();
 
-            File samples = new File("/data/pipelines-sampling/sampling");
+            File samples = new File(samplingAllDir + "sampling/downloads");
             FileUtils.forceMkdir(samples);
 
             Stream<File> latLngFiles = Stream.of(
-                new File("/data/pipelines-sampling/latlng/").listFiles()
+                new File(samplingAllDir + "latlng/").listFiles()
             );
 
             String layerList = lc.getRequiredLayers();
@@ -121,8 +145,10 @@ public class LayerCrawler {
         log.info("Retrieving layer list from sampling service");
         List<String> requiredEls = Arrays.asList(SELECTED_ELS.split(","));
         String layers = service.getLayers().execute().body().stream()
+                .filter(l -> l.getEnabled())
                 .map(l -> String.valueOf(l.getId()))
-                .filter(s -> s.startsWith("cl") || requiredEls.contains(s))
+
+//                .filter(s -> s.startsWith("cl") || requiredEls.contains(s))
                 .collect(Collectors.joining(","));
 
         log.info("Required layer count {}",  layers.split(",").length);
@@ -134,12 +160,14 @@ public class LayerCrawler {
     public void crawl(String layers, File inputFile, File outputDirectory) throws Exception {
 
         // partition the coordinates into batches of N to submit
-        log.info("Partitioning coordinates {}", inputFile.getAbsolutePath());
+        log.info("Partitioning coordinates from file {}", inputFile.getAbsolutePath());
 
         Stream<String> coordinateStream = Files.lines(inputFile.toPath());
         Collection<List<String>> partitioned = partition(coordinateStream, BATCH_SIZE);
 
         for (List<String> partition : partitioned) {
+
+            log.info("Partition size (no of coordinates) : {}", partition.size());
             String coords = String.join(",", partition);
 
             Instant batchStart = Instant.now();
@@ -148,8 +176,8 @@ public class LayerCrawler {
             Response<SamplingService.Batch> submit = service.submitIntersectBatch(layers, coords).execute();
             String batchId = submit.body().getBatchId();
 
-            String state = "unknown";
-            while (!state.equals("finished")  && !state.equals("error")) {
+            String state = UNKNOWN_STATUS;
+            while (!state.equalsIgnoreCase(FINISHED_STATUS)  && !state.equalsIgnoreCase(ERROR_STATUS)) {
                 Response<SamplingService.BatchStatus> status = service.getBatchStatus(batchId).execute();
                 SamplingService.BatchStatus batchStatus = status.body();
                 state = batchStatus.getStatus();
@@ -158,11 +186,10 @@ public class LayerCrawler {
 
                 log.info("batch ID {} - status: {} - time elapses {} seconds", batchId, state, Duration.between(batchStart, batchCurrentTime).getSeconds());
 
-                if (!state.equals("finished")) {
+                if (!state.equals(FINISHED_STATUS)) {
                     Thread.sleep(BATCH_STATUS_SLEEP_TIME);
                 } else {
                     log.info("Downloading sampling batch {}", batchId);
-
 
                     downloadFile(outputDirectory, batchId, batchStatus);
 
@@ -185,9 +212,23 @@ public class LayerCrawler {
                     log.info("Sampling done for file {}", inputFile.getAbsolutePath());
                 }
             }
+
+            if (state.equals(ERROR_STATUS)){
+                log.error("Unable to download batch ID {}", batchId);
+                throw new RuntimeException("Unable to complete sampling for dataset. Check the status of sampling service for more details");
+            }
         }
     }
 
+    /**
+     * Download the batch file with a retries mechanism.
+     *
+     * @param outputDirectory
+     * @param batchId
+     * @param batchStatus
+     * @return
+     * @throws IOException
+     */
     private boolean downloadFile(File outputDirectory, String batchId, SamplingService.BatchStatus batchStatus) throws IOException {
 
         for (int i = 0; i < DOWNLOAD_RETRIES; i++) {
@@ -209,7 +250,6 @@ public class LayerCrawler {
         }
         return false;
     }
-
 
     /**
      * Simple client to the ALA sampling service.
@@ -239,10 +279,11 @@ public class LayerCrawler {
         Call<Batch> submitIntersectBatch(@Field("fids") String layerIds,
                                          @Field("points") String coordinatePairs);
 
-
         @JsonIgnoreProperties(ignoreUnknown = true)
         class Layer {
+
             private String id;
+            private Boolean enabled;
 
             public String getId() {
                 return id;
@@ -250,6 +291,15 @@ public class LayerCrawler {
 
             public void setId(String id) {
                 this.id = id;
+            }
+
+
+            public Boolean getEnabled() {
+                return enabled;
+            }
+
+            public void setEnabled(Boolean enabled) {
+                this.enabled = enabled;
             }
         }
 
@@ -295,7 +345,6 @@ public class LayerCrawler {
      */
     private static <T> Collection<List<T>> partition(Stream<T> stream, int size) {
         final AtomicInteger counter = new AtomicInteger(0);
-
         return stream
                 .collect(Collectors.groupingBy(it -> counter.getAndIncrement() / size))
                 .values();

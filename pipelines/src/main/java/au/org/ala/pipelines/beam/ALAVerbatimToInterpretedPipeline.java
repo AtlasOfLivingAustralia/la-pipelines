@@ -117,22 +117,19 @@ public class ALAVerbatimToInterpretedPipeline {
     MetadataTransform metadataTransform = MetadataTransform.create(properties, endPointType, attempt, skipRegistryCalls);
     BasicTransform basicTransform =  BasicTransform.create(properties, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId);
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
-
-    ALAAttributionTransform alaAttributionTransform = ALAAttributionTransform.create(properties);
-
     TemporalTransform temporalTransform = TemporalTransform.create();
-
 //    TaxonomyTransform taxonomyTransform = TaxonomyTransform.create(properties);
-    LocationTransform locationTransform = LocationTransform.create(properties);
-
-    // ALA specific transforms
-    ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.create(properties);
 
     // Extension
     MeasurementOrFactTransform measurementOrFactTransform = MeasurementOrFactTransform.create();
     MultimediaTransform multimediaTransform = MultimediaTransform.create();
     AudubonTransform audubonTransform = AudubonTransform.create();
     ImageTransform imageTransform = ImageTransform.create();
+
+    // ALA specific transforms
+    ALAAttributionTransform alaAttributionTransform = ALAAttributionTransform.create(properties);
+    ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.create(properties);
+    LocationTransform locationTransform = LocationTransform.create(properties);
 
     log.info("Creating beam pipeline");
     // Create and write metadata
@@ -148,13 +145,13 @@ public class ALAVerbatimToInterpretedPipeline {
             .apply("Check verbatim transform condition", metadataTransform.checkMetadata(types))
             .apply("Convert into view", View.asSingleton());
 
+    // Interpret and write all record types
     PCollection<ExtendedRecord> uniqueRecords = metadataTransform.metadataOnly(types) ?
         verbatimTransform.emptyCollection(p) :
         p.apply("Read ExtendedRecords", verbatimTransform.read(options.getInputPath()))
             .apply("Read occurrences from extension", OccurrenceExtensionTransform.create())
             .apply("Filter duplicates", UniqueIdTransform.create());
 
-    // Interpret and write all record types
     uniqueRecords
         .apply("Check verbatim transform condition", verbatimTransform.check(types))
         .apply("Write verbatim to avro", verbatimTransform.write(pathFn));
@@ -165,14 +162,10 @@ public class ALAVerbatimToInterpretedPipeline {
         .apply("Write basic to avro", basicTransform.write(pathFn));
 
     uniqueRecords
-          .apply("Check collection attribution", alaAttributionTransform.check(types))
-          .apply("Interpret collection  attribution", alaAttributionTransform.interpret(metadataView))
-          .apply("Write attribution to avro", alaAttributionTransform.write(pathFn));
-
-    uniqueRecords
         .apply("Check temporal transform condition", temporalTransform.check(types))
         .apply("Interpret temporal", temporalTransform.interpret())
         .apply("Write temporal to avro", temporalTransform.write(pathFn));
+
 
     uniqueRecords
         .apply("Check multimedia transform condition", multimediaTransform.check(types))
@@ -193,6 +186,11 @@ public class ALAVerbatimToInterpretedPipeline {
         .apply("Check measurement transform condition", measurementOrFactTransform.check(types))
         .apply("Interpret measurement", measurementOrFactTransform.interpret())
         .apply("Write measurement to avro", measurementOrFactTransform.write(pathFn));
+
+    uniqueRecords
+        .apply("Check collection attribution", alaAttributionTransform.check(types))
+        .apply("Interpret collection attribution", alaAttributionTransform.interpret(metadataView))
+        .apply("Write attribution to avro", alaAttributionTransform.write(pathFn));
 
     uniqueRecords
         .apply("Check ALA taxonomy transform condition", alaTaxonomyTransform.check(types))

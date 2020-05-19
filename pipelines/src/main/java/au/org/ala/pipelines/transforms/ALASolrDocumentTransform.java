@@ -1,7 +1,5 @@
 package au.org.ala.pipelines.transforms;
 
-import au.org.ala.sampling.SamplingCache;
-import au.org.ala.sampling.SamplingCacheFactory;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.Schema;
@@ -64,6 +62,8 @@ public class ALASolrDocumentTransform implements Serializable {
     private TupleTag<AustraliaSpatialRecord> asrTag;
 
     private TupleTag<ALAAttributionRecord> aarTag;
+    @NonNull
+    private TupleTag<ALAUUIDRecord> urTag;
 
     @NonNull
     private  PCollectionView<MetadataRecord> metadataView;
@@ -83,6 +83,7 @@ public class ALASolrDocumentTransform implements Serializable {
             TupleTag<MeasurementOrFactRecord> mfrTag,
             TupleTag<AustraliaSpatialRecord> asrTag,
             TupleTag<ALAAttributionRecord> aarTag,
+            TupleTag<ALAUUIDRecord> urTag,
             PCollectionView<MetadataRecord> metadataView,
             String datasetID
     ){
@@ -99,6 +100,7 @@ public class ALASolrDocumentTransform implements Serializable {
         t.mfrTag = mfrTag;
         t.asrTag =  asrTag;
         t.aarTag  = aarTag;
+        t.urTag = urTag;
         t.metadataView = metadataView;
         t.datasetID = datasetID;
         return t;
@@ -119,7 +121,7 @@ public class ALASolrDocumentTransform implements Serializable {
      * @return
      */
     @NotNull
-    public static SolrInputDocument createSolrDocument(MetadataRecord mdr,  BasicRecord br, TemporalRecord tr, LocationRecord lr, TaxonRecord txr, ALATaxonRecord atxr, ExtendedRecord er, ALAAttributionRecord aar, AustraliaSpatialRecord asr) {
+    public static SolrInputDocument createSolrDocument(MetadataRecord mdr, BasicRecord br, TemporalRecord tr, LocationRecord lr, TaxonRecord txr, ALATaxonRecord atxr, ExtendedRecord er, ALAAttributionRecord aar, AustraliaSpatialRecord asr, ALAUUIDRecord ur) {
 
         Set<String> skipKeys = new HashSet<String>();
         skipKeys.add("id");
@@ -143,7 +145,7 @@ public class ALASolrDocumentTransform implements Serializable {
         skipKeys.add("machineTags"); //TODO review content
 
         SolrInputDocument doc = new SolrInputDocument();
-        doc.setField("id", er.getId());
+        doc.setField("id", ur.getUuid());
 
         addToDoc(lr, doc, skipKeys);
         addToDoc(tr, doc, skipKeys);
@@ -321,6 +323,7 @@ public class ALASolrDocumentTransform implements Serializable {
                 MeasurementOrFactRecord mfr = v.getOnly(mfrTag, MeasurementOrFactRecord.newBuilder().setId(k).build());
 
                 // ALA specific
+                ALAUUIDRecord ur = v.getOnly(urTag);
                 ALATaxonRecord atxr = v.getOnly(atxrTag, ALATaxonRecord.newBuilder().setId(k).build());
                 ALAAttributionRecord aar = v.getOnly(aarTag, ALAAttributionRecord.newBuilder().setId(k).build());
 
@@ -331,7 +334,7 @@ public class ALASolrDocumentTransform implements Serializable {
 
                 MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
 
-                SolrInputDocument doc = createSolrDocument(mdr, br, tr, lr, txr, atxr, er, aar, asr);
+                SolrInputDocument doc = createSolrDocument(mdr, br, tr, lr, txr, atxr, er, aar, asr, ur);
 
                 c.output(doc);
                 counter.inc();

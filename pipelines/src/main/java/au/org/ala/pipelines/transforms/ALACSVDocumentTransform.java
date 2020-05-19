@@ -21,9 +21,6 @@ public class ALACSVDocumentTransform implements Serializable {
     @NonNull
     private final TupleTag<LocationRecord> lrTag;
 
-//    @NonNull
-//    private final PCollectionView<MetadataRecord> metadataView;
-
     public ParDo.SingleOutput<KV<String, CoGbkResult>, String> converter() {
 
         DoFn<KV<String, CoGbkResult>, String> fn = new DoFn<KV<String, CoGbkResult>, String>() {
@@ -38,6 +35,6 @@ public class ALACSVDocumentTransform implements Serializable {
             }
         };
 
-        return ParDo.of(fn); //.withSideInputs(metadataView);
+        return ParDo.of(fn);
     }
 }

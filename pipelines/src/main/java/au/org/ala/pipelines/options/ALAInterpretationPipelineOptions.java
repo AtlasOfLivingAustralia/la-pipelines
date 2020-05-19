@@ -6,12 +6,9 @@ import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 
 public interface ALAInterpretationPipelineOptions extends InterpretationPipelineOptions {
 
-    @Description("ALA name matching service endpoint")
-    @Default.String("http://localhost:9179")
-    String getNameMatchingServiceUrl();
+    @Description("Use map DB for caches")
+    @Default.Boolean(false)
+    boolean isMapDBCacheEnabled();
 
-    void setNameMatchingServiceUrl(String nameMatchingServiceUrl);
-
-
-
+    void setMapDBCacheEnabled(boolean var1);
 }

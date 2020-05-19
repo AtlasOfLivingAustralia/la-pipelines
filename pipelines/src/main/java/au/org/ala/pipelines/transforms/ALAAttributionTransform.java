@@ -17,7 +17,6 @@ import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.core.Interpretation;
-import org.gbif.pipelines.core.interpreters.core.TaxonomyInterpreter;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
@@ -32,10 +31,10 @@ import static au.org.ala.pipelines.common.ALARecordTypes.ALA_ATTRIBUTION;
  * ALA attribution transform for adding ALA attribution retrieved from the collectory to interpreted occurrence data.
  *
  * Beam level transformations for the DWC Taxon, reads an avro, writes an avro, maps from value to keyValue and
- * transforms form {@link ExtendedRecord} to {@link TaxonRecord}.
+ * transforms form {@link ExtendedRecord} to {@link ALAAttributionRecord}.
  * <p>
- * ParDo runs sequence of interpretations for {@link TaxonRecord} using {@link ExtendedRecord} as
- * a source and {@link TaxonomyInterpreter} as interpretation steps
+ * ParDo runs sequence of interpretations for {@link ALAAttributionRecord} using {@link ExtendedRecord} as
+ * a source and {@link ALAAttributionInterpreter} as interpretation steps
  *
  * @see <a href="https://dwc.tdwg.org/terms/#taxon</a>
  */
@@ -91,8 +90,8 @@ public class ALAAttributionTransform extends Transform<ExtendedRecord, ALAAttrib
                     .withTimeOut(kvConfig.getTimeout()) //Geocode service connection time-out
                     .build();
 
-            this.dataResourceKvStore = ALAAttributionKVStoreFactory.alaAttributionKVStore(clientConfiguration);
-            this.collectionKvStore = ALACollectionKVStoreFactory.alaAttributionKVStore(clientConfiguration);
+            this.dataResourceKvStore = ALAAttributionKVStoreFactory.alaAttributionKVStore(clientConfiguration, kvConfig);
+            this.collectionKvStore = ALACollectionKVStoreFactory.alaCollectionKVStore(clientConfiguration, kvConfig);
         }
     }
 

@@ -39,7 +39,6 @@ public class ALANameUsageMatch {
     private List<String> speciesGroup;
     private List<String> speciesSubgroup;
 
-
     @JsonPOJOBuilder(withPrefix = "")
     public static class ALANameUsageMatchBuilder {}
 

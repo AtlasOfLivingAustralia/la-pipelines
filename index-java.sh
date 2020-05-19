@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-echo "Index verbatim.arvo file."
+echo "Index a dataset"
 
 if [ $# -eq 0 ]
   then
@@ -22,7 +22,7 @@ fi
 
 echo $(date)
 SECONDS=0
-java -Xmx8g -XX:+UseG1GC  -Dspark.master=local[*]  -cp pipelines/target/pipelines-1.0-SNAPSHOT-shaded.jar au.org.ala.pipelines.java.ALAInterpretedToSolrIndexPipeline \
+java -Xmx8g -XX:+UseG1GC -cp pipelines/target/pipelines-1.0-SNAPSHOT-shaded.jar au.org.ala.pipelines.java.ALAInterpretedToSolrIndexPipeline \
 --datasetId=$1 \
 --attempt=1 \
 --inputPath=/data/pipelines-data \

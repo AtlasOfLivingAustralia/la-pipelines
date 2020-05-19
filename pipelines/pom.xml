@@ -2,6 +2,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
+  <parent>
+    <groupId>au.org.ala</groupId>
+    <artifactId>ala-parent-pom</artifactId>
+    <version>11</version>
+  </parent>
+
   <groupId>au.org.ala</groupId>
   <artifactId>pipelines</artifactId>
   <packaging>jar</packaging>
@@ -10,26 +16,24 @@
   <name>Living Atlas Pipelines</name>
   <description>GBIF standalone pipelines for interpreting and indexing biodiversity data</description>
 
-  <repositories>
-
-    <repository>
-      <id>gbif-all</id>
-      <url>http://repository.gbif.org/content/groups/gbif</url>
-    </repository>
-    <repository>
-      <id>osgeo</id>
-      <name>Open Source Geospatial Foundation Repository</name>
-      <url>http://download.osgeo.org/webdav/geotools/</url>
-    </repository>
-    <repository>
-      <id>cloudera-release</id>
-      <url>http://repository.cloudera.com/artifactory/cloudera-repos/</url>
-    </repository>
-    <repository>
-      <id>ala-releases</id>
-      <url>https://nexus.ala.org.au/content/repositories/releases/</url>
-    </repository>
-  </repositories>
+    <repositories>
+        <repository>
+            <id>gbif-all</id>
+            <url>https://repository.gbif.org/content/groups/gbif</url>
+        </repository>
+        <repository>
+            <id>cloudera-release</id>
+            <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
+        </repository>
+        <repository>
+            <id>osgeo</id>
+            <url>https://repo.osgeo.org/repository/release/</url>
+        </repository>
+        <repository>
+            <id>boundless</id>
+            <url>https://repo.osgeo.org/repository/release/</url>
+        </repository>
+    </repositories>
 
 <!--  <modules>
     <module>../models</module>
@@ -190,7 +194,7 @@
     <elasticsearch.version>6.5.4</elasticsearch.version>
     <apache.httpcomponents.version>4.4.5</apache.httpcomponents.version>
 
-    <jackson.version>[2.9.10.3,)</jackson.version>
+    <jackson.version>[2.9.10.3,2.11)</jackson.version>
 
     <retrofit.version>2.6.2</retrofit.version>
     <okhttp.version>4.3.1</okhttp.version>
@@ -246,6 +250,13 @@
 
   </properties>
 
+  <scm>
+    <connection>scm:git:git@github.com:AtlasOfLivingAustralia/la-pipelines.git</connection>
+    <url>https://github.com/AtlasOfLivingAustralia/la-pipelines</url>
+    <developerConnection>scm:git:git@github.com:AtlasOfLivingAustralia/la-pipelines.git</developerConnection>
+    <tag>HEAD</tag>
+  </scm>
+
   <dependencies>
 
     <!-- ALA specific -->
@@ -280,7 +291,12 @@
     <dependency>
       <groupId>org.apache.beam</groupId>
       <artifactId>beam-sdks-java-io-solr</artifactId>
-      <version>2.15.0</version>
+      <version>${apache.beam.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.beam</groupId>
+      <artifactId>beam-sdks-java-extensions-join-library</artifactId>
+      <version>${apache.beam.version}</version>
     </dependency>
     <dependency>
       <groupId>commons-configuration</groupId>

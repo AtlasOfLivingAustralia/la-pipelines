@@ -43,7 +43,6 @@ public class ExportAllLatLongCSVPipeline {
 
     public static void run(AllDatasetsPipelinesOptions options) throws Exception {
 
-
         FileUtils.forceMkdir(new File("/data/pipelines-sampling/latlng/"));
 
         log.info("Adding step 1: Options");

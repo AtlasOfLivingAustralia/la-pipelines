@@ -4,6 +4,8 @@ import au.org.ala.pipelines.options.ALASolrPipelineOptions;
 import au.org.ala.pipelines.transforms.ALAAttributionTransform;
 import au.org.ala.pipelines.transforms.ALASolrDocumentTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
+import au.org.ala.pipelines.transforms.ALAUUIDTransform;
+import au.org.ala.utils.ALAFsUtils;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +38,10 @@ import java.util.function.UnaryOperator;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
+/**
+ * ALA Beam pipeline for creating a SOLR index.
+ * This pipeline uses the HTTP SOLR api to index records..
+ */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ALAInterpretedToSolrIndexPipeline {
@@ -53,6 +59,8 @@ public class ALAInterpretedToSolrIndexPipeline {
 
         log.info("Adding step 1: Options");
         UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
+        UnaryOperator<String> identifiersPathFn = t -> ALAFsUtils.buildPathIdentifiersUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
+        UnaryOperator<String> samplingPathFn = t -> ALAFsUtils.buildPathSamplingUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
 
         Pipeline p = Pipeline.create(options);
 
@@ -63,16 +71,19 @@ public class ALAInterpretedToSolrIndexPipeline {
         VerbatimTransform verbatimTransform = VerbatimTransform.create();
         TemporalTransform temporalTransform = TemporalTransform.create();
         TaxonomyTransform taxonomyTransform = TaxonomyTransform.create();
-        ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.create();
-        AustraliaSpatialTransform australiaSpatialTransform = AustraliaSpatialTransform.create();
-        LocationTransform locationTransform = LocationTransform.create();
-        ALAAttributionTransform alaAttributionTransform = ALAAttributionTransform.create();
 
         // Extension
         MeasurementOrFactTransform measurementOrFactTransform = MeasurementOrFactTransform.create();
         MultimediaTransform multimediaTransform = MultimediaTransform.create();
         AudubonTransform audubonTransform = AudubonTransform.create();
         ImageTransform imageTransform = ImageTransform.create();
+
+        // ALA specific
+        ALAUUIDTransform alaUuidTransform = ALAUUIDTransform.create();
+        ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.create();
+        AustraliaSpatialTransform australiaSpatialTransform = AustraliaSpatialTransform.create();
+        LocationTransform locationTransform = LocationTransform.create();
+        ALAAttributionTransform alaAttributionTransform = ALAAttributionTransform.create();
 
         log.info("Adding step 3: Creating beam pipeline");
         PCollectionView<MetadataRecord> metadataView =
@@ -102,10 +113,6 @@ public class ALAInterpretedToSolrIndexPipeline {
                             .apply("Map Taxon to KV", taxonomyTransform.toKv());
         }
 
-        PCollection<KV<String, ALATaxonRecord>> alaTaxonCollection =
-                p.apply("Read Taxon", alaTaxonomyTransform.read(pathFn))
-                        .apply("Map Taxon to KV", alaTaxonomyTransform.toKv());
-
         PCollection<KV<String, MultimediaRecord>> multimediaCollection =
                 p.apply("Read Multimedia", multimediaTransform.read(pathFn))
                         .apply("Map Multimedia to KV", multimediaTransform.toKv());
@@ -122,6 +129,15 @@ public class ALAInterpretedToSolrIndexPipeline {
                 p.apply("Read Measurement", measurementOrFactTransform.read(pathFn))
                         .apply("Map Measurement to KV", measurementOrFactTransform.toKv());
 
+        //ALA Specific
+        PCollection<KV<String, ALAUUIDRecord>> alaUUidCollection =
+                p.apply("Read Taxon", alaUuidTransform.read(identifiersPathFn))
+                        .apply("Map Taxon to KV", alaUuidTransform.toKv());
+
+        PCollection<KV<String, ALATaxonRecord>> alaTaxonCollection =
+                p.apply("Read Taxon", alaTaxonomyTransform.read(pathFn))
+                        .apply("Map Taxon to KV", alaTaxonomyTransform.toKv());
+
         PCollection<KV<String, ALAAttributionRecord>> alaAttributionCollection =
                 p.apply("Read attribution", alaAttributionTransform.read(pathFn))
                         .apply("Map attribution to KV", alaAttributionTransform.toKv());
@@ -129,7 +145,7 @@ public class ALAInterpretedToSolrIndexPipeline {
         PCollection<KV<String, AustraliaSpatialRecord>> australiaSpatialCollection = null;
         if (options.getIncludeSampling()) {
             australiaSpatialCollection =
-                    p.apply("Read Sampling", australiaSpatialTransform.read(pathFn))
+                    p.apply("Read Sampling", australiaSpatialTransform.read(samplingPathFn))
                          .apply("Map Sampling to KV", australiaSpatialTransform.toKv());
         }
 
@@ -146,6 +162,7 @@ public class ALAInterpretedToSolrIndexPipeline {
                 measurementOrFactTransform.getTag(),
                 options.getIncludeSampling() ? australiaSpatialTransform.getTag() : null,
                 alaAttributionTransform.getTag(),
+                alaUuidTransform.getTag(),
                 metadataView,
                 options.getDatasetId()
         );
@@ -166,6 +183,7 @@ public class ALAInterpretedToSolrIndexPipeline {
                 // Raw
                 .and(verbatimTransform.getTag(), verbatimCollection)
                 // ALA Specific
+                .and(alaUuidTransform.getTag(), alaUUidCollection)
                 .and(alaTaxonomyTransform.getTag(), alaTaxonCollection)
                 .and(alaAttributionTransform.getTag(), alaAttributionCollection);
 
@@ -198,7 +216,6 @@ public class ALAInterpretedToSolrIndexPipeline {
         result.waitUntilFinish();
 
         MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
-
 
         log.info("Pipeline has been finished");
     }

@@ -147,16 +147,13 @@ public class ALAVerbatimToInterpretedPipeline {
         IngestMetrics metrics = IngestMetricsBuilder.createVerbatimToInterpretedMetrics();
         SerializableConsumer<String> incMetricFn = metrics::incMetric;
 
-
         log.info("Creating pipelines transforms");
         // Core
         MetadataTransform metadataTransform = MetadataTransform.create(properties, endPointType, attempt, skipRegistryCalls).counterFn(incMetricFn).init();
         BasicTransform basicTransform = BasicTransform.create(properties, datasetId, tripletValid, occIdValid, useErdId).counterFn(incMetricFn).init();
-        ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.create(properties).counterFn(incMetricFn).init();
         LocationTransform locationTransform = LocationTransform.create(properties).init();
         VerbatimTransform verbatimTransform = VerbatimTransform.create().counterFn(incMetricFn);
         TemporalTransform temporalTransform = TemporalTransform.create().counterFn(incMetricFn);
-        ALAAttributionTransform alaAttributionTransform = ALAAttributionTransform.create(properties).counterFn(incMetricFn).init();
 
         // Extension
         MeasurementOrFactTransform measurementTransform = MeasurementOrFactTransform.create().counterFn(incMetricFn);
@@ -168,6 +165,11 @@ public class ALAVerbatimToInterpretedPipeline {
         OccurrenceExtensionTransform occExtensionTransform = OccurrenceExtensionTransform.create().counterFn(incMetricFn);
         DefaultValuesTransform defaultValuesTransform = DefaultValuesTransform.create(properties, datasetId, skipRegistryCalls);
 
+        // ALA specific
+//        ALAUUIDTransform alaUuidTransform = ALAUUIDTransform.create(properties).counterFn(incMetricFn).init();
+        ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.create(properties).counterFn(incMetricFn).init();
+        ALAAttributionTransform alaAttributionTransform = ALAAttributionTransform.create(properties).counterFn(incMetricFn).init();
+
         log.info("Creating writers");
         try (
                 SyncDataFileWriter<ExtendedRecord> verbatimWriter = createWriter(options, ExtendedRecord.getClassSchema(), verbatimTransform, id, false);
@@ -175,12 +177,15 @@ public class ALAVerbatimToInterpretedPipeline {
                 SyncDataFileWriter<BasicRecord> basicWriter = createWriter(options, BasicRecord.getClassSchema(), basicTransform, id, false);
                 SyncDataFileWriter<TemporalRecord> temporalWriter = createWriter(options, TemporalRecord.getClassSchema(), temporalTransform, id, false);
                 SyncDataFileWriter<MeasurementOrFactRecord> measurementWriter = createWriter(options, MeasurementOrFactRecord.getClassSchema(), measurementTransform, id, false);
-                SyncDataFileWriter<ALATaxonRecord> alaTaxonWriter = createWriter(options, ALATaxonRecord.getClassSchema(), alaTaxonomyTransform, id, false);
                 SyncDataFileWriter<LocationRecord> locationWriter = createWriter(options, LocationRecord.getClassSchema(), locationTransform, id, false);
-                SyncDataFileWriter<ALAAttributionRecord> alaAttributionWriter = createWriter(options, ALAAttributionRecord.getClassSchema(), alaAttributionTransform, id, false);
                 SyncDataFileWriter<MultimediaRecord> multimediaWriter = createWriter(options, MultimediaRecord.getClassSchema(), multimediaTransform, id, false);
                 SyncDataFileWriter<ImageRecord> imageWriter = createWriter(options, ImageRecord.getClassSchema(), imageTransform, id, false);
                 SyncDataFileWriter<AudubonRecord> audubonWriter = createWriter(options, AudubonRecord.getClassSchema(), audubonTransform, id, false);
+
+                //ALA specific
+//                SyncDataFileWriter<ALAUUIDRecord> alaUuidWriter = createWriter(options, ALAUUIDRecord.getClassSchema(), alaUuidTransform, id, false);
+                SyncDataFileWriter<ALATaxonRecord> alaTaxonWriter = createWriter(options, ALATaxonRecord.getClassSchema(), alaTaxonomyTransform, id, false);
+                SyncDataFileWriter<ALAAttributionRecord> alaAttributionWriter = createWriter(options, ALAAttributionRecord.getClassSchema(), alaAttributionTransform, id, false);
         ) {
 
             log.info("Creating metadata record");
@@ -189,7 +194,7 @@ public class ALAVerbatimToInterpretedPipeline {
             metadataWriter.append(mdr);
 
             // Read DWCA and replace default values
-            log.info("Reading DwcA - into erMap");
+            log.info("Reading Verbatim into erMap");
             Map<String, ExtendedRecord> erMap = AvroReader.readUniqueRecords(hdfsSiteConfig, ExtendedRecord.class, options.getInputPath());
 
             log.info("Reading DwcA - extension transform");
@@ -220,6 +225,8 @@ public class ALAVerbatimToInterpretedPipeline {
                 audubonTransform.processElement(er).ifPresent(audubonWriter::append);
                 measurementTransform.processElement(er).ifPresent(measurementWriter::append);
                 locationTransform.processElement(er, mdr).ifPresent(locationWriter::append);
+                //ALA specific
+//                alaUuidTransform.processElement(er, mdr).ifPresent(alaUuidWriter::append);
                 alaTaxonomyTransform.processElement(er).ifPresent(alaTaxonWriter::append);
                 alaAttributionTransform.processElement(er, mdr).ifPresent(alaAttributionWriter::append);
             };
