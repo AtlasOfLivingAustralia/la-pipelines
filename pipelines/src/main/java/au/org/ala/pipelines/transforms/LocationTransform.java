@@ -18,8 +18,6 @@ import org.gbif.pipelines.parsers.config.factory.KvConfigFactory;
 import org.gbif.pipelines.parsers.config.model.KvConfig;
 
 import au.org.ala.kvs.cache.GeocodeServiceFactory;
-import org.gbif.pipelines.parsers.parsers.location.GeocodeService;
-import org.gbif.rest.client.geocode.GeocodeResponse;
 
 public class LocationTransform extends org.gbif.pipelines.transforms.core.LocationTransform {
 
@@ -61,24 +59,6 @@ public class LocationTransform extends org.gbif.pipelines.transforms.core.Locati
             .setCreated(Instant.now().toEpochMilli())
             .build();
 
-/*    Optional<LocationRecord> result = Interpretation.from(source)
-            .to(lr)
-            .when(er -> !er.getCoreTerms().isEmpty())
-            .via(LocationInterpreter.interpretCountryAndCoordinates(getService(), mdr))
-            .via(LocationInterpreter::interpretContinent)
-            .via(LocationInterpreter::interpretWaterBody)
-            .via(LocationInterpreter::interpretStateProvince)
-            .via(LocationInterpreter::interpretMinimumElevationInMeters)
-            .via(LocationInterpreter::interpretMaximumElevationInMeters)
-            .via(LocationInterpreter::interpretElevation)
-            .via(LocationInterpreter::interpretMinimumDepthInMeters)
-            .via(LocationInterpreter::interpretMaximumDepthInMeters)
-            .via(LocationInterpreter::interpretDepth)
-            .via(LocationInterpreter::interpretMinimumDistanceAboveSurfaceInMeters)
-            .via(LocationInterpreter::interpretMaximumDistanceAboveSurfaceInMeters)
-            .via(LocationInterpreter::interpretCoordinatePrecision)
-            .via(LocationInterpreter::interpretCoordinateUncertaintyInMeters)
-            .get();*/
 
     Optional<LocationRecord> result = Interpretation.from(source)
             .to(lr)

@@ -21,8 +21,6 @@ import org.junit.Test;
 import java.io.Serializable;
 import java.util.*;
 
-import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_ROUNDED;
-import static org.gbif.api.vocabulary.OccurrenceIssue.GEODETIC_DATUM_ASSUMED_WGS84;
 import static org.junit.Assert.*;
 
 
