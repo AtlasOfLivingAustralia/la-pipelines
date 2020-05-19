@@ -1,49 +1,30 @@
 package au.org.ala.pipelines.interpreters;
 
-import java.util.Collection;
-
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-
+import au.org.ala.pipelines.parser.CoordinatesParser;
 import au.org.ala.pipelines.vocabulary.*;
 import com.google.common.base.Strings;
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.CountryParser;
 import org.gbif.common.parsers.core.ParseResult;
-import org.gbif.common.parsers.geospatial.MeterRangeParser;
 import org.gbif.dwc.terms.DwcTerm;
-
 import org.gbif.kvs.geocode.LatLng;
-import org.gbif.pipelines.core.Interpretation;
+import org.gbif.pipelines.core.interpreters.core.LocationInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
-
 import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.parsers.parsers.SimpleTypeParser;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 import org.gbif.pipelines.parsers.parsers.location.GeocodeService;
-import org.gbif.common.parsers.core.ParseResult;
-import org.gbif.pipelines.parsers.parsers.location.parser.CoordinateParseUtils;
-
-
-import org.gbif.pipelines.parsers.parsers.location.parser.LocationParser;
-import org.gbif.pipelines.parsers.parsers.location.parser.ParsedLocation;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.geocode.Location;
 
-import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_PRECISION_INVALID;
-import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_UNCERTAINTY_METERS_INVALID;
+import java.util.Collection;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.BiConsumer;
+
 import static org.gbif.pipelines.parsers.utils.ModelUtils.addIssue;
 import static org.gbif.pipelines.parsers.utils.ModelUtils.extractNullAwareValue;
-
-import lombok.extern.slf4j.Slf4j;
-
-import au.org.ala.pipelines.parser.CoordinatesParser;
-import org.gbif.pipelines.core.interpreters.core.LocationInterpreter;
 
 @Slf4j
 public class ALALocationInterpreter {
@@ -68,7 +49,6 @@ public class ALALocationInterpreter {
             ParsedField<LatLng> parsedLatLon = CoordinatesParser.parseCoords(er);
 
             if (parsedLatLon.isSuccessful()) {
-                // coords parsing failed
                 org.gbif.kvs.geocode.LatLng latlng = parsedLatLon.getResult();
 
                 GeocodeResponse gr = service.get(latlng);
@@ -82,14 +62,20 @@ public class ALALocationInterpreter {
                         if (StateCentrePoints.getInstance().coordinatesMatchCentre(lr.getStateProvince(), latlng.getLatitude(), latlng.getLongitude()))
                             addIssue(lr, ALAOccurrenceIssue.COORDINATES_CENTRE_OF_STATEPROVINCE.name());
                         else{
-                            log.warn(lr.getStateProvince() + " has wrong centre of " + latlng.getLatitude() +" " + latlng.getLongitude());
+                            log.debug(lr.getStateProvince() + " has wrong centre of " + latlng.getLatitude() +" " + latlng.getLongitude());
                         }
-
+                    }else{
+                        log.debug("Current state SHP file does not contain a state at " + latlng.getLatitude() +"," + latlng.getLongitude());
                     }
                 } else {
-                    log.warn("No state is found on this cooridnate: " + parsedLatLon.getResult().getLatitude() + ' ' + parsedLatLon.getResult().getLongitude());
+                    log.debug("No location is found on this cooridnate: " + parsedLatLon.getResult().getLatitude() + ' ' + parsedLatLon.getResult().getLongitude());
                 }
             }
+
+            //Assign state from source if no state is fetched from coorinates
+            if (Strings.isNullOrEmpty(lr.getStateProvince()))
+                LocationInterpreter.interpretStateProvince(er,lr);
+
             Set<String> issues = parsedLatLon.getIssues();
             addIssue(lr, issues);
         };
@@ -130,21 +116,18 @@ public class ALALocationInterpreter {
                                 if(CountryCentrePoints.getInstance().coordinatesMatchCentre(lr.getCountry(),lr.getDecimalLatitude(),lr.getDecimalLongitude()))
                                     addIssue(lr, ALAOccurrenceIssue.COORDINATES_CENTRE_OF_COUNTRY.name());
                             }else{
-                                log.warn("Country iso code " + countryIsoCode +" not found!");
+                                log.debug("Country iso code " + countryIsoCode +" not found!");
                             }
                         }else{
-                            log.warn("Country at "+latlng.getLatitude() +","+latlng.getLongitude() +" is not found in SHP file.");
+                            log.debug("Country at "+latlng.getLatitude() +","+latlng.getLongitude() +" is not found in SHP file.");
                         }
-
                     }
-
                 }
                 Set<String> latLonIssues = parsedLatLon.getIssues();
                 addIssue(lr, latLonIssues);
-
-                }else{
+            }else{
                  log.error("Geoservice for Country is not initialized!");
-                }
+            }
 
         };
     }
@@ -205,6 +188,8 @@ public class ALALocationInterpreter {
    }
 
     /**
+     * TODO Need further discussion
+     *
      * Check coordinate uncertainty and precision
      *
      * Prerequisite : interpretCoordinateUncertaintyInMeters and interpretCoordinatePrecision MUST be run.

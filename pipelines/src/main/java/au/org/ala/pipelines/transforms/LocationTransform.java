@@ -99,7 +99,7 @@ public class LocationTransform extends org.gbif.pipelines.transforms.core.Locati
             .via(LocationInterpreter::interpretCoordinateUncertaintyInMeters)
             .via(ALALocationInterpreter::checkForStateMismatch)
             .via(ALALocationInterpreter::checkForCountryMismatch)
-            //.via(ALALocationInterpreter::checkGeodetic)
+            .via(ALALocationInterpreter::checkGeodetic)
             .via(ALALocationInterpreter::checkCoordinateUncertainty)
             .get();
 
