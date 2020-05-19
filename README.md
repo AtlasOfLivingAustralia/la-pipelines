@@ -1,4 +1,4 @@
-# Living Atlas Pipelines extensions [![Build Status](https://travis-ci.org/AtlasOfLivingAustralia/la-pipelines.svg?branch=master)](http://travis-ci.org/AtlasOfLivingAustralia/la-pipelines)
+# Living Atlas Pipelines extensions [![Build Status](https://travis-ci.org/AtlasOfLivingAustralia/la-pipelines.svg?branch=master)](http://travis-ci.org/AtlasOfLivingAustralia/la-pipelines) [![Coverage Status](https://coveralls.io/repos/github/AtlasOfLivingAustralia/la-pipelines/badge.svg?branch=master)](https://coveralls.io/github/AtlasOfLivingAustralia/la-pipelines?branch=master)
 
 This project is **proof of concept quality code** aimed at identifying work required
  to use of pipelines as a replacement to [biocache-store](https://github.com/AtlasOfLivingAustralia/biocache-store)
