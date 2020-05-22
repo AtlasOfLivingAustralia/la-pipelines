@@ -23,46 +23,20 @@ public class DefaultValuesTest {
     @Test
     public void testDwCaPipeline() throws Exception {
 
-        String testResourcePath = "src/test/resources";
-        File file = new File(testResourcePath);
-        String absolutePath = file.getAbsolutePath();
+        //clear up previous test runs
+        FileUtils.forceDelete("/tmp/la-pipelines-test/default-values");
+
+        String absolutePath = new File("src/test/resources").getAbsolutePath();
 
         DwcaPipelineOptions dwcaOptions = PipelinesOptionsFactory.create(DwcaPipelineOptions.class, new String[]{
                 "--datasetId=dr893",
                 "--attempt=1",
                 "--runner=SparkRunner",
                 "--metaFileName=dwca-metrics.yml",
-                "--targetPath=/tmp",
+                "--targetPath=/tmp/la-pipelines-test/default-values",
                 "--inputPath=" + absolutePath + "/default-values/dr893"
         });
         DwcaToVerbatimPipeline.run(dwcaOptions);
-
-        ALAInterpretationPipelineOptions interpretationOptions = PipelinesOptionsFactory.create(ALAInterpretationPipelineOptions.class, new String[]{
-                "--datasetId=dr893",
-                "--attempt=1",
-                "--runner=SparkRunner",
-                "--interpretationTypes=ALL",
-                "--metaFileName=interpretation-metrics.yml",
-                "--targetPath=/tmp",
-                "--inputPath=/tmp/dr893/1/verbatim.avro",
-                "--properties="+ testResourcePath +"/pipelines.properties",
-                "--useExtendedRecordId=true",
-                "--skipRegisrtyCalls=true"
-        });
-        ALAVerbatimToInterpretedPipeline.run(interpretationOptions);
-
-        InterpretationPipelineOptions uuidOptions = PipelinesOptionsFactory.create(InterpretationPipelineOptions.class, new String[]{
-                "--datasetId=dr893",
-                "--attempt=1",
-                "--runner=SparkRunner",
-                "--metaFileName=uuid-metrics.yml",
-                "--targetPath=/tmp",
-                "--inputPath=/tmp/dr893/1/verbatim.avro",
-                "--properties="+ testResourcePath +"/pipelines.properties",
-                "--useExtendedRecordId=true",
-                "--skipRegisrtyCalls=true"
-        });
-        ALAUUIDMintingPipeline.run(uuidOptions);
 
         //check the original verbatim values are NOT populated with default values
         InterpretationPipelineOptions testOptions1 = PipelinesOptionsFactory.create(InterpretationPipelineOptions.class, new String[]{
@@ -70,35 +44,49 @@ public class DefaultValuesTest {
                 "--attempt=1",
                 "--runner=SparkRunner",
                 "--metaFileName=uuid-metrics.yml",
-                "--targetPath=/tmp",
-                "--inputPath=/tmp/dr893/1/verbatim.avro",
-                "--properties="+ testResourcePath +"/pipelines.properties",
+                "--targetPath=/tmp/la-pipelines-test/default-values",
+                "--inputPath=/tmp/la-pipelines-test/default-values/dr893/1/verbatim.avro",
+                "--properties=src/test/resources/pipelines.properties",
                 "--useExtendedRecordId=true",
                 "--skipRegisrtyCalls=true"
         });
         Function<ExtendedRecord, Boolean> notPopulated = (Function<ExtendedRecord, Boolean> & Serializable) er ->
                 er.getCoreTerms().get(DwcTerm.basisOfRecord.namespace() + DwcTerm.basisOfRecord.name()) == null
-                && er.getCoreTerms().get(DwcTerm.occurrenceStatus.namespace() + DwcTerm.basisOfRecord.name())  == null;
-        AvroCheckPipeline.assertCountRecords(testOptions1, 5l, notPopulated);
+                    && er.getCoreTerms().get(DwcTerm.occurrenceStatus.namespace() + DwcTerm.basisOfRecord.name()) == null;
+        AvroCheckPipeline.assertExtendedCountRecords(testOptions1, 5l, notPopulated);
 
-        //check the interpreted values are populated with default values
-        InterpretationPipelineOptions testOptions2 = PipelinesOptionsFactory.create(InterpretationPipelineOptions.class, new String[]{
+        //Run the interpretation pipeline
+        ALAInterpretationPipelineOptions interpretationOptions = PipelinesOptionsFactory.create(ALAInterpretationPipelineOptions.class, new String[]{
                 "--datasetId=dr893",
                 "--attempt=1",
                 "--runner=SparkRunner",
-                "--metaFileName=uuid-metrics.yml",
-                "--targetPath=/tmp",
-                "--inputPath=/tmp/dr893/1/interpreted/verbatim/interpret-*",
-                "--properties="+ testResourcePath +"/pipelines.properties",
+                "--interpretationTypes=ALL",
+                "--metaFileName=interpretation-metrics.yml",
+                "--targetPath=/tmp/la-pipelines-test/default-values",
+                "--inputPath=/tmp/la-pipelines-test/default-values/dr893/1/verbatim.avro",
+                "--properties=src/test/resources/pipelines.properties",
                 "--useExtendedRecordId=true",
                 "--skipRegisrtyCalls=true"
         });
-        Function<ExtendedRecord, Boolean> fullNameFunc = (Function<ExtendedRecord, Boolean> & Serializable) er ->
-                er.getCoreTerms().get(DwcTerm.basisOfRecord.namespace() + DwcTerm.basisOfRecord.name()).equals("HumanObservation")
-                && er.getCoreTerms().get(DwcTerm.occurrenceStatus.namespace() + DwcTerm.occurrenceStatus.name()).equals("present");
-        AvroCheckPipeline.assertCountRecords(testOptions2, 5l, fullNameFunc);
+        ALAVerbatimToInterpretedPipeline.run(interpretationOptions);
 
-        //cleanup test outputs
-        FileUtils.forceDelete("/tmp/dr893");
+        //check the interpreted values are NOW populated with default values
+        InterpretationPipelineOptions checkPopulatedOptions = PipelinesOptionsFactory.create(InterpretationPipelineOptions.class, new String[]{
+                "--datasetId=dr893",
+                "--attempt=1",
+                "--runner=SparkRunner",
+                "--targetPath=/tmp/la-pipelines-test/default-values",
+                "--inputPath=/tmp/la-pipelines-test/default-values/dr893/1/interpreted/verbatim/interpret-*",
+                "--properties=src/test/resources/pipelines.properties"
+        });
+
+        //check default values are populated
+        Function<ExtendedRecord, Boolean> checkPopulatedFcn = (Function<ExtendedRecord, Boolean> & Serializable) er ->
+                   er.getCoreTerms().containsKey(DwcTerm.basisOfRecord.namespace() + DwcTerm.basisOfRecord.name())
+                && er.getCoreTerms().containsKey(DwcTerm.occurrenceStatus.namespace() + DwcTerm.occurrenceStatus.name())
+                && er.getCoreTerms().get(DwcTerm.basisOfRecord.namespace() + DwcTerm.basisOfRecord.name()).equals("HumanObservation")
+                && er.getCoreTerms().get(DwcTerm.occurrenceStatus.namespace() + DwcTerm.occurrenceStatus.name()).equals("present");
+
+        AvroCheckPipeline.assertExtendedCountRecords(checkPopulatedOptions, 5l, checkPopulatedFcn);
     }
 }

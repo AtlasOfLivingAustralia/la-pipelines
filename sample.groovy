@@ -6,11 +6,11 @@ if (this.args.length == 1) {
     def text = new File("/data/pipelines-data/${this.args[0]}/1/dwca-metrics.yml").text.replaceAll("[^a-zA-Z0-9: ]+", "")
     def dwcaMetrics = yaml.load(text)
     if (dwcaMetrics.archiveToErCountAttempted > 50000) {
-        def proc = "./index-spark-cluster.sh ${this.args[0]}".execute()
+        def proc = "./sample-avro-cluster.sh ${this.args[0]}".execute()
         proc.consumeProcessOutput(System.out, System.err)
         proc.waitFor()
     } else {
-        def proc = "./index-java.sh ${this.args[0]}".execute()
+        def proc = "./sample-avro-embedded.sh ${this.args[0]}".execute()
         proc.consumeProcessOutput(System.out, System.err)
         proc.waitFor()
     }

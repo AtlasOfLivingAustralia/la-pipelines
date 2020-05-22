@@ -1,5 +1,6 @@
 package au.org.ala.pipelines.beam;
 
+import au.org.ala.pipelines.transforms.ALAUUIDTransform;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -8,7 +9,9 @@ import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.values.PCollection;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
+import org.gbif.pipelines.io.avro.ALAUUIDRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import java.util.function.Function;
@@ -17,10 +20,10 @@ import java.util.function.Function;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class AvroCheckPipeline {
 
-    public static void assertCountRecords(InterpretationPipelineOptions options, Long assertedCount, final Function<ExtendedRecord, Boolean> testFcn) throws Exception {
 
-        log.info("Creating a pipeline from options");
+    public static void assertExtendedCountRecords(InterpretationPipelineOptions options, Long assertedCount, final Function<ExtendedRecord, Boolean> testFcn) throws Exception {
 
+        log.info("Creating a pipeline from options - loading data from " + options.getInputPath());
         // Initialise pipeline
         Pipeline p = Pipeline.create(options);
         VerbatimTransform verbatimTransform = VerbatimTransform.create();
@@ -35,9 +38,6 @@ public class AvroCheckPipeline {
                     }
                 }))
                 .apply(Count.globally());
-
-        log.info("Running the pipeline");
-
         PAssert.that(extendedRecordsCount).containsInAnyOrder(assertedCount);
         PipelineResult result = p.run();
         result.waitUntilFinish();

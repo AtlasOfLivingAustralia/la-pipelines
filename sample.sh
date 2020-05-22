@@ -6,4 +6,10 @@ if [ $# -eq 0 ]
     exit 1
 fi
 
-java -Xmx8g -Xmx8g -XX:+UseG1GC -cp pipelines/target/pipelines-1.0-SNAPSHOT-shaded.jar au.org.ala.sampling.LayerCrawler $1
+java -Xmx8g -Xmx8g -XX:+UseG1GC -cp pipelines/target/pipelines-1.0-SNAPSHOT-shaded.jar au.org.ala.sampling.LayerCrawler \
+ --appName="Sample for $1" \
+ --datasetId=$1 \
+ --attempt=1 \
+ --runner=SparkRunner \
+ --inputPath=/data/pipelines-data \
+ --targetPath=/data/pipelines-data

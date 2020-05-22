@@ -77,7 +77,7 @@ public class MigrateUUIDPipeline {
                 KV<String, ALAUUIDRecord> kv = KV.of(datasetID,record);
                 out.output(kv);
             } catch (Exception e){
-                throw new RuntimeException(e.getMessage());
+                throw new RuntimeException(e.getMessage() + " - problem ID: " + line);
             }
         }
     }

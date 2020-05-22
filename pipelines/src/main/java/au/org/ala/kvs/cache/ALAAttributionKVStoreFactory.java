@@ -17,8 +17,6 @@ import java.io.IOException;
 @Slf4j
 public class ALAAttributionKVStoreFactory {
 
-    private static KeyValueStore<String, ALACollectoryMetadata> mapDBCache = null;
-
     /**
      * Retrieve KV Store for Collectory Metadata.
      *
