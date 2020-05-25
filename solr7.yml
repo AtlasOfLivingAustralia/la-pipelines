@@ -2,7 +2,7 @@ version: "3.2"
 
 services:
   solr:
-    image: biocache-pipelines-solr7:v1
+    image: djtfmartin/biocache-pipelines-solr7:v1
     container_name: biocache-pipelines-solr7
     ports:
       - 9983:9983
