@@ -1,4 +1,4 @@
-# Living Atlas Pipelines extensions [![Build Status](https://travis-ci.org/AtlasOfLivingAustralia/la-pipelines.svg?branch=master)](http://travis-ci.org/AtlasOfLivingAustralia/la-pipelines)
+# Living Atlas Pipelines extensions [![Build Status](https://travis-ci.org/AtlasOfLivingAustralia/la-pipelines.svg?branch=master)](http://travis-ci.org/AtlasOfLivingAustralia/la-pipelines) [![Coverage Status](https://coveralls.io/repos/github/AtlasOfLivingAustralia/la-pipelines/badge.svg?branch=master)](https://coveralls.io/github/AtlasOfLivingAustralia/la-pipelines?branch=master)
 
 This project is **proof of concept quality code** aimed at identifying work required
  to use of pipelines as a replacement to [biocache-store](https://github.com/AtlasOfLivingAustralia/biocache-store)
@@ -97,13 +97,13 @@ Requirements of softwares:
 1. To interpret, run `./interpret-spark-embedded.sh dr893`
 1. To mint UUIDs, run `./uuid-spark-embedded.sh dr893`
 1. To sample run
-    1. ./export-latlng.sh dr893
-    1. ./sample.sh dr893
-    1. ./sample-avro-embedded.sh dr893
+    1. `./export-latlng.sh dr893`
+    1. `./sample.sh dr893`
+    1. `./sample-avro-embedded.sh dr893`
 1. To setup SOLR:
     1. Install docker
     1. Follow the instructions in [solr8/docker/README.md](solr/docker/solr8/README.md)
-    1. Run `docker-compose -f solr8.yml up`
+    1. Run `docker-compose -f solr8.yml up -d`
     1. Run `./update-solr-config.sh`
 1. To index, run `./index.sh dr893`
 
