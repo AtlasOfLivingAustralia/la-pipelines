@@ -4,7 +4,6 @@ import au.org.ala.pipelines.beam.ALAInterpretedToLatLongCSVPipeline;
 import au.org.ala.pipelines.beam.ALASamplingToAvroPipeline;
 import au.org.ala.pipelines.beam.ALAUUIDMintingPipeline;
 import au.org.ala.util.TestUtils;
-import au.org.ala.pipelines.options.ALAInterpretationPipelineOptions;
 import au.org.ala.pipelines.options.ALASolrPipelineOptions;
 import au.org.ala.sampling.LayerCrawler;
 import org.codehaus.plexus.util.FileUtils;
@@ -78,7 +77,7 @@ public class CompleteIngestJavaPipelineTest {
         });
         DwcaToVerbatimPipeline.run(dwcaOptions);
 
-        ALAInterpretationPipelineOptions interpretationOptions = PipelinesOptionsFactory.create(ALAInterpretationPipelineOptions.class, new String[]{
+        InterpretationPipelineOptions interpretationOptions = PipelinesOptionsFactory.create(InterpretationPipelineOptions.class, new String[]{
                 "--datasetId=" + datasetID,
                 "--attempt=1",
                 "--runner=SparkRunner",

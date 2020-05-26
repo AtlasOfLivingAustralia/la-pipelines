@@ -1,6 +1,5 @@
 package au.org.ala.pipelines.beam;
 
-import au.org.ala.pipelines.options.ALAInterpretationPipelineOptions;
 import org.codehaus.plexus.util.FileUtils;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.ingest.options.DwcaPipelineOptions;
@@ -9,7 +8,6 @@ import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.pipelines.DwcaToVerbatimPipeline;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.junit.Test;
-import org.locationtech.jts.util.Assert;
 
 import java.io.File;
 import java.io.Serializable;
@@ -56,7 +54,7 @@ public class DefaultValuesTest {
         AvroCheckPipeline.assertExtendedCountRecords(testOptions1, 5l, notPopulated);
 
         //Run the interpretation pipeline
-        ALAInterpretationPipelineOptions interpretationOptions = PipelinesOptionsFactory.create(ALAInterpretationPipelineOptions.class, new String[]{
+        InterpretationPipelineOptions interpretationOptions = PipelinesOptionsFactory.create(InterpretationPipelineOptions.class, new String[]{
                 "--datasetId=dr893",
                 "--attempt=1",
                 "--runner=SparkRunner",

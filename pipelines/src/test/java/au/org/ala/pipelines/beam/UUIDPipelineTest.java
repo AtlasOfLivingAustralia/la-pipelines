@@ -1,6 +1,5 @@
 package au.org.ala.pipelines.beam;
 
-import au.org.ala.pipelines.options.ALAInterpretationPipelineOptions;
 import au.org.ala.util.TestUtils;
 import org.codehaus.plexus.util.FileUtils;
 import org.gbif.pipelines.ingest.options.DwcaPipelineOptions;
@@ -82,7 +81,7 @@ public class UUIDPipelineTest {
         });
         DwcaToVerbatimPipeline.run(dwcaOptions);
 
-        ALAInterpretationPipelineOptions interpretationOptions = PipelinesOptionsFactory.create(ALAInterpretationPipelineOptions.class, new String[]{
+        InterpretationPipelineOptions interpretationOptions = PipelinesOptionsFactory.create(InterpretationPipelineOptions.class, new String[]{
                 "--datasetId=" + datasetID,
                 "--attempt=1",
                 "--runner=SparkRunner",

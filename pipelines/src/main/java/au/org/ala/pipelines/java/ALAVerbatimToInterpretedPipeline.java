@@ -1,6 +1,5 @@
 package au.org.ala.pipelines.java;
 
-import au.org.ala.pipelines.options.ALAInterpretationPipelineOptions;
 import au.org.ala.pipelines.transforms.ALAAttributionTransform;
 import au.org.ala.pipelines.transforms.ALADefaultValuesTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
@@ -27,7 +26,6 @@ import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
-import org.gbif.pipelines.ingest.java.transforms.DefaultValuesTransform;
 import org.gbif.pipelines.ingest.java.transforms.OccurrenceExtensionTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.MetadataTransform;
@@ -101,11 +99,11 @@ public class ALAVerbatimToInterpretedPipeline {
     }
 
     public static void run(String[] args) {
-        ALAInterpretationPipelineOptions options = (ALAInterpretationPipelineOptions) PipelinesOptionsFactory.create(ALAInterpretationPipelineOptions.class, args);
+        InterpretationPipelineOptions options = (InterpretationPipelineOptions) PipelinesOptionsFactory.create(InterpretationPipelineOptions.class, args);
         run(options);
     }
 
-    public static void run(ALAInterpretationPipelineOptions options) {
+    public static void run(InterpretationPipelineOptions options) {
         ExecutorService executor = Executors.newWorkStealingPool();
         try {
             run(options, executor);
