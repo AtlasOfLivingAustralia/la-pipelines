@@ -108,20 +108,5 @@ public class UUIDPipelineTest {
                 "--skipRegisrtyCalls=true"
         });
         ALAUUIDMintingPipeline.run(uuidOptions);
-//
-//        ALASolrPipelineOptions solrOptions = PipelinesOptionsFactory.create(ALASolrPipelineOptions.class, new String[]{
-//                "--datasetId=" + datasetID,
-//                "--attempt=1",
-//                "--runner=SparkRunner",
-//                "--metaFileName=uuid-metrics.yml",
-//                "--targetPath=/tmp/la-pipelines-test/uuid-management",
-//                "--inputPath=/tmp/la-pipelines-test/uuid-management/dr893/1/verbatim.avro",
-//                "--properties=src/test/resources/pipelines.properties",
-//                "--zkHost=localhost:9983",
-//                "--solrCollection=biocache",
-//                "--includeSampling=false"
-//        });
-//
-//        ALAInterpretedToSolrIndexPipeline.run(solrOptions);
     }
 }

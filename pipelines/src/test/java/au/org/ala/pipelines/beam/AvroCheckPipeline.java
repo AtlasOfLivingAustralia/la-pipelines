@@ -16,10 +16,13 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import java.util.function.Function;
 
+
+/**
+ * Test utility pipelines for testing the outputs of tests.
+ */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class AvroCheckPipeline {
-
 
     public static void assertExtendedCountRecords(InterpretationPipelineOptions options, Long assertedCount, final Function<ExtendedRecord, Boolean> testFcn) throws Exception {
 
