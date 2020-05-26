@@ -10,6 +10,7 @@ import org.gbif.kvs.hbase.Command;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 
 import java.io.IOException;
+import java.net.UnknownHostException;
 
 /**
  * Key value store factory for Attribution
@@ -48,9 +49,12 @@ public class ALAAttributionKVStoreFactory {
             public ALACollectoryMetadata get(String key) {
                 try {
                     return service.lookupDataResource(key);
+                } catch (org.gbif.rest.client.retrofit.RestClientException ex) {
+                    throw logAndThrow(ex, "Unable to connect to service");
+                } catch (retrofit2.HttpException ex2){
+                    throw logAndThrow(ex2, "Unable to connect to service");
                 } catch (Exception ex) {
-                    log.error("Error contacting the collectory service to retrieve data resource metadata. Has resource been removed ? " + key, ex);
-                    return ALACollectoryMetadata.EMPTY;
+                    throw logAndThrow(ex,"Error contacting the collectory service to retrieve data resource metadata. Has resource been removed ? " + key);
                 }
             }
 

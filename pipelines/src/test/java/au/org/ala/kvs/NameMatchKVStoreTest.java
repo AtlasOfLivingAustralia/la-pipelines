@@ -9,6 +9,8 @@ import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.junit.Test;
 import java.util.Properties;
 
+import static org.junit.Assert.fail;
+
 public class NameMatchKVStoreTest {
 
     /**
@@ -31,5 +33,31 @@ public class NameMatchKVStoreTest {
         ALASpeciesMatchRequest req2 = ALASpeciesMatchRequest.builder().scientificName("Osphranter rufus").build();
         ALANameUsageMatch match2 = kvs.get(req2);
         assert match2.getTaxonConceptID() != null;
+
+        kvs.close();
     }
+
+    /**
+     * Tests the Get operation on {@link KeyValueCache} that wraps a simple KV store backed by a HashMap.
+     */
+    @Test
+    public void getCacheFailTest() throws Exception {
+
+        ClientConfiguration cc = ClientConfiguration.builder()
+                .withBaseApiUrl("http://localhostXXXXXX:9179") //GBIF base API url
+                .withTimeOut(10000l) //Geocode service connection time-out
+                .build();
+        ALAKvConfig alaKvConfig = ALAKvConfigFactory.create(new Properties());
+
+        KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch> kvs = ALANameMatchKVStoreFactory.alaNameMatchKVStore(cc, alaKvConfig);
+
+        try {
+            ALASpeciesMatchRequest req = ALASpeciesMatchRequest.builder().scientificName("Macropus rufus").build();
+            ALANameUsageMatch match = kvs.get(req);
+            fail("Exception should be thrown");
+        } catch (RuntimeException e){
+            //expected
+        }
+    }
+
 }
