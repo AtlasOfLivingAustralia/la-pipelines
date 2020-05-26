@@ -107,12 +107,6 @@ public class ALAInterpretedToSolrIndexPipeline {
         }
     }
 
-    public static void run(String[] args, ExecutorService executor) {
-        ALASolrPipelineOptions options = PipelinesOptionsFactory.create(ALASolrPipelineOptions.class, args);
-        run(options, executor);
-    }
-
-
     @SneakyThrows
     public static void run(ALASolrPipelineOptions options, ExecutorService executor) {
 
