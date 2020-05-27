@@ -12,6 +12,8 @@ import java.util.Collections;
 import java.util.Set;
 
 public enum ALAOccurrenceIssue implements InterpretationRemark {
+
+    //Location related
     LOCATION_NOT_SUPPLIED(InterpretationRemarkSeverity.WARNING, TermsGroup.COORDINATES_TERMS_NO_DATUM),
     COORDINATES_CENTRE_OF_STATEPROVINCE(InterpretationRemarkSeverity.WARNING, TermsGroup.COORDINATES_TERMS_NO_DATUM),
     MISSING_COORDINATEPRECISION(InterpretationRemarkSeverity.WARNING, TermsGroup.COORDINATES_TERMS),
@@ -26,7 +28,13 @@ public enum ALAOccurrenceIssue implements InterpretationRemark {
     MISSING_GEOREFERNCEDBY(InterpretationRemarkSeverity.WARNING, TermsGroup.GEODETIC),
     MISSING_GEOREFERENCEPROTOCOL(InterpretationRemarkSeverity.WARNING, TermsGroup.GEODETIC),
     MISSING_GEOREFERENCESOURCES(InterpretationRemarkSeverity.WARNING, TermsGroup.GEODETIC),
-    MISSING_GEOREFERENCEVERIFICATIONSTATUS(InterpretationRemarkSeverity.WARNING, TermsGroup.GEODETIC);
+    MISSING_GEOREFERENCEVERIFICATIONSTATUS(InterpretationRemarkSeverity.WARNING, TermsGroup.GEODETIC),
+
+    //Temporal related
+    MISSING_COLLECTION_DATE(InterpretationRemarkSeverity.WARNING, TermsGroup.RECORDED_DATE_TERMS),
+    GEOREFERENCE_POST_OCCURRENCE(InterpretationRemarkSeverity.WARNING, TermsGroup.RECORDED_DATE_TERMS),
+    ID_PRE_OCCURRENCE(InterpretationRemarkSeverity.WARNING, TermsGroup.RECORDED_DATE_TERMS),
+    GEOREFERENCED_DATE_UNLIKELY(InterpretationRemarkSeverity.WARNING, TermsGroup.RECORDED_DATE_TERMS);
 
     private final Set<Term> relatedTerms;
     private final InterpretationRemarkSeverity severity;

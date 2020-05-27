@@ -48,6 +48,7 @@ public class AlaLocationInterpreterTest {
         coreMap.put(DwcTerm.coordinatePrecision.qualifiedName(), "0.5");
         coreMap.put(DwcTerm.coordinateUncertaintyInMeters.qualifiedName(), "1");
         coreMap.put(DwcTerm.geodeticDatum.qualifiedName(), "EPSG:4326");
+        coreMap.put(DwcTerm.georeferencedDate.qualifiedName(), "1979-1-1");
 
 
         ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
@@ -74,6 +75,7 @@ public class AlaLocationInterpreterTest {
         LocationInterpreter.interpretElevation(er,lr);
 
 
+
         //should
         assertEquals(lr.getStateProvince(), "Act");
         assertEquals(lr.getMinimumDepthInMeters(), Double.valueOf(10d));
@@ -91,7 +93,9 @@ public class AlaLocationInterpreterTest {
         assertEquals(lr.getCoordinatePrecision(), Double.valueOf(0.5d));
         assertEquals(lr.getCoordinateUncertaintyInMeters(), Double.valueOf(1d));
 
+        ALALocationInterpreter.interpretGeoreferencedDate(er,lr);
         ALALocationInterpreter.checkGeodetic(er, lr);
+        assertEquals("1979-01-01T00:00", lr.getGeoreferencedDate());
         assertEquals(lr.getIssues().getIssueList().size(), 5);
 
 

@@ -10,6 +10,7 @@ import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.core.interpreters.core.LocationInterpreter;
+import org.gbif.pipelines.core.interpreters.core.TemporalInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
@@ -17,14 +18,24 @@ import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 import org.gbif.pipelines.parsers.parsers.location.GeocodeService;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.geocode.Location;
+import com.google.common.collect.Range;
+
 
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.TemporalAccessor;
 
 import static org.gbif.pipelines.parsers.utils.ModelUtils.addIssue;
 import static org.gbif.pipelines.parsers.utils.ModelUtils.extractNullAwareValue;
+import static org.gbif.pipelines.parsers.utils.ModelUtils.*;
+import org.gbif.common.parsers.date.TemporalAccessorUtils;
+import org.gbif.common.parsers.date.TemporalParser;
+import org.gbif.api.vocabulary.OccurrenceIssue;
+import org.gbif.common.parsers.core.OccurrenceParseResult;
 
 @Slf4j
 public class ALALocationInterpreter {
@@ -132,6 +143,30 @@ public class ALALocationInterpreter {
         };
     }
 
+    /**
+     * TODO TemporalRecord does not contain georeferenceDate
+     * @param er
+     * @param lr
+     */
+    public static void interpretGeoreferencedDate(ExtendedRecord er, LocationRecord lr) {
+        if (hasValue(er, DwcTerm.georeferencedDate)) {
+            LocalDate upperBound = LocalDate.now().plusDays(1);
+            Range<LocalDate> validRecordedDateRange = Range.closed(ALATemporalInterpreter.MIN_LOCAL_DATE, upperBound);
+            OccurrenceParseResult<TemporalAccessor> parsed =
+                    TemporalInterpreter.interpretLocalDate(extractValue(er, DwcTerm.georeferencedDate),
+                            validRecordedDateRange, OccurrenceIssue.IDENTIFIED_DATE_UNLIKELY);
+            if (parsed.isSuccessful()) {
+                Optional.ofNullable(TemporalAccessorUtils.toEarliestLocalDateTime(parsed.getPayload(), false))
+                        .map(LocalDateTime::toString)
+                        .ifPresent(lr::setGeoreferencedDate);
+            }
+
+            if(parsed.getIssues().contains(OccurrenceIssue.IDENTIFIED_DATE_UNLIKELY))
+                addIssue(lr, ALAOccurrenceIssue.GEOREFERENCED_DATE_UNLIKELY.name());
+        }
+    }
+
+
 /*
     Checking missing Geodetic fields
             GEODETIC_DATUM_ASSUMED_WGS84
@@ -211,6 +246,8 @@ public class ALALocationInterpreter {
                 //check coordinates range
                 //Unimplemented
             }
+
+
 
     }
 
