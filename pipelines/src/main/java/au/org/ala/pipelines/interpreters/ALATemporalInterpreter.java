@@ -17,17 +17,23 @@ import org.gbif.pipelines.io.avro.TemporalRecord;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.TemporalAccessor;
-import java.util.Optional;
 
-import static org.gbif.pipelines.core.interpreters.core.TemporalInterpreter.interpretLocalDate;
 import static org.gbif.pipelines.parsers.utils.ModelUtils.*;
 
 public class ALATemporalInterpreter{
     protected static final LocalDate MIN_LOCAL_DATE = LocalDate.of(1600, 1, 1);
 
-
+    /**
+     * Inherit from GBIF interpretTemporal method.
+     * Add extra assertions
+     * @param er
+     * @param tr
+     */
     public static void interpretTemporal(ExtendedRecord er, TemporalRecord tr) {
         TemporalInterpreter.interpretTemporal(er,tr);
+        checkRecordDateQuality(er,tr);
+        checkDateIdentified(tr);
+        checkGeoreferencedDate(er,tr);
     }
 
     /**
@@ -37,7 +43,7 @@ public class ALATemporalInterpreter{
      * @param er
      * @param tr
      */
-    public static void checkNullRecordDate(ExtendedRecord er, TemporalRecord tr) {
+    private static void checkRecordDateQuality(ExtendedRecord er, TemporalRecord tr) {
         final String year = extractValue(er, DwcTerm.year);
         final String month = extractValue(er, DwcTerm.month);
         final String day = extractValue(er, DwcTerm.day);
@@ -50,6 +56,12 @@ public class ALATemporalInterpreter{
             addIssue(tr, ALAOccurrenceIssue.MISSING_COLLECTION_DATE.name());
         }
 
+        if (tr.getDay() !=null && tr.getDay() == 1)
+            addIssue(tr, ALAOccurrenceIssue.FIRST_OF_MONTH.name());
+        if (tr.getMonth() !=null && tr.getMonth() == 1)
+            addIssue(tr, ALAOccurrenceIssue.FIRST_OF_YEAR.name());
+        if (tr.getYear() != null && tr.getYear() % 100 == 0)
+             addIssue(tr, ALAOccurrenceIssue.FIRST_OF_CENTURY.name());
     }
 
 
@@ -58,7 +70,7 @@ public class ALATemporalInterpreter{
      * All verification process require TemporalInterpreter.interpretTemporal has been called.
      * @param tr
      */
-    public static void verifyDateIdentified(TemporalRecord tr) {
+    private static void checkDateIdentified(TemporalRecord tr) {
         if (tr.getEventDate() != null && tr.getDateIdentified() != null){
             TemporalParser TEXTDATE_PARSER = DateParsers.defaultTemporalParser();
             ParseResult<TemporalAccessor> parsedIdentifiedResult = TEXTDATE_PARSER.parse(tr.getDateIdentified());
@@ -75,10 +87,10 @@ public class ALATemporalInterpreter{
      * All verification process require TemporalInterpreter.interpretTemporal has been called.
      * @param tr
      */
-/*    public static void verifyDateGeoreferenced(TemporalRecord tr) {
-        if (tr.getEventDate() != null && tr.getDateIdentified() != null){
+    private static void checkGeoreferencedDate(ExtendedRecord er, TemporalRecord tr) {
+        if (tr.getEventDate() != null && hasValue(er, DwcTerm.georeferencedDate)){
             TemporalParser TEXTDATE_PARSER = DateParsers.defaultTemporalParser();
-            ParseResult<TemporalAccessor> parsedGeoreferencedResult = TEXTDATE_PARSER.parse(tr.getGeoreferencedDate());
+            ParseResult<TemporalAccessor> parsedGeoreferencedResult = TEXTDATE_PARSER.parse(extractValue(er,DwcTerm.georeferencedDate));
             ParseResult<TemporalAccessor> parsedEventDateResult = TEXTDATE_PARSER.parse(tr.getEventDate().getGte());
 
             if (parsedEventDateResult.isSuccessful() && parsedGeoreferencedResult.isSuccessful()){
@@ -86,7 +98,7 @@ public class ALATemporalInterpreter{
                     addIssue(tr, ALAOccurrenceIssue.GEOREFERENCE_POST_OCCURRENCE.name());
             }
         }
-    }*/
+    }
 
 
 

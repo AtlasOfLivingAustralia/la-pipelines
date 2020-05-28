@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 public class AlaTemporalInterpreterTest {
     @Test
-    public void testAllNulls() {
+    public void testQualityAssertion() {
         Map<String, String> map = new HashMap<>();
         map.put(DwcTerm.year.qualifiedName(), "");
         map.put(DwcTerm.month.qualifiedName(), " "); //keep the space at the end
@@ -28,44 +28,42 @@ public class AlaTemporalInterpreterTest {
         map.put(DwcTerm.eventDate.qualifiedName(), "");
         ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
         TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
-
-        ALATemporalInterpreter.checkNullRecordDate(er, tr);
+        ALATemporalInterpreter.interpretTemporal(er, tr);
         assertArrayEquals(tr.getIssues().getIssueList().toArray(),new String[]{ALAOccurrenceIssue.MISSING_COLLECTION_DATE.name()});
+
+        map.put(DwcTerm.year.qualifiedName(), "2000");
+        map.put(DwcTerm.month.qualifiedName(), "01"); //keep the space at the end
+        map.put(DwcTerm.day.qualifiedName(), "01");
+        map.put(DwcTerm.eventDate.qualifiedName(), "");
+        er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
+        tr = TemporalRecord.newBuilder().setId("1").build();
+
+        ALATemporalInterpreter.interpretTemporal(er, tr);
+        assertArrayEquals(tr.getIssues().getIssueList().toArray(),new String[]{ALAOccurrenceIssue.FIRST_OF_MONTH.name(),ALAOccurrenceIssue.FIRST_OF_YEAR.name(),ALAOccurrenceIssue.FIRST_OF_CENTURY.name()});
+
     }
 
     @Test
-    public void testIdentifiedDate() {
+    public void testALAssertions() {
         Map<String, String> map = new HashMap<>();
         map.put(DwcTerm.year.qualifiedName(), "");
         map.put(DwcTerm.month.qualifiedName(), " "); //keep the space at the end
         map.put(DwcTerm.day.qualifiedName(), "");
-        map.put(DwcTerm.eventDate.qualifiedName(), "1980-1-1");
-        map.put(DwcTerm.dateIdentified.qualifiedName(), "1979-1-1");
+        map.put(DwcTerm.eventDate.qualifiedName(), "1980-2-2");
+        map.put(DwcTerm.dateIdentified.qualifiedName(), "1979-2-3");
+        map.put(DwcTerm.georeferencedDate.qualifiedName(), "1981-1-1");
+
+
         ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
         TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
 
-        TemporalInterpreter.interpretTemporal(er,tr);
-        ALATemporalInterpreter.verifyDateIdentified(tr);
+        ALATemporalInterpreter.interpretTemporal(er,tr);
 
-        assertArrayEquals(tr.getIssues().getIssueList().toArray(),new String[]{ALAOccurrenceIssue.ID_PRE_OCCURRENCE.name()});
+        assertArrayEquals(tr.getIssues().getIssueList().toArray(),new String[]{ALAOccurrenceIssue.ID_PRE_OCCURRENCE.name(), ALAOccurrenceIssue.GEOREFERENCE_POST_OCCURRENCE.name() });
+
     }
 
-/*    @Test
-    public void testALASpec() {
-        Map<String, String> map = new HashMap<>();
-        map.put(DwcTerm.year.qualifiedName(), "");
-        map.put(DwcTerm.month.qualifiedName(), " "); //keep the space at the end
-        map.put(DwcTerm.day.qualifiedName(), "");
-        map.put(DwcTerm.eventDate.qualifiedName(), "1980-1-1");
-        map.put(DwcTerm.georeferencedDate.qualifiedName(), "1979-1-1");
-        ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
-        TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
 
-
-        ALATemporalInterpreter.interpretGeoreferenceDate(er,tr);
-
-        assertEquals(tr.getGeoreferencedDate(), "1979-1-1T00:00");
-    }*/
 
 /*    @Test
     public void testBadDay() {
