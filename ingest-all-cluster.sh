@@ -74,6 +74,19 @@ done
 duration=$SECONDS
 echo "#### SAMPLING CACHE - Sample cache builds of all took $(($duration / 60)) minutes and $(($duration % 60)) seconds."
 
+echo "#### UUID MAPPING #####"
+SECONDS=0
+for file in /data/pipelines-data/*
+do
+    if [[ -d $file ]]; then
+        datasetID=$(basename $file)
+        echo "[Uuid-Mapping] Starting uuid mapping for $datasetID....."
+        ./uuid-spark-cluster.sh  $1
+        echo "[Uuid-Mapping] Finished uuid mapping for $datasetID."
+    fi
+done
+duration=$SECONDS
+echo "#### UUID-MAPPING - Uuid mapping builds of all took $(($duration / 60)) minutes and $(($duration % 60)) seconds."
 
 echo "#### INDEXING #####"
 SECONDS=0
