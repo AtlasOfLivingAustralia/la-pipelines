@@ -60,19 +60,19 @@ duration=$SECONDS
 echo "#### SAMPLING - Sampling of all took $(($duration / 60)) minutes and $(($duration % 60)) seconds."
 
 
-echo "#### SAMPLING CACHE #####"
+echo "#### SAMPLING AVRO #####"
 SECONDS=0
 for file in /data/pipelines-data/*
 do
     if [[ -d $file ]]; then
         datasetID=$(basename $file)
-        echo "[Sampling-Cache] Starting sample cache for $datasetID....."
-        ./sample-cache.sh $datasetID
-        echo "[Sampling-Cache] Finished sample cache for $datasetID."
+        echo "[Sampling-AVRO] Starting sample AVRO for $datasetID....."
+        ./sample-avro-cluster.sh $datasetID
+        echo "[Sampling-AVRO] Finished sample AVRO for $datasetID."
     fi
 done
 duration=$SECONDS
-echo "#### SAMPLING CACHE - Sample cache builds of all took $(($duration / 60)) minutes and $(($duration % 60)) seconds."
+echo "#### SAMPLING AVRO - Sample avro builds of all took $(($duration / 60)) minutes and $(($duration % 60)) seconds."
 
 echo "#### UUID MAPPING #####"
 SECONDS=0
