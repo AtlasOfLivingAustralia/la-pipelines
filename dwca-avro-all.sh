@@ -5,11 +5,11 @@ rootDir=/data/biocache-load
 echo "#### DWCA-AVRO #####"
 SECONDS=0
 tempDirs=()
-drDwcaList=`ls -S $rootDir/dr*/dr*.zip`
+drDwcaList=($(ls -S $rootDir/dr*/dr*.zip))
 for drDwca in "${drDwcaList[@]}"; do
-    filename=$(basename $drDwca)
+    filename=$(basename "$drDwca")
     datasetID="${filename%.*}"
-    folder=${dirname $drDwca}
+    folder=$(dirname "$drDwca")
     if mkdir "$folder.lockdir"; then
       tempDirs+=("$folder.lockdir")
       # you now have the exclusive lock
