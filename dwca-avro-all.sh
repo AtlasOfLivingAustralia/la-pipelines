@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 rootDir=/data/biocache-load
 # !!!!!! need to run this command on one vm then run the script !!!!
-# rm -rf $rootDir/dr*.locked
+# rm -rf $rootDir/dr*.lockdir
 echo "#### DWCA-AVRO #####"
 SECONDS=0
 tempDirs=()
