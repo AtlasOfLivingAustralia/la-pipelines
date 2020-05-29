@@ -7,8 +7,6 @@ import java.util.Properties;
 import au.org.ala.kvs.ALAKvConfig;
 import au.org.ala.kvs.ALAKvConfigFactory;
 import au.org.ala.pipelines.interpreters.ALALocationInterpreter;
-import org.gbif.api.vocabulary.Country;
-import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.LocationInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -80,10 +78,8 @@ public class LocationTransform extends org.gbif.pipelines.transforms.core.Locati
             .via(LocationInterpreter::interpretMaximumDistanceAboveSurfaceInMeters)
             .via(LocationInterpreter::interpretCoordinatePrecision)
             .via(LocationInterpreter::interpretCoordinateUncertaintyInMeters)
-            .via(ALALocationInterpreter::checkForStateMismatch)
-            .via(ALALocationInterpreter::checkForCountryMismatch)
-            .via(ALALocationInterpreter::checkGeodetic)
-            .via(ALALocationInterpreter::checkCoordinateUncertainty)
+            .via(ALALocationInterpreter::interpretGeodetic)
+            .via(ALALocationInterpreter::interpretCoordinateUncertainty)
             .get();
 
     result.ifPresent(r -> this.incCounter());

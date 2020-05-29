@@ -94,9 +94,9 @@ public class AlaLocationInterpreterTest {
         assertEquals(lr.getCoordinateUncertaintyInMeters(), Double.valueOf(1d));
 
         ALALocationInterpreter.interpretGeoreferencedDate(er,lr);
-        ALALocationInterpreter.checkGeodetic(er, lr);
+        ALALocationInterpreter.interpretGeodetic(er, lr);
         assertEquals("1979-01-01T00:00", lr.getGeoreferencedDate());
-        assertEquals(lr.getIssues().getIssueList().size(), 5);
+        assertEquals(lr.getIssues().getIssueList().size(), 4);
 
 
     }
@@ -138,9 +138,37 @@ public class AlaLocationInterpreterTest {
     }
 
     @Test
-    public void assertionStateProvinceTest() {
+    public void assertionStateProvinceValidTest() {
         Location state = new Location();
         state.setCountryName("New South Wales");
+        state.setType("State");
+
+        KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
+        kvStore.put(new LatLng(-31.25d, 146.921099d), new GeocodeResponse(Collections.singletonList(state)));
+
+        GeocodeService service = GeocodeService.create(kvStore);
+
+        LocationRecord lr = LocationRecord.newBuilder().setId(ID).build();
+        Map<String, String> coreMap = new HashMap<>();
+
+        ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+        coreMap.put(DwcTerm.verbatimLatitude.qualifiedName(), "-31.25d");
+        coreMap.put(DwcTerm.verbatimLongitude.qualifiedName(), "146.921099d");
+
+
+        ALALocationInterpreter.interpretStateProvince(service).accept(er,lr);
+
+        assertEquals(lr.getStateProvince(), "New South Wales");
+
+        assertArrayEquals(lr.getIssues().getIssueList().toArray(),new String[]{ALAOccurrenceIssue.COORDINATES_CENTRE_OF_STATEPROVINCE.name()});
+
+
+    }
+
+    @Test
+    public void assertionStateProvinceInvalidAssertionTest() {
+        Location state = new Location();
+        state.setCountryName("New South Wales - invalid state name");
         state.setType("State");
 
         KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
@@ -158,16 +186,13 @@ public class AlaLocationInterpreterTest {
 
         ALALocationInterpreter.interpretStateProvince(service).accept(er,lr);
 
-        assertEquals(lr.getStateProvince(), "New South Wales");
+        assertEquals(lr.getStateProvince(), "New South Wales - invalid state name");
 
-        ALALocationInterpreter.checkForStateMismatch(lr);
-        assertArrayEquals(lr.getIssues().getIssueList().toArray(),new String[]{ALAOccurrenceIssue.COORDINATES_CENTRE_OF_STATEPROVINCE.name(), OccurrenceIssue.PRESUMED_SWAPPED_COORDINATE.name()});
+        assertArrayEquals(lr.getIssues().getIssueList().toArray(),new String[]{ALAOccurrenceIssue.STATE_COORDINATE_MISMATCH.name(), OccurrenceIssue.PRESUMED_SWAPPED_COORDINATE.name()});
 
-        ///Check state mismatch asserstion
-        lr.setStateProvince("New York");
-        ALALocationInterpreter.checkForStateMismatch(lr);
 
     }
+
 
 
     @Test
@@ -233,8 +258,6 @@ public class AlaLocationInterpreterTest {
         GeocodeService SERVICE = GeocodeService.create(store);
         MetadataRecord mdr = MetadataRecord.newBuilder().setId(ID).build();
 
-
-
         Map<String, String> coreMap = new HashMap<>();
         coreMap.put(DwcTerm.verbatimLatitude.qualifiedName(), "-2.752778d");
         coreMap.put(DwcTerm.verbatimLongitude.qualifiedName(), "-58.653057d");
@@ -249,7 +272,6 @@ public class AlaLocationInterpreterTest {
         Optional<LocationRecord> lrResult = Interpretation.from(source)
                 .to(er -> LocationRecord.newBuilder().setId(er.getId()).build())
                 .via(ALALocationInterpreter.interpretCountryAndCoordinates(SERVICE, mdr))
-                .via(ALALocationInterpreter::checkForCountryMismatch)
                 .get();
 
         //country matches
@@ -258,12 +280,41 @@ public class AlaLocationInterpreterTest {
         assertEquals(lr.getCountryCode(), "BR");
         assertEquals(lr.getCountry(), "BRAZIL");
 
-        //Validate assertion Country not match
-        lr.setCountry("Test");
+    }
 
-        ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
 
-        ALALocationInterpreter.checkForCountryMismatch(er,lr);
+    /////////////////////////////////////
+    @Test
+    public void assertCountryCoordinateInvalidTest(){
+
+        Location invalidlocation = new Location();
+        invalidlocation.setCountryName("invalid-country-name");
+        invalidlocation.setIsoCountryCode2Digit("invalid-country-code");
+
+        invalidlocation.setType("Political");
+        KeyValueTestStoreStub store = new KeyValueTestStoreStub();
+
+        store.put(new LatLng(-2.752778d, -58.653057d),new GeocodeResponse(  Arrays.asList(invalidlocation)));
+
+        GeocodeService SERVICE = GeocodeService.create(store);
+        MetadataRecord mdr = MetadataRecord.newBuilder().setId(ID).build();
+
+        Map<String, String> coreMap = new HashMap<>();
+        coreMap.put(DwcTerm.verbatimLatitude.qualifiedName(), "-2.752778d");
+        coreMap.put(DwcTerm.verbatimLongitude.qualifiedName(), "-58.653057d");
+        coreMap.put(DwcTerm.geodeticDatum.qualifiedName(), "EPSG:4326");
+
+        ExtendedRecord source = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+        Optional<LocationRecord> lrResult = Interpretation.from(source)
+                .to(er -> LocationRecord.newBuilder().setId(er.getId()).build())
+                .via(ALALocationInterpreter.interpretCountryAndCoordinates(SERVICE, mdr))
+                .get();
+
+        //country matches
+        LocationRecord lr = lrResult.get();
+        assertEquals(lr.getCountryCode(), "invalid-country-code");
+
         assertArrayEquals(lr.getIssues().getIssueList().toArray(),new String[]{ ALAOccurrenceIssue.UNKNOWN_COUNTRY_NAME.name()});
 
     }
