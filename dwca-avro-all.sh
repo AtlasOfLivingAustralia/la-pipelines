@@ -17,4 +17,4 @@ for file in $rootDir/dr*; do
 done
 duration=$SECONDS
 echo "#### DWCA-AVRO - DWCA load of all took $(($duration / 60)) minutes and $(($duration % 60)) seconds."
-rmdir "$rootDir/*.lockdir"
+rmdir $rootDir/dr*.lockdir
