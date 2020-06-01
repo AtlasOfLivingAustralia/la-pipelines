@@ -9,7 +9,6 @@ import okio.Source;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.impl.CloudSolrClient;
-import org.apache.solr.client.solrj.impl.CloudSolrServer;
 import org.apache.solr.client.solrj.request.CollectionAdminRequest;
 import org.apache.solr.client.solrj.request.ConfigSetAdminRequest;
 import org.apache.solr.client.solrj.response.CollectionAdminResponse;
@@ -18,8 +17,6 @@ import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.util.NamedList;
 import org.codehaus.plexus.util.FileUtils;
-import org.gbif.pipelines.ingest.java.io.AvroReader;
-import org.gbif.pipelines.io.avro.ALAUUIDRecord;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -32,32 +29,15 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Utilities to support tests.
+ * Utilities for querying SOLR outputs and for creating configsets and collections
+ * in SOLR to support integration tests.
  */
 @Slf4j
-public class TestUtils {
+public class SolrUtils {
 
     public static final String BIOCACHE_TEST_SOLR_COLLECTION = "biocache_test";
     public static final String BIOCACHE_CONFIG_SET = "biocache_test";
     public static final String BIOCACHE_ZK_HOST = "localhost:9983";
-
-    public static Map<String, String> readKeysForPath(String path){
-        Map<String, ALAUUIDRecord> records = AvroReader.readRecords("", ALAUUIDRecord.class, path);
-        Map<String, String> uniqueKeyToUuid = new HashMap<String, String>();
-        for (Map.Entry<String, ALAUUIDRecord> record: records.entrySet()){
-            System.out.println(record.getValue().getUniqueKey() + " -> " + record.getValue().getUuid());
-            uniqueKeyToUuid.put(record.getValue().getUniqueKey(), record.getValue().getUuid());
-        }
-        return uniqueKeyToUuid;
-    }
-
-    public static void dumpKeysForPath(String path){
-        Map<String, ALAUUIDRecord> records = AvroReader.readRecords("", ALAUUIDRecord.class, path);
-        Map<String, String> uniqueKeyToUuid = new HashMap<String, String>();
-        for (Map.Entry<String, ALAUUIDRecord> record: records.entrySet()){
-            System.out.println(record.getValue().getUniqueKey() + " -> " + record.getValue().getUuid());
-        }
-    }
 
     public static void setupIndex() throws Exception {
         try {
@@ -87,9 +67,6 @@ public class TestUtils {
         env.put("create", "true");
 
         URI uri = URI.create("jar:file:/tmp/configset.zip");
-
-
-
 
         String absolutePath = new File(".").getAbsolutePath();
         String fullPath = absolutePath + "/solr/conf";

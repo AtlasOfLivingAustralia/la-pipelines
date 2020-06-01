@@ -20,7 +20,7 @@
     <avro-generated-path>${project.basedir}/src/main/java-generated/</avro-generated-path>
     <sonar.skip>true</sonar.skip>
     <avro.version>1.8.2</avro.version>
-    <apache.beam.version>2.17.0</apache.beam.version>
+    <apache.beam.version>2.16.0</apache.beam.version>
   </properties>
 
   <repositories>

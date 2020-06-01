@@ -26,8 +26,13 @@ import static org.apache.beam.sdk.io.FileIO.Write.defaultNaming;
 
 /**
  * A temporary pipeline used for data migration. This uses a extract from the cassandra occ_uuid and generates
- * the necessary files in AVRO and distributes them for each dataset.
- * This class should not be part of the codebase in the long term.
+ * the <DATASET_ID>/1/identifiers/ala_uuid files in AVRO and distributes them for each dataset into separate
+ * directories.
+ *
+ * This class should not be part of the codebase in the long term and should be removed eventually.
+ *
+ * Note: this pipeline can currently only be ran with the DirectRunner due to issues with SparkRunner
+ * logged here: https://jira.apache.org/jira/browse/BEAM-10100
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)

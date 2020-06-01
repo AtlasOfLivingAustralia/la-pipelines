@@ -2,7 +2,7 @@ package au.org.ala.pipelines.beam;
 
 import au.org.ala.pipelines.options.ALASolrPipelineOptions;
 import au.org.ala.sampling.LayerCrawler;
-import au.org.ala.util.TestUtils;
+import au.org.ala.util.SolrUtils;
 import org.codehaus.plexus.util.FileUtils;
 import org.gbif.pipelines.ingest.options.DwcaPipelineOptions;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
@@ -31,7 +31,7 @@ public class CompleteIngestPipelineTest {
         FileUtils.forceDelete("/tmp/la-pipelines-test/complete-pipeline");
 
         //clear SOLR index
-        TestUtils.setupIndex();
+        SolrUtils.setupIndex();
 
         String absolutePath = new File("src/test/resources").getAbsolutePath();
 
@@ -39,13 +39,13 @@ public class CompleteIngestPipelineTest {
         loadTestDataset("dr893", absolutePath + "/complete-pipeline/dr893");
 
         //reload
-        TestUtils.reloadSolrIndex();
+        SolrUtils.reloadSolrIndex();
 
         //validate SOLR index
-        assert TestUtils.getRecordCount("*:*") == 5;
+        assert SolrUtils.getRecordCount("*:*") == 5;
 
         //1. includes UUIDs
-        String documentId = (String) TestUtils.getRecords("*:*").get(0).get("id");
+        String documentId = (String) SolrUtils.getRecords("*:*").get(0).get("id");
         assert documentId != null;
         UUID uuid = null;
         try{
@@ -58,8 +58,8 @@ public class CompleteIngestPipelineTest {
         assert uuid != null;
 
         //2. includes samples
-        assert TestUtils.getRecordCount("cl620:*") == 5;
-        assert TestUtils.getRecordCount("cl927:*") == 5;
+        assert SolrUtils.getRecordCount("cl620:*") == 5;
+        assert SolrUtils.getRecordCount("cl927:*") == 5;
     }
 
     public void loadTestDataset(String datasetID, String inputPath) throws Exception {
@@ -128,7 +128,7 @@ public class CompleteIngestPipelineTest {
                 "--inputPath=/tmp/la-pipelines-test/complete-pipeline/dr893/1/verbatim.avro",
                 "--properties=src/test/resources/pipelines.properties",
                 "--zkHost=localhost:9983",
-                "--solrCollection=" + TestUtils.BIOCACHE_TEST_SOLR_COLLECTION,
+                "--solrCollection=" + SolrUtils.BIOCACHE_TEST_SOLR_COLLECTION,
                 "--includeSampling=true"
         });
 

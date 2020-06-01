@@ -23,6 +23,8 @@ import org.apache.beam.sdk.values.TypeDescriptor;
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.plexus.util.FileUtils;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.Term;
+import org.gbif.dwc.terms.UnknownTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
@@ -100,15 +102,18 @@ public class ALAUUIDMintingPipeline {
 
         //construct unique list of darwin core terms
         final List<String> uniqueTerms = collectoryMetadata.getConnectionParameters().getTermsForUniqueKey();
-        final List<DwcTerm> uniqueDwcTerms = new ArrayList<DwcTerm>();
+        final List<Term> uniqueDwcTerms = new ArrayList<Term>();
         for (String uniqueTerm : uniqueTerms){
             Optional<DwcTerm> dwcTerm = getDwcTerm(uniqueTerm);
-            if(dwcTerm.isPresent()){
+            if (dwcTerm.isPresent()){
                 uniqueDwcTerms.add(dwcTerm.get());
             } else {
-                throw new RuntimeException("Unrecognised unique term configured for datasource " + options.getDatasetId() + ", term: " + uniqueTerm);
+                //create a UnknownTerm for non DWC fields
+                uniqueDwcTerms.add(UnknownTerm.build(uniqueTerm.trim()));
             }
         }
+
+        final String datasetID = options.getDatasetId();
 
         log.info("Transform 1: ExtendedRecord er ->  <uniqueKey, er.getId()> - this generates the UniqueKey.....");
         PCollection<KV<String, String>> extendedRecords =
@@ -116,7 +121,7 @@ public class ALAUUIDMintingPipeline {
                 .apply(ParDo.of(new DoFn<ExtendedRecord, KV<String, String>>() {
                     @ProcessElement
                     public void processElement(@Element ExtendedRecord source, OutputReceiver<KV<String, String>> out, ProcessContext c) {
-                        out.output(KV.of(generateUniqueKey(source, uniqueDwcTerms), source.getId()));
+                        out.output(KV.of(generateUniqueKey(datasetID, source, uniqueDwcTerms), source.getId()));
                     }
         }));
 
@@ -170,25 +175,28 @@ public class ALAUUIDMintingPipeline {
      * in the biocache-store. This is repeated to maintain backwards compatibility with existing data holdings.
      *
      * @param source
-     * @param uniqueDwcTerms
+     * @param uniqueTerms
      * @return
      * @throws RuntimeException
      */
-    public static String generateUniqueKey(ExtendedRecord source, List<DwcTerm> uniqueDwcTerms) throws RuntimeException {
+    public static String generateUniqueKey(String datasetID, ExtendedRecord source, List<Term> uniqueTerms) throws RuntimeException {
         List<String> uniqueValues = new ArrayList<String>();
         boolean allUniqueValuesAreEmpty = true;
-        for (DwcTerm dwcTerm : uniqueDwcTerms) {
-            String value = ModelUtils.extractNullAwareValue(source, dwcTerm);
+        for (Term term : uniqueTerms) {
+            String value = ModelUtils.extractNullAwareValue(source, term);
             if (value != null && StringUtils.trimToNull(value) != null) {
                 //we have a term with a value
                 allUniqueValuesAreEmpty = false;
+                uniqueValues.add(value.trim());
             }
-            uniqueValues.add(value.trim());
         }
 
         if (allUniqueValuesAreEmpty){
             throw new RuntimeException("Unable to load dataset. All supplied unique terms where empty record with ID " + source.getId());
         }
+
+        //add the datasetID
+        uniqueValues.add(0, datasetID);
 
         //create the unique key
         return String.join(UNIQUE_COMPOSITE_KEY_JOIN_CHAR, uniqueValues);
