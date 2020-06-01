@@ -14,8 +14,6 @@ import java.io.IOException;
 @Slf4j
 public class ALACollectionKVStoreFactory {
 
-    private static KeyValueStore<ALACollectionLookup, ALACollectionMatch> mapDBCache = null;
-
     /**
      *
      * @param clientConfiguration

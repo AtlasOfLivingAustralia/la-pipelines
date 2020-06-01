@@ -93,5 +93,6 @@ public class AttributionKVStoreTest {
         ALACollectionMatch m = kvs.get(lookup);
         assert m.getCollectionUid() == null;
         assert m.equals(ALACollectionMatch.EMPTY);
+        kvs.close();
     }
 }

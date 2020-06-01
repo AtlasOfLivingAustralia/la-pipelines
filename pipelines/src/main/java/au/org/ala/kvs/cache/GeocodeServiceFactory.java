@@ -16,12 +16,10 @@ import lombok.SneakyThrows;
  */
 public class GeocodeServiceFactory {
 
-  @SneakyThrows
   public static GeocodeService create(KvConfig config, ALAKvConfig alaKvConfig) {
     return GeocodeService.create(createKvStore(alaKvConfig), BitmapFactory.getInstance(config));
   }
 
-  @SneakyThrows
   private static KeyValueStore<LatLng, GeocodeResponse> createKvStore(ALAKvConfig config) {
     if (config == null) {
       return null;
