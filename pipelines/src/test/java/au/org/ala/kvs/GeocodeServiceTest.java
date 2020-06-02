@@ -24,9 +24,8 @@ public class GeocodeServiceTest {
         Properties p = new Properties();
         p.load(new FileInputStream(new File("src/test/resources/pipelines.properties")));
 
-        ALAKvConfig alaKvConfig = ALAKvConfigFactory.create(new Properties());
         KvConfig kvConfig = KvConfigFactory.create(p, KvConfigFactory.GEOCODE_PREFIX);
-        GeocodeService geoService = GeocodeServiceFactory.create(kvConfig, alaKvConfig);
+        GeocodeService geoService = GeocodeServiceFactory.create(kvConfig);
         GeocodeResponse resp = geoService.get(LatLng.builder().withLongitude(146.2).withLatitude(-27.9).build());
         assert !resp.getLocations().isEmpty();
         assert resp.getLocations().iterator().next().getCountryName().equals("AU");
@@ -40,10 +39,8 @@ public class GeocodeServiceTest {
 
         Properties p = new Properties();
         p.load(new FileInputStream(new File("src/test/resources/pipelines.properties")));
-
-        ALAKvConfig alaKvConfig = ALAKvConfigFactory.create(new Properties());
         KvConfig kvConfig = KvConfigFactory.create(p, KvConfigFactory.GEOCODE_PREFIX);
-        GeocodeService geoService = GeocodeServiceFactory.create(kvConfig, alaKvConfig);
+        GeocodeService geoService = GeocodeServiceFactory.create(kvConfig);
         GeocodeResponse resp = geoService.get(LatLng.builder().withLongitude(151.329751).withLatitude(-36.407357).build());
         assert !resp.getLocations().isEmpty();
         assert resp.getLocations().iterator().next().getCountryName().equals("AU");

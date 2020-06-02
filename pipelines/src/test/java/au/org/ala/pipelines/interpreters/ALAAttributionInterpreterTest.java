@@ -51,8 +51,8 @@ public class ALAAttributionInterpreterTest {
         BiConsumer<ExtendedRecord, ALAAttributionRecord> fcn = ALAAttributionInterpreter.interpretCodes(kvs);
 
         Map<String, String> map = new HashMap<String, String>();
-        map.put(DwcTerm.institutionCode.namespace() + DwcTerm.institutionCode.simpleName(), "CSIRO");
-        map.put(DwcTerm.collectionCode.namespace() + DwcTerm.collectionCode.simpleName(), "ANICXXXXXX");
+        map.put(DwcTerm.institutionCode.namespace() + DwcTerm.institutionCode.simpleName(), "ANIC");
+        map.put(DwcTerm.collectionCode.namespace() + DwcTerm.collectionCode.simpleName(), "Insects$$%%%$$");
 
         ALAAttributionRecord aar = ALAAttributionRecord.newBuilder().setId("1").build();
 

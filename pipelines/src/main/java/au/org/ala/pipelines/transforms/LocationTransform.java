@@ -39,7 +39,7 @@ public class LocationTransform extends org.gbif.pipelines.transforms.core.Locati
    */
   @Override
   public LocationTransform init() {
-    setService(GeocodeServiceFactory.create(kvConfig, alaKvConfig));
+    setService(GeocodeServiceFactory.create(kvConfig));
     return this;
   }
 
@@ -47,7 +47,7 @@ public class LocationTransform extends org.gbif.pipelines.transforms.core.Locati
   @Override
   public void setup() {
     if (kvConfig != null) {
-      this.setService(GeocodeServiceFactory.create(kvConfig, alaKvConfig));
+      this.setService(GeocodeServiceFactory.create(kvConfig));
     }
   }
 

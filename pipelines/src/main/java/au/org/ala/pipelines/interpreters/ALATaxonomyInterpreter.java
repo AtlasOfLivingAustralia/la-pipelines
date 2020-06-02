@@ -50,12 +50,7 @@ public class ALATaxonomyInterpreter {
 
                 atr.setId(er.getId());
 
-                ALANameUsageMatch usageMatch = null;
-                try {
-                    usageMatch = kvStore.get(matchRequest);
-                } catch (Exception ex) {
-                    log.error(ex.getMessage(), ex);
-                }
+                ALANameUsageMatch usageMatch = kvStore.get(matchRequest);
 
                 if (usageMatch == null || isEmpty(usageMatch)) {
                     // "NO_MATCHING_RESULTS". This
@@ -108,6 +103,6 @@ public class ALATaxonomyInterpreter {
     }
 
     private static boolean isEmpty(ALANameUsageMatch response) {
-        return response == null || !response.isSuccess();
+        return response == ALANameUsageMatch.FAIL;
     }
 }
