@@ -15,7 +15,7 @@ dwca_dir="/data/pipelines-data/$1"
 --executor-memory 16G \
 --driver-memory 4G \
 --class au.org.ala.pipelines.beam.ALAInterpretedToLatLongCSVPipeline  \
---master spark://172.30.2.127:7077 \
+--master spark://172.30.1.102:7077 \
 --driver-java-options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
 /efs-mount-point/pipelines.jar \
 --appName="Lat Long export for $1" \
