@@ -14,6 +14,11 @@ import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.slf4j.MDC;
 
 import java.nio.file.Paths;
+
+/**
+ * FIXME: This class has been temporarily copied from gbif/pipelines to add the use of InterpretationPipelineOptions
+ * to test with HDFS.
+ */
 @Slf4j
 public class DwcaToVerbatimPipeline {
 
