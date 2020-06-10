@@ -6,9 +6,9 @@ import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 
 public interface ALAInterpretationPipelineOptions extends InterpretationPipelineOptions {
 
-    @Description("Use map DB for caches")
-    @Default.Boolean(false)
-    boolean isMapDBCacheEnabled();
+  @Description("Use map DB for caches")
+  @Default.Boolean(false)
+  boolean isMapDBCacheEnabled();
 
-    void setMapDBCacheEnabled(boolean var1);
+  void setMapDBCacheEnabled(boolean var1);
 }

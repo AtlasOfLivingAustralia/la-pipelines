@@ -3,6 +3,7 @@ package au.org.ala.pipelines.java;
 import au.org.ala.pipelines.options.ALAInterpretationPipelineOptions;
 import au.org.ala.pipelines.transforms.ALAAttributionTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
+import au.org.ala.pipelines.transforms.ALATemporalTransform;
 import au.org.ala.pipelines.transforms.LocationTransform;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -48,16 +49,15 @@ import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
-import  org.gbif.pipelines.io.avro.*;
 import static org.gbif.converters.converter.FsUtils.createParentDirectories;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALL;
 
 /**
  * WARNING - this is not suitable for use for archives over 50k records due to in-memory cache use.
- *
+ * <p>
  * Pipeline sequence:
- *
+ * <p>
  * <pre>
  *    1) Reads verbatim.avro file
  *    2) Interprets and converts avro {@link org.gbif.pipelines.io.avro.ExtendedRecord} file to:
@@ -72,9 +72,9 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
  *      {@link org.gbif.pipelines.io.avro.LocationRecord}
  *    3) Writes data to independent files
  * </pre>
- *
+ * <p>
  * <p>How to run:
- *
+ * <p>
  * <pre>{@code
  * java -jar target/ingest-gbif-java-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.java.pipelines.ALAVerbatimToInterpretedPipeline some.properties
  *
@@ -153,7 +153,7 @@ public class ALAVerbatimToInterpretedPipeline {
         BasicTransform basicTransform = BasicTransform.create(properties, datasetId, tripletValid, occIdValid, useErdId).counterFn(incMetricFn).init();
         LocationTransform locationTransform = LocationTransform.create(properties).init();
         VerbatimTransform verbatimTransform = VerbatimTransform.create().counterFn(incMetricFn);
-        TemporalTransform temporalTransform = TemporalTransform.create().counterFn(incMetricFn);
+        //TemporalTransform temporalTransform = TemporalTransform.create().counterFn(incMetricFn);
 
         // Extension
         MeasurementOrFactTransform measurementTransform = MeasurementOrFactTransform.create().counterFn(incMetricFn);
@@ -169,6 +169,8 @@ public class ALAVerbatimToInterpretedPipeline {
 //        ALAUUIDTransform alaUuidTransform = ALAUUIDTransform.create(properties).counterFn(incMetricFn).init();
         ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.create(properties).counterFn(incMetricFn).init();
         ALAAttributionTransform alaAttributionTransform = ALAAttributionTransform.create(properties).counterFn(incMetricFn).init();
+        ALATemporalTransform  temporalTransform = ALATemporalTransform.create().counterFn(incMetricFn);
+
 
         log.info("Creating writers");
         try (
@@ -269,7 +271,9 @@ public class ALAVerbatimToInterpretedPipeline {
         log.info("Pipeline has been finished - " + LocalDateTime.now());
     }
 
-    /** Create an AVRO file writer */
+    /**
+     * Create an AVRO file writer
+     */
     @SneakyThrows
     private static <T> SyncDataFileWriter<T> createWriter(InterpretationPipelineOptions options, Schema schema,
                                                           Transform transform, String id, boolean useInvalidName) {

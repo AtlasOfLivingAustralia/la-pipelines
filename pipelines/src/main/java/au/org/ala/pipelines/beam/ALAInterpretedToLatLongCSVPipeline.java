@@ -33,64 +33,65 @@ import java.util.function.UnaryOperator;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
 /**
- * A pipeline that exports a unique set of coordinates for a dataset into CSV.
- * This pipeline can only be ran after the {@link ALAVerbatimToInterpretedPipeline} has been ran
- * as it relies on the output of the LocationTransform.
+ * A pipeline that exports a unique set of coordinates for a dataset into CSV. This pipeline can
+ * only be ran after the {@link ALAVerbatimToInterpretedPipeline} has been ran as it relies on the
+ * output of the LocationTransform.
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ALAInterpretedToLatLongCSVPipeline {
 
-    public static void main(String[] args) throws Exception {
-        BasePipelineOptions options = PipelinesOptionsFactory.create(BasePipelineOptions.class, args);
-        run(options);
-    }
+  public static void main(String[] args) throws Exception {
+    BasePipelineOptions options = PipelinesOptionsFactory.create(BasePipelineOptions.class, args);
+    run(options);
+  }
 
-    public static void run(BasePipelineOptions options) throws Exception {
+  public static void run(BasePipelineOptions options) throws Exception {
 
-        MDC.put("datasetId", options.getDatasetId());
-        MDC.put("attempt", options.getAttempt().toString());
+    MDC.put("datasetId", options.getDatasetId());
+    MDC.put("attempt", options.getAttempt().toString());
 
-        log.info("Adding step 1: Options");
-        UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
+    log.info("Adding step 1: Options");
+    UnaryOperator<String> pathFn = t -> FsUtils
+        .buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
 
-        // Initialise pipeline
-        Pipeline p = Pipeline.create(options);
+    // Initialise pipeline
+    Pipeline p = Pipeline.create(options);
 
-        // Use pre-processed coordinates from location transform outputs
-        log.info("Adding step 2: Initialise location transform");
-        LocationTransform locationTransform = LocationTransform.create();
+    // Use pre-processed coordinates from location transform outputs
+    log.info("Adding step 2: Initialise location transform");
+    LocationTransform locationTransform = LocationTransform.create();
 
-        log.info("Adding step 3: Creating beam pipeline");
-        PCollection<KV<String, LocationRecord>> locationCollection =
-                p.apply("Read Location", locationTransform.read(pathFn))
-                        .apply("Map Location to KV", locationTransform.toKv());
+    log.info("Adding step 3: Creating beam pipeline");
+    PCollection<KV<String, LocationRecord>> locationCollection =
+        p.apply("Read Location", locationTransform.read(pathFn))
+            .apply("Map Location to KV", locationTransform.toKv());
 
-        log.info("Adding step 3: Converting into a CSV object");
-        ParDo.SingleOutput<KV<String, CoGbkResult>, String> alaCSVrDoFn =
-                ALACSVDocumentTransform.create(locationTransform.getTag()).converter();
+    log.info("Adding step 3: Converting into a CSV object");
+    ParDo.SingleOutput<KV<String, CoGbkResult>, String> alaCSVrDoFn =
+        ALACSVDocumentTransform.create(locationTransform.getTag()).converter();
 
-        PCollection<String> csvCollection =
-                KeyedPCollectionTuple
-                        .of(locationTransform.getTag(), locationCollection)
-                        .apply("Grouping objects", CoGroupByKey.create())
-                        .apply("Merging to CSV doc", alaCSVrDoFn);
+    PCollection<String> csvCollection =
+        KeyedPCollectionTuple
+            .of(locationTransform.getTag(), locationCollection)
+            .apply("Grouping objects", CoGroupByKey.create())
+            .apply("Merging to CSV doc", alaCSVrDoFn);
 
-        String outputPath = FsUtils.buildDatasetAttemptPath(options, "latlng", true);
+    String outputPath = FsUtils.buildDatasetAttemptPath(options, "latlng", true);
 
-        log.info("Output path = " + outputPath);
-        FileUtils.forceMkdir(new File(outputPath));
+    log.info("Output path = " + outputPath);
+    FileUtils.forceMkdir(new File(outputPath));
 
-        csvCollection
-                .apply(Distinct.<String>create())
-                .apply(TextIO.write().to(outputPath + "/latlong.csv"));
+    csvCollection
+        .apply(Distinct.<String>create())
+        .apply(TextIO.write().to(outputPath + "/latlong.csv"));
 
-        log.info("Running the pipeline");
-        PipelineResult result = p.run();
-        result.waitUntilFinish();
+    log.info("Running the pipeline");
+    PipelineResult result = p.run();
+    result.waitUntilFinish();
 
-        MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
+    MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
 
-        log.info("Pipeline has been finished. Output written to " + outputPath + "/latlong.csv");
-    }
+    log.info("Pipeline has been finished. Output written to " + outputPath + "/latlong.csv");
+  }
 }

@@ -14,27 +14,27 @@ import java.io.Serializable;
 @AllArgsConstructor
 public class ALAKvConfig implements Serializable {
 
-    String geocodeBasePath;
-    String taxonomyBasePath;
-    String spatialBasePath;
-    String collectoryBasePath;
-    String listsBasePath;
-    long timeout;
+  String geocodeBasePath;
+  String taxonomyBasePath;
+  String spatialBasePath;
+  String collectoryBasePath;
+  String listsBasePath;
+  long timeout;
 
-    long geocodeCacheMaxSize;
-    long taxonomyCacheMaxSize;
-    long collectionCacheMaxSize;
-    long metadataCacheMaxSize;
+  long geocodeCacheMaxSize;
+  long taxonomyCacheMaxSize;
+  long collectionCacheMaxSize;
+  long metadataCacheMaxSize;
 
-    boolean geocodeCachePersistEnabled;
-    boolean taxonomyCachePersistEnabled;
-    boolean collectionCachePersistEnabled;
-    boolean metadataCachePersistEnabled;
+  boolean geocodeCachePersistEnabled;
+  boolean taxonomyCachePersistEnabled;
+  boolean collectionCachePersistEnabled;
+  boolean metadataCachePersistEnabled;
 
-    String geocodeCacheFileName;
-    String taxonomyCacheFileName;
-    String collectionCacheFileName;
-    String metadataCacheFileName;
+  String geocodeCacheFileName;
+  String taxonomyCacheFileName;
+  String collectionCacheFileName;
+  String metadataCacheFileName;
 
-    String cacheDirectoryPath;
+  String cacheDirectoryPath;
 }

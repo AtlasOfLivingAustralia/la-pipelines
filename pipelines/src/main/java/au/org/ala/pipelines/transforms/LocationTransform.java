@@ -24,14 +24,17 @@ public class LocationTransform extends org.gbif.pipelines.transforms.core.Locati
 
   private LocationTransform(KvConfig kvConfig, ALAKvConfig alaKvConfig) {
     super(kvConfig);
-    this.kvConfig  = kvConfig;
-    this.alaKvConfig  = alaKvConfig;
+    this.kvConfig = kvConfig;
+    this.alaKvConfig = alaKvConfig;
   }
 
   public static LocationTransform create(Properties properties) {
     ALAKvConfig alaKvConfig = ALAKvConfigFactory.create(properties);
     KvConfig kv = KvConfigFactory.create(properties, KvConfigFactory.GEOCODE_PREFIX);
-    KvConfig kvConfig = KvConfig.create(alaKvConfig.getGeocodeBasePath(), kv.getTimeout(), kv.getCacheSizeMb(), kv.getTableName(), kv.getZookeeperUrl(), kv.getNumOfKeyBuckets(), true,  kv.getImagePath());
+    KvConfig kvConfig = KvConfig
+        .create(alaKvConfig.getGeocodeBasePath(), kv.getTimeout(), kv.getCacheSizeMb(),
+            kv.getTableName(), kv.getZookeeperUrl(), kv.getNumOfKeyBuckets(), true,
+            kv.getImagePath());
     return new LocationTransform(kvConfig, alaKvConfig);
   }
 
@@ -56,31 +59,30 @@ public class LocationTransform extends org.gbif.pipelines.transforms.core.Locati
   public Optional<LocationRecord> processElement(ExtendedRecord source, MetadataRecord mdr) {
 
     LocationRecord lr = LocationRecord.newBuilder()
-            .setId(source.getId())
-            .setCreated(Instant.now().toEpochMilli())
-            .build();
-
+        .setId(source.getId())
+        .setCreated(Instant.now().toEpochMilli())
+        .build();
 
     Optional<LocationRecord> result = Interpretation.from(source)
-            .to(lr)
-            .when(er -> !er.getCoreTerms().isEmpty())
-            .via(ALALocationInterpreter.interpretCountryAndCoordinates(getService(),mdr))
-            .via(ALALocationInterpreter.interpretStateProvince(getService()))
-            .via(LocationInterpreter::interpretContinent)
-            .via(LocationInterpreter::interpretWaterBody)
-            .via(LocationInterpreter::interpretMinimumElevationInMeters)
-            .via(LocationInterpreter::interpretMaximumElevationInMeters)
-            .via(LocationInterpreter::interpretElevation)
-            .via(LocationInterpreter::interpretMinimumDepthInMeters)
-            .via(LocationInterpreter::interpretMaximumDepthInMeters)
-            .via(LocationInterpreter::interpretDepth)
-            .via(LocationInterpreter::interpretMinimumDistanceAboveSurfaceInMeters)
-            .via(LocationInterpreter::interpretMaximumDistanceAboveSurfaceInMeters)
-            .via(LocationInterpreter::interpretCoordinatePrecision)
-            .via(LocationInterpreter::interpretCoordinateUncertaintyInMeters)
-            .via(ALALocationInterpreter::interpretGeodetic)
-            .via(ALALocationInterpreter::interpretCoordinateUncertainty)
-            .get();
+        .to(lr)
+        .when(er -> !er.getCoreTerms().isEmpty())
+        .via(ALALocationInterpreter.interpretCountryAndCoordinates(getService(), mdr))
+        .via(ALALocationInterpreter.interpretStateProvince(getService()))
+        .via(LocationInterpreter::interpretContinent)
+        .via(LocationInterpreter::interpretWaterBody)
+        .via(LocationInterpreter::interpretMinimumElevationInMeters)
+        .via(LocationInterpreter::interpretMaximumElevationInMeters)
+        .via(LocationInterpreter::interpretElevation)
+        .via(LocationInterpreter::interpretMinimumDepthInMeters)
+        .via(LocationInterpreter::interpretMaximumDepthInMeters)
+        .via(LocationInterpreter::interpretDepth)
+        .via(LocationInterpreter::interpretMinimumDistanceAboveSurfaceInMeters)
+        .via(LocationInterpreter::interpretMaximumDistanceAboveSurfaceInMeters)
+        .via(LocationInterpreter::interpretCoordinatePrecision)
+        .via(LocationInterpreter::interpretCoordinateUncertaintyInMeters)
+        .via(ALALocationInterpreter::interpretGeodetic)
+        .via(ALALocationInterpreter::interpretCoordinateUncertainty)
+        .get();
 
     result.ifPresent(r -> this.incCounter());
 

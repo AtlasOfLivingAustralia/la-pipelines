@@ -20,41 +20,43 @@ import static org.gbif.rest.client.retrofit.SyncCall.syncCall;
 
 public class ALANameUsageMatchServiceClient implements ALANameMatchService {
 
-    //Wrapped service
-    private final ALANameUsageMatchRetrofitService alaNameUsageMatchService;
+  //Wrapped service
+  private final ALANameUsageMatchRetrofitService alaNameUsageMatchService;
 
-    private final OkHttpClient okHttpClient;
+  private final OkHttpClient okHttpClient;
 
-    /**
-     * Creates an instance using the provided configuration settings.
-     * @param clientConfiguration Rest client configuration
-     */
-    public ALANameUsageMatchServiceClient(ClientConfiguration clientConfiguration) {
-        okHttpClient = RetrofitClientFactory.createClient(clientConfiguration);
-        alaNameUsageMatchService = RetrofitClientFactory.createRetrofitClient(okHttpClient,
-                clientConfiguration.getBaseApiUrl(),
-                ALANameUsageMatchRetrofitService.class);
-    }
+  /**
+   * Creates an instance using the provided configuration settings.
+   *
+   * @param clientConfiguration Rest client configuration
+   */
+  public ALANameUsageMatchServiceClient(ClientConfiguration clientConfiguration) {
+    okHttpClient = RetrofitClientFactory.createClient(clientConfiguration);
+    alaNameUsageMatchService = RetrofitClientFactory.createRetrofitClient(okHttpClient,
+        clientConfiguration.getBaseApiUrl(),
+        ALANameUsageMatchRetrofitService.class);
+  }
 
-    /**
-     * See {@link NameMatchService#match(String, String, String, String, String, String, String, String, boolean, boolean)}
-     */
-    @Override
-    public ALANameUsageMatch match(ALASpeciesMatchRequest key) {
-        return syncCall(alaNameUsageMatchService.match(key));
-    }
+  /**
+   * See {@link NameMatchService#match(String, String, String, String, String, String, String,
+   * String, boolean, boolean)}
+   */
+  @Override
+  public ALANameUsageMatch match(ALASpeciesMatchRequest key) {
+    return syncCall(alaNameUsageMatchService.match(key));
+  }
 
-    @Override
-    public void close() throws IOException {
-        if (Objects.nonNull(okHttpClient) && Objects.nonNull(okHttpClient.cache())) {
-            File cacheDirectory = okHttpClient.cache().directory();
-            if (cacheDirectory.exists()) {
-                try (Stream<File> files = Files.walk(cacheDirectory.toPath())
-                        .sorted(Comparator.reverseOrder())
-                        .map(Path::toFile)) {
-                    files.forEach(File::delete);
-                }
-            }
+  @Override
+  public void close() throws IOException {
+    if (Objects.nonNull(okHttpClient) && Objects.nonNull(okHttpClient.cache())) {
+      File cacheDirectory = okHttpClient.cache().directory();
+      if (cacheDirectory.exists()) {
+        try (Stream<File> files = Files.walk(cacheDirectory.toPath())
+            .sorted(Comparator.reverseOrder())
+            .map(Path::toFile)) {
+          files.forEach(File::delete);
         }
+      }
     }
+  }
 }

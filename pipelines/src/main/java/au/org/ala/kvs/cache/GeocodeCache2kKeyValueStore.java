@@ -10,21 +10,22 @@ import java.io.IOException;
 
 public class GeocodeCache2kKeyValueStore implements KeyValueStore<LatLng, GeocodeResponse> {
 
-    private final GeocodeService service;
+  private final GeocodeService service;
 
-    private GeocodeCache2kKeyValueStore(){
-        this.service = GeocodeShpIntersectService.getInstance();
-    }
+  private GeocodeCache2kKeyValueStore() {
+    this.service = GeocodeShpIntersectService.getInstance();
+  }
 
-    public static GeocodeCache2kKeyValueStore create() {
-        return new GeocodeCache2kKeyValueStore();
-    }
+  public static GeocodeCache2kKeyValueStore create() {
+    return new GeocodeCache2kKeyValueStore();
+  }
 
-    @Override
-    public void close() throws IOException {}
+  @Override
+  public void close() throws IOException {
+  }
 
-    @Override
-    public GeocodeResponse get(LatLng latLng) {
-        return new GeocodeResponse(service.reverse(latLng.getLatitude(), latLng.getLongitude()));
-    }
+  @Override
+  public GeocodeResponse get(LatLng latLng) {
+    return new GeocodeResponse(service.reverse(latLng.getLatitude(), latLng.getLongitude()));
+  }
 }

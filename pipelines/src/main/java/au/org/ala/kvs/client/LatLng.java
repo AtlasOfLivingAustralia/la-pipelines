@@ -16,15 +16,17 @@ import java.io.Serializable;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class LatLng implements Serializable {
 
-    Double latitude;
-    Double longitude;
+  Double latitude;
+  Double longitude;
 
-    @JsonPOJOBuilder(withPrefix = "")
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class LatLngBuilder {}
+  @JsonPOJOBuilder(withPrefix = "")
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  public static class LatLngBuilder {
 
-    @Override
-    public String toString() {
-        return latitude + "," + longitude;
-    }
+  }
+
+  @Override
+  public String toString() {
+    return latitude + "," + longitude;
+  }
 }

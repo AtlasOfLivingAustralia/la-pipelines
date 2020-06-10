@@ -38,8 +38,7 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Pipeline sequence:
- *
+ * Pipeline sequence: <p>
  * <pre>
  *    1) Reads verbatim.avro file
  *    2) Interprets and converts avro {@link ExtendedRecord} file to:
@@ -54,9 +53,7 @@ import lombok.extern.slf4j.Slf4j;
  *      {@link org.gbif.pipelines.io.avro.LocationRecord}
  *    3) Writes data to independent files
  * </pre>
- *
- * <p>How to run:
- *
+ * <p> <p>How to run: <p>
  * <pre>{@code
  * java -jar target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar some.properties
  *
@@ -97,7 +94,8 @@ public class ALAVerbatimToInterpretedPipeline {
 
     String targetPath = options.getTargetPath();
     String hdfsSiteConfig = options.getHdfsSiteConfig();
-    Properties properties = FsUtils.readPropertiesFile(options.getHdfsSiteConfig(), options.getProperties());
+    Properties properties = FsUtils
+        .readPropertiesFile(options.getHdfsSiteConfig(), options.getProperties());
 
     FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, types);
 
@@ -114,8 +112,10 @@ public class ALAVerbatimToInterpretedPipeline {
     Pipeline p = Pipeline.create(options);
 
     // Core
-    MetadataTransform metadataTransform = MetadataTransform.create(properties, endPointType, attempt, skipRegistryCalls);
-    BasicTransform basicTransform =  BasicTransform.create(properties, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId);
+    MetadataTransform metadataTransform = MetadataTransform
+        .create(properties, endPointType, attempt, skipRegistryCalls);
+    BasicTransform basicTransform = BasicTransform
+        .create(properties, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId);
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.create();
 //    TaxonomyTransform taxonomyTransform = TaxonomyTransform.create(properties);
@@ -165,7 +165,6 @@ public class ALAVerbatimToInterpretedPipeline {
         .apply("Check temporal transform condition", temporalTransform.check(types))
         .apply("Interpret temporal", temporalTransform.interpret())
         .apply("Write temporal to avro", temporalTransform.write(pathFn));
-
 
     uniqueRecords
         .apply("Check multimedia transform condition", multimediaTransform.check(types))

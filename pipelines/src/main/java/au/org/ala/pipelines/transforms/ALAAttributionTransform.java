@@ -28,99 +28,105 @@ import java.util.Properties;
 import static au.org.ala.pipelines.common.ALARecordTypes.ALA_ATTRIBUTION;
 
 /**
- * ALA attribution transform for adding ALA attribution retrieved from the collectory to interpreted occurrence data.
- *
- * Beam level transformations for the DWC Taxon, reads an avro, writes an avro, maps from value to keyValue and
- * transforms form {@link ExtendedRecord} to {@link ALAAttributionRecord}.
- * <p>
- * ParDo runs sequence of interpretations for {@link ALAAttributionRecord} using {@link ExtendedRecord} as
- * a source and {@link ALAAttributionInterpreter} as interpretation steps
+ * ALA attribution transform for adding ALA attribution retrieved from the collectory to interpreted
+ * occurrence data. <p> Beam level transformations for the DWC Taxon, reads an avro, writes an avro,
+ * maps from value to keyValue and transforms form {@link ExtendedRecord} to {@link
+ * ALAAttributionRecord}. <p> ParDo runs sequence of interpretations for {@link
+ * ALAAttributionRecord} using {@link ExtendedRecord} as a source and {@link
+ * ALAAttributionInterpreter} as interpretation steps
  *
  * @see <a href="https://dwc.tdwg.org/terms/#taxon</a>
  */
 @Slf4j
 public class ALAAttributionTransform extends Transform<ExtendedRecord, ALAAttributionRecord> {
 
-    private final ALAKvConfig kvConfig;
+  private final ALAKvConfig kvConfig;
 
-    private KeyValueStore<String, ALACollectoryMetadata> dataResourceKvStore;
+  private KeyValueStore<String, ALACollectoryMetadata> dataResourceKvStore;
 
-    private KeyValueStore<ALACollectionLookup, ALACollectionMatch> collectionKvStore;
+  private KeyValueStore<ALACollectionLookup, ALACollectionMatch> collectionKvStore;
 
-    private PCollectionView<MetadataRecord> metadataView;
+  private PCollectionView<MetadataRecord> metadataView;
 
-    private ALAAttributionTransform(KeyValueStore<String, ALACollectoryMetadata> dataResourceKvStore,
-                                    ALAKvConfig kvConfig) {
-        super(ALAAttributionRecord.class, ALA_ATTRIBUTION, ALAAttributionTransform.class.getName(), "alaAttributionRecordsCount");
-        this.dataResourceKvStore = dataResourceKvStore;
-        this.kvConfig = kvConfig;
+  private ALAAttributionTransform(KeyValueStore<String, ALACollectoryMetadata> dataResourceKvStore,
+      ALAKvConfig kvConfig) {
+    super(ALAAttributionRecord.class, ALA_ATTRIBUTION, ALAAttributionTransform.class.getName(),
+        "alaAttributionRecordsCount");
+    this.dataResourceKvStore = dataResourceKvStore;
+    this.kvConfig = kvConfig;
+  }
+
+  public static ALAAttributionTransform create(Properties properties) {
+    ALAKvConfig config = ALAKvConfigFactory.create(properties);
+    return new ALAAttributionTransform(null, config);
+  }
+
+  public ALAAttributionTransform counterFn(SerializableConsumer<String> counterFn) {
+    setCounterFn(counterFn);
+    return this;
+  }
+
+  public ALAAttributionTransform init() {
+    setup();
+    return this;
+  }
+
+  public static ALAAttributionTransform create() {
+    return new ALAAttributionTransform(null, null);
+  }
+
+  /**
+   * Maps {@link ALATaxonRecord} to key value, where key is {@link TaxonRecord#getId}
+   */
+  public MapElements<ALAAttributionRecord, KV<String, ALAAttributionRecord>> toKv() {
+    return MapElements.into(new TypeDescriptor<KV<String, ALAAttributionRecord>>() {
+    })
+        .via((ALAAttributionRecord tr) -> KV.of(tr.getId(), tr));
+  }
+
+  @SneakyThrows
+  @Setup
+  public void setup() {
+    if (kvConfig != null) {
+      ClientConfiguration clientConfiguration = ClientConfiguration.builder()
+          .withBaseApiUrl(kvConfig.getCollectoryBasePath()) //GBIF base API url
+          .withTimeOut(kvConfig.getTimeout()) //Geocode service connection time-out
+          .build();
+
+      this.dataResourceKvStore = ALAAttributionKVStoreFactory
+          .alaAttributionKVStore(clientConfiguration, kvConfig);
+      this.collectionKvStore = ALACollectionKVStoreFactory
+          .alaCollectionKVStore(clientConfiguration, kvConfig);
     }
+  }
 
-    public static ALAAttributionTransform create(Properties properties) {
-        ALAKvConfig config = ALAKvConfigFactory.create(properties);
-        return new ALAAttributionTransform(null, config);
-    }
+  public ParDo.SingleOutput<ExtendedRecord, ALAAttributionRecord> interpret(
+      PCollectionView<MetadataRecord> metadataView) {
+    this.metadataView = metadataView;
+    return ParDo.of(this).withSideInputs(metadataView);
+  }
 
-    public ALAAttributionTransform counterFn(SerializableConsumer<String> counterFn) {
-        setCounterFn(counterFn);
-        return this;
-    }
+  @Override
+  @ProcessElement
+  public void processElement(ProcessContext c) {
+    processElement(c.element(), c.sideInput(metadataView)).ifPresent(c::output);
+  }
 
-    public ALAAttributionTransform init() {
-        setup();
-        return this;
-    }
+  @Override
+  public Optional<ALAAttributionRecord> convert(ExtendedRecord extendedRecord) {
+    throw new IllegalArgumentException("Method is not implemented!");
+  }
 
-    public static ALAAttributionTransform create() {
-        return new ALAAttributionTransform(null, null);
-    }
+  public Optional<ALAAttributionRecord> processElement(ExtendedRecord source, MetadataRecord mdr) {
 
-    /** Maps {@link ALATaxonRecord} to key value, where key is {@link TaxonRecord#getId} */
-    public MapElements<ALAAttributionRecord, KV<String, ALAAttributionRecord>> toKv() {
-        return MapElements.into(new TypeDescriptor<KV<String, ALAAttributionRecord>>() {})
-                .via((ALAAttributionRecord tr) -> KV.of(tr.getId(), tr));
-    }
-
-    @SneakyThrows
-    @Setup
-    public void setup() {
-        if (kvConfig != null) {
-            ClientConfiguration clientConfiguration = ClientConfiguration.builder()
-                    .withBaseApiUrl(kvConfig.getCollectoryBasePath()) //GBIF base API url
-                    .withTimeOut(kvConfig.getTimeout()) //Geocode service connection time-out
-                    .build();
-
-            this.dataResourceKvStore = ALAAttributionKVStoreFactory.alaAttributionKVStore(clientConfiguration, kvConfig);
-            this.collectionKvStore = ALACollectionKVStoreFactory.alaCollectionKVStore(clientConfiguration, kvConfig);
-        }
-    }
-
-    public ParDo.SingleOutput<ExtendedRecord, ALAAttributionRecord> interpret(PCollectionView<MetadataRecord> metadataView) {
-        this.metadataView = metadataView;
-        return ParDo.of(this).withSideInputs(metadataView);
-    }
-
-    @Override
-    @ProcessElement
-    public void processElement(ProcessContext c) {
-        processElement(c.element(), c.sideInput(metadataView)).ifPresent(c::output);
-    }
-
-    @Override
-    public Optional<ALAAttributionRecord> convert(ExtendedRecord extendedRecord) {
-        throw new IllegalArgumentException("Method is not implemented!");
-    }
-
-    public Optional<ALAAttributionRecord> processElement(ExtendedRecord source, MetadataRecord mdr) {
-
-        ALAAttributionRecord tr = ALAAttributionRecord.newBuilder().setId(source.getId()).build();
-        Interpretation.from(source)
-                .to(tr)
-                .via(ALAAttributionInterpreter.interpretDatasetKey(mdr, dataResourceKvStore))
-                .via(ALAAttributionInterpreter.interpretCodes(collectionKvStore))
-        ;
-        // the id is null when there is an error in the interpretation. In these
-        // cases we do not write the taxonRecord because it is totally empty.
-        return  Optional.of(tr);
-    }
+    ALAAttributionRecord tr = ALAAttributionRecord.newBuilder().setId(source.getId()).build();
+    Interpretation.from(source)
+        .to(tr)
+        .via(ALAAttributionInterpreter.interpretDatasetKey(mdr, dataResourceKvStore))
+        .via(ALAAttributionInterpreter.interpretCodes(collectionKvStore))
+    ;
+    // the id is null when there is an error in the interpretation. In these
+    // cases we do not write the taxonRecord because it is totally empty.
+    return Optional.of(tr);
+  }
 }

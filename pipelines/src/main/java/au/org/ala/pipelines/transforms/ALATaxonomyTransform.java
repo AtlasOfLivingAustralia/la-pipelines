@@ -27,14 +27,11 @@ import java.util.Properties;
 import static au.org.ala.pipelines.common.ALARecordTypes.ALA_TAXONOMY;
 
 /**
- *
- * ALA taxonomy transform for adding ALA taxonomy to interpreted occurrence data.
- *
- * Beam level transformations for the DWC Taxon, reads an avro, writes an avro, maps from value to keyValue and
- * transforms form {@link ExtendedRecord} to {@link TaxonRecord}.
- * <p>
- * ParDo runs sequence of interpretations for {@link TaxonRecord} using {@link ExtendedRecord} as
- * a source and {@link TaxonomyInterpreter} as interpretation steps
+ * ALA taxonomy transform for adding ALA taxonomy to interpreted occurrence data. <p> Beam level
+ * transformations for the DWC Taxon, reads an avro, writes an avro, maps from value to keyValue and
+ * transforms form {@link ExtendedRecord} to {@link TaxonRecord}. <p> ParDo runs sequence of
+ * interpretations for {@link TaxonRecord} using {@link ExtendedRecord} as a source and {@link
+ * TaxonomyInterpreter} as interpretation steps
  *
  * @see <a href="https://dwc.tdwg.org/terms/#taxon</a>
  */
@@ -44,8 +41,10 @@ public class ALATaxonomyTransform extends Transform<ExtendedRecord, ALATaxonReco
   private final ALAKvConfig kvConfig;
   private KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch> kvStore;
 
-  private ALATaxonomyTransform(KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch> kvStore, ALAKvConfig kvConfig) {
-    super(ALATaxonRecord.class, ALA_TAXONOMY, ALATaxonomyTransform.class.getName(), "alaTaxonRecordsCount");
+  private ALATaxonomyTransform(KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch> kvStore,
+      ALAKvConfig kvConfig) {
+    super(ALATaxonRecord.class, ALA_TAXONOMY, ALATaxonomyTransform.class.getName(),
+        "alaTaxonRecordsCount");
     this.kvStore = kvStore;
     this.kvConfig = kvConfig;
   }
@@ -58,7 +57,8 @@ public class ALATaxonomyTransform extends Transform<ExtendedRecord, ALATaxonReco
     return new ALATaxonomyTransform(null, kvConfig);
   }
 
-  public static ALATaxonomyTransform create(KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch> kvStore) {
+  public static ALATaxonomyTransform create(
+      KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch> kvStore) {
     return new ALATaxonomyTransform(kvStore, null);
   }
 
@@ -66,9 +66,12 @@ public class ALATaxonomyTransform extends Transform<ExtendedRecord, ALATaxonReco
     return new ALATaxonomyTransform(null, ALAKvConfigFactory.create(properties));
   }
 
-  /** Maps {@link ALATaxonRecord} to key value, where key is {@link TaxonRecord#getId} */
+  /**
+   * Maps {@link ALATaxonRecord} to key value, where key is {@link TaxonRecord#getId}
+   */
   public MapElements<ALATaxonRecord, KV<String, ALATaxonRecord>> toKv() {
-    return MapElements.into(new TypeDescriptor<KV<String, ALATaxonRecord>>() {})
+    return MapElements.into(new TypeDescriptor<KV<String, ALATaxonRecord>>() {
+    })
         .via((ALATaxonRecord tr) -> KV.of(tr.getId(), tr));
   }
 
@@ -88,16 +91,17 @@ public class ALATaxonomyTransform extends Transform<ExtendedRecord, ALATaxonReco
 
     if (kvConfig != null) {
       ClientConfiguration clientConfiguration = ClientConfiguration.builder()
-              .withBaseApiUrl(kvConfig.getTaxonomyBasePath()) //GBIF base API url
-              .withTimeOut(kvConfig.getTimeout()) //Geocode service connection time-out
-              .build();
+          .withBaseApiUrl(kvConfig.getTaxonomyBasePath()) //GBIF base API url
+          .withTimeOut(kvConfig.getTimeout()) //Geocode service connection time-out
+          .build();
 
       kvStore = ALANameMatchKVStoreFactory.alaNameMatchKVStore(clientConfiguration, kvConfig);
     }
   }
 
   @Teardown
-  public void tearDown() {}
+  public void tearDown() {
+  }
 
   @Override
   public Optional<ALATaxonRecord> convert(ExtendedRecord source) {
@@ -110,6 +114,6 @@ public class ALATaxonomyTransform extends Transform<ExtendedRecord, ALATaxonReco
 
     // the id is null when there is an error in the interpretation. In these
     // cases we do not write the taxonRecord because it is totally empty.
-    return  Optional.of(tr);
+    return Optional.of(tr);
   }
 }

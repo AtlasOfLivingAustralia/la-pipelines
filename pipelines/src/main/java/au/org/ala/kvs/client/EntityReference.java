@@ -17,11 +17,13 @@ import lombok.Value;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class EntityReference {
 
-    String uid;
-    String name;
-    String uri;
+  String uid;
+  String name;
+  String uri;
 
-    @JsonPOJOBuilder(withPrefix = "")
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class EntityReferenceBuilder {}
+  @JsonPOJOBuilder(withPrefix = "")
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  public static class EntityReferenceBuilder {
+
+  }
 }

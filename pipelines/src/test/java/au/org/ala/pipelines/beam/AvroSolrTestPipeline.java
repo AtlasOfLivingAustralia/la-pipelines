@@ -16,46 +16,50 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * A performance test pipeline that avoids using GroupByKey (a suspected bottleneck).
- * This is for testing purposes only, and ultimately should be removed (or moved) from the codebase.
+ * A performance test pipeline that avoids using GroupByKey (a suspected bottleneck). This is for
+ * testing purposes only, and ultimately should be removed (or moved) from the codebase.
  */
 public class AvroSolrTestPipeline {
 
-    public static void main(String[] args){
+  public static void main(String[] args) {
 
-        ALASolrPipelineOptions options = PipelinesOptionsFactory.create(ALASolrPipelineOptions.class, args);
-        Pipeline p = Pipeline.create(options);
-        PCollection<SolrInputDocument> records =
-                p.apply(AvroIO.read(AustraliaSpatialRecord.class).from("/data/pipelines-data/" + options.getDatasetId().trim() + "/1/interpreted/australia_spatial/*.avro"))
-                .apply(ParDo.of(new SolrDocumentFn()));
-        SolrIO.ConnectionConfiguration conn = SolrIO.ConnectionConfiguration.create(
-                options.getZkHost()
-        );
-        records.apply(
-                SolrIO.write()
-                        .to(options.getSolrCollection())
-                        .withConnectionConfiguration(conn)
-                        .withMaxBatchSize(options.getSolrBatchSize())
-        );
-        PipelineResult result = p.run();
-        result.waitUntilFinish();
+    ALASolrPipelineOptions options = PipelinesOptionsFactory
+        .create(ALASolrPipelineOptions.class, args);
+    Pipeline p = Pipeline.create(options);
+    PCollection<SolrInputDocument> records =
+        p.apply(AvroIO.read(AustraliaSpatialRecord.class).from(
+            "/data/pipelines-data/" + options.getDatasetId().trim()
+                + "/1/interpreted/australia_spatial/*.avro"))
+            .apply(ParDo.of(new SolrDocumentFn()));
+    SolrIO.ConnectionConfiguration conn = SolrIO.ConnectionConfiguration.create(
+        options.getZkHost()
+    );
+    records.apply(
+        SolrIO.write()
+            .to(options.getSolrCollection())
+            .withConnectionConfiguration(conn)
+            .withMaxBatchSize(options.getSolrBatchSize())
+    );
+    PipelineResult result = p.run();
+    result.waitUntilFinish();
+  }
+
+  static class SolrDocumentFn extends DoFn<AustraliaSpatialRecord, SolrInputDocument> {
+
+    @ProcessElement
+    public void processElement(@Element AustraliaSpatialRecord l,
+        OutputReceiver<SolrInputDocument> outputReceiver) {
+
+      SolrInputDocument s = new SolrInputDocument();
+      s.setField("id", UUID.randomUUID().toString());
+      int count = 0;
+      for (Map.Entry entry : l.getItems().entrySet()) {
+        count++;
+        //double up fields
+        s.setField(entry.getKey().toString(), entry.getValue().toString());
+        s.setField(entry.getKey().toString() + "0", entry.getValue().toString());
+      }
+      outputReceiver.output(s);
     }
-
-    static class SolrDocumentFn extends DoFn<AustraliaSpatialRecord, SolrInputDocument> {
-
-        @ProcessElement
-        public void processElement(@Element AustraliaSpatialRecord l, OutputReceiver<SolrInputDocument> outputReceiver) {
-
-            SolrInputDocument s = new SolrInputDocument();
-            s.setField("id", UUID.randomUUID().toString());
-            int count = 0;
-            for (Map.Entry entry: l.getItems().entrySet()){
-                count++;
-                //double up fields
-                s.setField(entry.getKey().toString(), entry.getValue().toString());
-                s.setField(entry.getKey().toString() + "0", entry.getValue().toString());
-            }
-            outputReceiver.output(s);
-        }
-    }
+  }
 }
