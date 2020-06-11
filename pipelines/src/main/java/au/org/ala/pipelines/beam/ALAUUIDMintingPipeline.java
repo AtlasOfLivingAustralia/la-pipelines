@@ -21,6 +21,8 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.codehaus.plexus.util.FileUtils;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
@@ -79,10 +81,11 @@ public class ALAUUIDMintingPipeline {
     public static void run(InterpretationPipelineOptions options) throws Exception {
 
         Pipeline p = Pipeline.create(options);
-        Properties properties = FsUtils.readPropertiesFile(options.getHdfsSiteConfig(), options.getProperties());
+        Properties properties = FsUtils.readPropertiesFile(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getProperties());
 
         //build the directory path for existing identifiers
         String alaRecordDirectoryPath = options.getTargetPath() + "/" + options.getDatasetId().trim() + "/1/identifiers/" + ALARecordTypes.ALA_UUID.name().toLowerCase();
+        log.info("Output path {}", alaRecordDirectoryPath);
 
         //create client configuration
         ALAKvConfig kvConfig = ALAKvConfigFactory.create(properties);
@@ -128,11 +131,13 @@ public class ALAUUIDMintingPipeline {
         PCollection<KV<String, String>> alaUuids = null;
 
         log.info("Transform 2: ALAUUIDRecord ur ->  <uniqueKey, uuid> (assume incomplete)");
-        File alaRecordDirectory = new File(alaRecordDirectoryPath);
 
-        if (alaRecordDirectory.exists() && alaRecordDirectory.isDirectory()){
+        FileSystem fs = FsUtils.getFileSystem(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), null);
+        Path path = new Path(alaRecordDirectoryPath);
+
+        if (fs.exists(path)){
             alaUuids = p.apply(AvroIO.read(ALAUUIDRecord.class)
-                            .from(alaRecordDirectory + "/*.avro"))
+                            .from(alaRecordDirectoryPath + "/*.avro"))
                             .apply(ParDo.of(new ALAUUIDRecordKVFcn()));
         } else {
 
@@ -150,7 +155,7 @@ public class ALAUUIDMintingPipeline {
         joinedPcollection
                 .apply(ParDo.of(new CreateALAUUIDRecordFcn()))
                 .apply(AvroIO.write(ALAUUIDRecord.class)
-                        .to(alaRecordDirectory + "_new/interpret")
+                        .to(alaRecordDirectoryPath + "_new/interpret")
                         .withSuffix(".avro")
                         .withCodec(BASE_CODEC));
 
@@ -159,15 +164,18 @@ public class ALAUUIDMintingPipeline {
         result.waitUntilFinish();
         MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
 
-        //TODO duplicate check of ALAUUIDRecord entries and report them.....see issue #62
+        Path existingVersionUUids = new Path(alaRecordDirectoryPath);
+        Path newVersionUUids = new Path(alaRecordDirectoryPath + "_new");
 
-        //rename existing
-        if (new File(alaRecordDirectoryPath).exists()){
-            FileUtils.rename(new File(alaRecordDirectoryPath), new File(alaRecordDirectory + "_backup_" + System.currentTimeMillis()));
+        //rename backup existing
+        if (fs.exists(existingVersionUUids)){
+            String backupPath = alaRecordDirectoryPath + "_backup_" + System.currentTimeMillis();
+            log.info("Backing up existing UUIDs to {}", backupPath);
+            fs.rename(existingVersionUUids, new Path(backupPath));
         }
-
-        //rename existing
-        FileUtils.rename(new File(alaRecordDirectory + "_new"), new File(alaRecordDirectoryPath));
+        //rename new version to current path
+        fs.rename(newVersionUUids, existingVersionUUids);
+        log.info("Pipeline complete.");
     }
 
     /**

@@ -12,6 +12,7 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.kvs.KeyValueStore;
 
+import java.util.ArrayList;
 import java.util.function.BiConsumer;
 
 import static org.gbif.pipelines.parsers.utils.ModelUtils.addIssue;
@@ -64,6 +65,13 @@ public class ALATaxonomyInterpreter {
 
                     try {
                         BeanUtils.copyProperties(atr, usageMatch);
+                        //initialise to avoid AVRO serialisation error
+                        if(usageMatch.getSpeciesGroup() == null){
+                            atr.setSpeciesGroup(new ArrayList<String>());
+                        }
+                        if(usageMatch.getSpeciesSubgroup() == null){
+                            atr.setSpeciesSubgroup(new ArrayList<String>());
+                        }
                     } catch (Exception e) {
                         log.error(e.getMessage(), e);
                     }

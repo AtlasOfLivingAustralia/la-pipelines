@@ -15,7 +15,7 @@ import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.transforms.common.DefaultValuesTransform;
+import org.gbif.pipelines.transforms.metadata.DefaultValuesTransform;
 import org.gbif.pipelines.transforms.common.UniqueIdTransform;
 import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
 import org.gbif.pipelines.transforms.core.*;
@@ -30,6 +30,7 @@ import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
+import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.slf4j.MDC;
 
 import au.org.ala.pipelines.transforms.ALAAttributionTransform;
@@ -99,9 +100,14 @@ public class ALAVerbatimToInterpretedPipeline {
 
     String targetPath = options.getTargetPath();
     String hdfsSiteConfig = options.getHdfsSiteConfig();
-    Properties properties = FsUtils.readPropertiesFile(options.getHdfsSiteConfig(), options.getProperties());
+    String coreSiteConfig = options.getCoreSiteConfig();
 
-    FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, types);
+    log.info("hdfsSiteConfig = " + hdfsSiteConfig);
+    log.info("coreSiteConfig = " + coreSiteConfig);
+
+    FsUtils.deleteInterpretIfExist(hdfsSiteConfig, coreSiteConfig, targetPath, datasetId, attempt, types);
+
+    Properties properties = FsUtils.readPropertiesFile(options.getHdfsSiteConfig(), options.getProperties());
 
     MDC.put("datasetId", datasetId);
     MDC.put("attempt", attempt.toString());

@@ -2,9 +2,10 @@ package au.org.ala.sampling;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.extern.slf4j.Slf4j;
-import org.codehaus.plexus.util.FileUtils;
+import org.apache.hadoop.fs.FileSystem;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.ingest.utils.FsUtils;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -14,16 +15,13 @@ import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+
+import java.io.*;
 import java.net.URL;
+import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
-import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
-import java.nio.file.Files;
+import java.nio.channels.WritableByteChannel;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
@@ -77,6 +75,8 @@ public class LayerCrawler {
 
         String baseDir = options.getInputPath();
 
+        FileSystem fs = FsUtils.getFileSystem(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), "/");
+
         if (options.getDatasetId() != null) {
 
             String dataSetID = options.getDatasetId();
@@ -87,57 +87,54 @@ public class LayerCrawler {
             LayerCrawler lc = new LayerCrawler();
 
             //delete existing sampling output
-            File samplingDir = new File(baseDir + "/" + dataSetID + "/1/sampling");
-            if (samplingDir.exists()){
-                FileUtils.forceDelete(samplingDir);
+            String samplingDir = baseDir + "/" + dataSetID + "/1/sampling";
+            FsUtils.deleteIfExist(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), samplingDir);
+
+//            (re)create sampling output directories
+            String sampleDownloadPath = baseDir + "/" + dataSetID + "/1/sampling/downloads";
+//            FsUtils.createDirectory(fs, sampleDownloadPath);
+
+            //check the lat lng export directory has been created
+            String latLngExportPath = baseDir +  "/" + dataSetID + "/1/latlng";
+            if (! FsUtils.exists(fs, latLngExportPath)){
+                log.error("LatLng export unavailable. Has LatLng export pipeline been ran ? Not available at path {}", latLngExportPath);
+                throw new RuntimeException("LatLng export unavailable. Has LatLng export pipeline been ran ? Not available:" + latLngExportPath);
             }
 
-            //(re)create sampling output directories
-            File samples = new File(baseDir + "/" + dataSetID + "/1/sampling/downloads");
-            FileUtils.forceMkdir(samples);
-
-            File latLngExportDir = new File(baseDir +  "/" + dataSetID + "/1/latlng");
-            if (!latLngExportDir.exists()){
-                throw new RuntimeException("LatLng export unavailable. Has LatLng export pipeline been ran ? " + latLngExportDir.getAbsolutePath());
-            }
-
-            Stream<File> latLngFiles = Stream.of(latLngExportDir.listFiles());
-
+            Collection<String> latLngFiles = FsUtils.listPaths(fs, latLngExportPath);
             String layerList = lc.getRequiredLayers();
 
-            for (Iterator<File> i = latLngFiles.iterator(); i.hasNext(); ) {
-                File inputFile = i.next();
-                lc.crawl(layerList, inputFile, samples);
+            for (Iterator<String> i = latLngFiles.iterator(); i.hasNext(); ) {
+                String inputFile = i.next();
+                lc.crawl(fs, layerList, inputFile, sampleDownloadPath);
             }
             Instant batchFinish = Instant.now();
 
             log.info("Finished sampling for {}. Time taken {} minutes", dataSetID, Duration.between(batchStart, batchFinish).toMinutes());
         } else  {
 
-            Instant batchStart = Instant.now();
-            //list file in directory
-            LayerCrawler lc = new LayerCrawler();
-
-            File samples = new File(options.getTargetPath() + "/sampling/downloads");
-            FileUtils.forceMkdir(samples);
-
-            Stream<File> latLngFiles = Stream.of(
-                    new File(options.getTargetPath() + "/latlng/").listFiles()
-            );
-
-            String layerList = lc.getRequiredLayers();
-
-            for (Iterator<File> i = latLngFiles.iterator(); i.hasNext(); ) {
-                File inputFile = i.next();
-                lc.crawl(layerList, inputFile, samples);
-            }
-            Instant batchFinish = Instant.now();
-
-            log.info("Finished sampling for complete lat lng export. Time taken {} minutes", Duration.between(batchStart, batchFinish).toMinutes());
+//            Instant batchStart = Instant.now();
+//            //list file in directory
+//            LayerCrawler lc = new LayerCrawler();
+//
+//            File samples = new File(options.getTargetPath() + "/sampling/downloads");
+//            FileUtils.forceMkdir(samples);
+//
+//            Stream<File> latLngFiles = Stream.of(
+//                    new File(options.getTargetPath() + "/latlng/").listFiles()
+//            );
+//
+//            String layerList = lc.getRequiredLayers();
+//
+//            for (Iterator<File> i = latLngFiles.iterator(); i.hasNext(); ) {
+//                File inputFile = i.next();
+////                lc.crawl(fs, layerList, inputFile, samples);
+//            }
+//            Instant batchFinish = Instant.now();
+//
+//            log.info("Finished sampling for complete lat lng export. Time taken {} minutes", Duration.between(batchStart, batchFinish).toMinutes());
         }
-
     }
-
 
     public LayerCrawler(){
         log.info("Initialising crawler....");
@@ -152,7 +149,6 @@ public class LayerCrawler {
         String layers = service.getLayers().execute().body().stream()
                 .filter(l -> l.getEnabled())
                 .map(l -> String.valueOf(l.getId()))
-
 //                .filter(s -> s.startsWith("cl") || requiredEls.contains(s))
                 .collect(Collectors.joining(","));
 
@@ -162,13 +158,14 @@ public class LayerCrawler {
     }
 
 
-    public void crawl(String layers, File inputFile, File outputDirectory) throws Exception {
+    public void crawl(FileSystem fs, String layers, String inputFilePath, String outputDirectoryPath) throws Exception {
 
         // partition the coordinates into batches of N to submit
-        log.info("Partitioning coordinates from file {}", inputFile.getAbsolutePath());
+        log.info("Partitioning coordinates from file {}", inputFilePath);
 
-        Stream<String> coordinateStream = Files.lines(inputFile.toPath());
-        Collection<List<String>> partitioned = partition(coordinateStream, BATCH_SIZE);
+        InputStream inputStream = FsUtils.openInputStream(fs, inputFilePath);
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+        Collection<List<String>> partitioned = partition(reader.lines(), BATCH_SIZE);
 
         for (List<String> partition : partitioned) {
 
@@ -196,17 +193,20 @@ public class LayerCrawler {
                 } else {
                     log.info("Downloading sampling batch {}", batchId);
 
-                    downloadFile(outputDirectory, batchId, batchStatus);
+                    downloadFile(fs, outputDirectoryPath, batchId, batchStatus);
 
-                    try (ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(new File(outputDirectory, batchId + ".zip")))) {
+                    String zipFilePath = outputDirectoryPath + "/" + batchId + ".zip";
+                    ReadableByteChannel readableByteChannel = FsUtils.openByteChannel(fs, zipFilePath);
+                    InputStream zipInput = Channels.newInputStream(readableByteChannel);
+
+                    try (ZipInputStream zipInputStream = new ZipInputStream(zipInput)) {
                         ZipEntry entry = zipInputStream.getNextEntry();
                         while (entry != null) {
                             log.info("Unzipping {}", entry.getName());
-                            java.nio.file.Path filePath = new File(outputDirectory, batchId + ".csv").toPath();
+
+                            String unzippedOutputFilePath = outputDirectoryPath + "/" + batchId + ".csv";
                             if (!entry.isDirectory()) {
-                                unzipFiles(zipInputStream, filePath);
-                            } else {
-                                Files.createDirectories(filePath);
+                                unzipFiles(fs, zipInputStream, unzippedOutputFilePath);
                             }
 
                             zipInputStream.closeEntry();
@@ -214,7 +214,10 @@ public class LayerCrawler {
                         }
                     }
 
-                    log.info("Sampling done for file {}", inputFile.getAbsolutePath());
+                    //delete zip file
+                    FsUtils.deleteIfExist(fs, zipFilePath);
+
+                    log.info("Sampling done for file {}", inputFilePath);
                 }
             }
 
@@ -228,23 +231,26 @@ public class LayerCrawler {
     /**
      * Download the batch file with a retries mechanism.
      *
-     * @param outputDirectory
      * @param batchId
      * @param batchStatus
      * @return
      * @throws IOException
      */
-    private boolean downloadFile(File outputDirectory, String batchId, SamplingService.BatchStatus batchStatus) throws IOException {
+    private boolean downloadFile(FileSystem fs, String outputDirectoryPath, String batchId, SamplingService.BatchStatus batchStatus) throws IOException {
 
         for (int i = 0; i < DOWNLOAD_RETRIES; i++) {
 
             try {
                 try (
-                        ReadableByteChannel readableByteChannel = Channels.newChannel(new URL(batchStatus.getDownloadUrl()).openStream());
-                        FileOutputStream fileOutputStream = new FileOutputStream(new File(outputDirectory, batchId + ".zip"));
-                        FileChannel fileChannel = fileOutputStream.getChannel()
+                        ReadableByteChannel inputChannel = Channels.newChannel(new URL(batchStatus.getDownloadUrl()).openStream());
+                        WritableByteChannel outputChannel = FsUtils.createByteChannel(fs, outputDirectoryPath + "/" + batchId + ".zip");
                 ) {
-                    fileChannel.transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
+                    ByteBuffer buffer = ByteBuffer.allocate(512);
+                    while (inputChannel.read(buffer) != -1) {
+                        buffer.flip();
+                        outputChannel.write(buffer);
+                        buffer.clear();
+                    }
                     return true;
                 }
 
@@ -358,9 +364,8 @@ public class LayerCrawler {
     /**
      * Unzip the file to the path.
      */
-    public static void unzipFiles(final ZipInputStream zipInputStream, final java.nio.file.Path unzipFilePath) throws IOException {
-
-        try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(unzipFilePath.toAbsolutePath().toString()))) {
+    public static void unzipFiles(final FileSystem fs, final ZipInputStream zipInputStream, final String unzippedFilePath) throws IOException {
+        try (BufferedOutputStream bos = new BufferedOutputStream(FsUtils.openOutputStream(fs, unzippedFilePath))) {
             byte[] bytesIn = new byte[1024];
             int read = 0;
             while ((read = zipInputStream.read(bytesIn)) != -1) {

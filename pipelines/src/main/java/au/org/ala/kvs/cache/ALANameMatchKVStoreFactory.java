@@ -15,7 +15,6 @@ import java.io.IOException;
 @Slf4j
 public class ALANameMatchKVStoreFactory {
 
-
     /**
      * Returns ala name matching key value store.
      *
@@ -41,7 +40,6 @@ public class ALANameMatchKVStoreFactory {
      * Builds a KV Store backed by the rest client.
      */
     private static KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch> cache2kBackedKVStore(ALANameMatchService nameMatchService, Command closeHandler, ALAKvConfig kvConfig) {
-
 
         KeyValueStore kvs = new KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch>() {
             @Override

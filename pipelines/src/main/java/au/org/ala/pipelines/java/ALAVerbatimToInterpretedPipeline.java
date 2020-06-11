@@ -28,7 +28,7 @@ import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 import org.gbif.pipelines.ingest.java.transforms.OccurrenceExtensionTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
-import org.gbif.pipelines.transforms.core.MetadataTransform;
+import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
@@ -131,9 +131,10 @@ public class ALAVerbatimToInterpretedPipeline {
         String targetPath = options.getTargetPath();
         String endPointType = options.getEndPointType();
         String hdfsSiteConfig = options.getHdfsSiteConfig();
+        String coreSiteConfig = options.getCoreSiteConfig();
         Properties properties = PropertiesFactory.getInstance(hdfsSiteConfig, options.getProperties()).get();
 
-        FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, types);
+        FsUtils.deleteInterpretIfExist(hdfsSiteConfig, coreSiteConfig, targetPath, datasetId, attempt, types);
 
         MDC.put("datasetId", datasetId);
         MDC.put("attempt", attempt.toString());

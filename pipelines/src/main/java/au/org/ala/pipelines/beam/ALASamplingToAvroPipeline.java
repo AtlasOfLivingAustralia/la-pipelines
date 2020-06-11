@@ -18,15 +18,19 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.io.avro.AustraliaSpatialRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.transforms.specific.AustraliaSpatialTransform;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -56,8 +60,11 @@ public class ALASamplingToAvroPipeline {
         String outputPath = ALAFsUtils.buildPathSamplingOutputUsingTargetPath(options);
         log.info("Outputting results to " + outputPath);
 
+        FileSystem fs = FsUtils.getFileSystem(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), "/");
+
+
         // Read column headers
-        final String[] columnHeaders = getColumnHeaders(samplingPath);
+        final String[] columnHeaders = getColumnHeaders(fs, samplingPath);
 
         // Read from download sampling CSV files
         PCollection<String> lines = p.apply(TextIO.read().from(samplingPath + "/*.csv"));
@@ -152,33 +159,29 @@ public class ALASamplingToAvroPipeline {
 
 
     @NotNull
-    private static String[] getColumnHeaders(String samplingPath) {
+    private static String[] getColumnHeaders(FileSystem fs, String samplingPath)  {
 
-        //obtain column header
-        File samplingDir = new File(samplingPath);
+        try {
+            //obtain column header
+            if (FsUtils.exists(fs, samplingPath)) {
 
-        if (samplingDir.exists() && samplingDir.isDirectory()){
-            File[] samplingFiles = samplingDir.listFiles(new FilenameFilter() {
-                @Override
-                public boolean accept(File dir, String name) {
-                    return name.endsWith(".csv");
-                }
-            });
+                Collection<String> samplingFiles = FsUtils.listPaths(fs, samplingPath);
 
-            if (samplingFiles.length > 0){
+                if (!samplingFiles.isEmpty()) {
 
-                try {
-                    String columnHeaderString = new BufferedReader(new FileReader(samplingFiles[0])).readLine();
+                    //read the first line of the first sampling file
+                    String samplingFilePath = samplingFiles.iterator().next();
+                    String columnHeaderString = new BufferedReader(new InputStreamReader(FsUtils.openInputStream(fs, samplingFilePath))).readLine();
                     return columnHeaderString.split(",");
-                } catch (Exception e){
-                    throw new RuntimeException(e.getMessage());
-                }
 
+                } else {
+                    throw new RuntimeException("Sampling directory found, but is empty. Has sampling from spatial-service been ran ? Missing dir: " + samplingPath);
+                }
             } else {
-                throw new RuntimeException("Sampling directory found, but is empty. Has sampling from spatial-service been ran ? Missing dir: " + samplingPath);
+                throw new RuntimeException("Sampling directory cant be found. Has sampling from spatial-service been ran ? Missing dir: " + samplingPath);
             }
-        } else {
-            throw new RuntimeException("Sampling directory cant be found. Has sampling from spatial-service been ran ? Missing dir: " + samplingPath);
+        } catch (IOException e){
+            throw new RuntimeException("Problem reading sampling from: " + samplingPath + " - " + e.getMessage(), e);
         }
     }
 

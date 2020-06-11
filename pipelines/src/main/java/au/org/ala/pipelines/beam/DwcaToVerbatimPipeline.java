@@ -23,7 +23,7 @@ import java.nio.file.Paths;
 public class DwcaToVerbatimPipeline {
 
     public static void main(String[] args) {
-        InterpretationPipelineOptions options = PipelinesOptionsFactory.create(InterpretationPipelineOptions.class, args);
+        InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
         run(options);
     }
 
@@ -36,6 +36,7 @@ public class DwcaToVerbatimPipeline {
         log.info("Adding step 1: Options");
         String inputPath = options.getInputPath();
         String targetPath = FsUtils.buildDatasetAttemptPath(options, PipelinesVariables.Pipeline.Conversion.FILE_NAME, false);
+
         String tmpPath = FsUtils.getTempDir(options);
 
         boolean isDir = Paths.get(inputPath).toFile().isDirectory();
