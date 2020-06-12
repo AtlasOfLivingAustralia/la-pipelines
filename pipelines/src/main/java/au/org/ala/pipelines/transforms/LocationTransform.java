@@ -43,7 +43,7 @@ public class LocationTransform extends org.gbif.pipelines.transforms.core.Locati
    */
   @Override
   public LocationTransform init() {
-    setService(GeocodeServiceFactory.create(kvConfig, alaKvConfig));
+    setGeocodeKvStore(GeocodeServiceFactory.create(kvConfig, alaKvConfig));
     return this;
   }
 
@@ -51,7 +51,7 @@ public class LocationTransform extends org.gbif.pipelines.transforms.core.Locati
   @Override
   public void setup() {
     if (kvConfig != null) {
-      this.setService(GeocodeServiceFactory.create(kvConfig, alaKvConfig));
+      this.setGeocodeKvStore(GeocodeServiceFactory.create(kvConfig, alaKvConfig));
     }
   }
 
@@ -66,8 +66,8 @@ public class LocationTransform extends org.gbif.pipelines.transforms.core.Locati
     Optional<LocationRecord> result = Interpretation.from(source)
         .to(lr)
         .when(er -> !er.getCoreTerms().isEmpty())
-        .via(ALALocationInterpreter.interpretCountryAndCoordinates(getService(), mdr))
-        .via(ALALocationInterpreter.interpretStateProvince(getService()))
+        .via(ALALocationInterpreter.interpretCountryAndCoordinates(getGeocodeKvStore(), mdr))
+        .via(ALALocationInterpreter.interpretStateProvince(getGeocodeKvStore()))
         .via(LocationInterpreter::interpretContinent)
         .via(LocationInterpreter::interpretWaterBody)
         .via(LocationInterpreter::interpretMinimumElevationInMeters)

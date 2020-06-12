@@ -14,7 +14,7 @@ import au.org.ala.pipelines.interpreters.ALALocationInterpreter;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.rest.client.geocode.Location;
 
-import org.gbif.pipelines.parsers.parsers.location.GeocodeService;
+import org.gbif.pipelines.parsers.parsers.location.GeocodeKvStore;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.junit.Test;
 
@@ -146,7 +146,6 @@ public class AlaLocationInterpreterTest {
     kvStore.put(new LatLng(-31.25d, 146.921099d),
         new GeocodeResponse(Collections.singletonList(state)));
 
-    GeocodeService service = GeocodeService.create(kvStore);
 
     LocationRecord lr = LocationRecord.newBuilder().setId(ID).build();
     Map<String, String> coreMap = new HashMap<>();
@@ -155,7 +154,7 @@ public class AlaLocationInterpreterTest {
     coreMap.put(DwcTerm.verbatimLatitude.qualifiedName(), "-31.25d");
     coreMap.put(DwcTerm.verbatimLongitude.qualifiedName(), "146.921099d");
 
-    ALALocationInterpreter.interpretStateProvince(service).accept(er, lr);
+    ALALocationInterpreter.interpretStateProvince(kvStore).accept(er, lr);
 
     assertEquals(lr.getStateProvince(), "New South Wales");
 
@@ -175,7 +174,6 @@ public class AlaLocationInterpreterTest {
     kvStore.put(new LatLng(-31.25d, 146.921099d),
         new GeocodeResponse(Collections.singletonList(state)));
 
-    GeocodeService service = GeocodeService.create(kvStore);
 
     LocationRecord lr = LocationRecord.newBuilder().setId(ID).build();
     Map<String, String> coreMap = new HashMap<>();
@@ -184,7 +182,7 @@ public class AlaLocationInterpreterTest {
     coreMap.put(DwcTerm.verbatimLatitude.qualifiedName(), "146.921099d");
     coreMap.put(DwcTerm.verbatimLongitude.qualifiedName(), "-31.25d");
 
-    ALALocationInterpreter.interpretStateProvince(service).accept(er, lr);
+    ALALocationInterpreter.interpretStateProvince(kvStore).accept(er, lr);
 
     assertEquals(lr.getStateProvince(), "New South Wales - invalid state name");
 
@@ -206,14 +204,13 @@ public class AlaLocationInterpreterTest {
     kvStore.put(new LatLng(-31.2532183d, 146.921099d),
         new GeocodeResponse(Collections.singletonList(state)));
 
-    GeocodeService service = GeocodeService.create(kvStore);
 
     LocationRecord lr = LocationRecord.newBuilder().setId(ID).build();
     Map<String, String> coreMap = new HashMap<>();
 
     ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
 
-    ALALocationInterpreter.interpretStateProvince(service).accept(er, lr);
+    ALALocationInterpreter.interpretStateProvince(kvStore).accept(er, lr);
 
     assertArrayEquals(lr.getIssues().getIssueList().toArray(),
         new String[]{ALAOccurrenceIssue.LOCATION_NOT_SUPPLIED.name()});
@@ -230,7 +227,6 @@ public class AlaLocationInterpreterTest {
     kvStore.put(new LatLng(-31.2532183d, 146.921099d),
         new GeocodeResponse(Collections.singletonList(state)));
 
-    GeocodeService service = GeocodeService.create(kvStore);
 
     LocationRecord lr = LocationRecord.newBuilder().setId(ID).build();
     Map<String, String> coreMap = new HashMap<>();
@@ -239,7 +235,7 @@ public class AlaLocationInterpreterTest {
     coreMap.put(DwcTerm.decimalLongitude.qualifiedName(), "0");
     ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
 
-    ALALocationInterpreter.interpretStateProvince(service).accept(er, lr);
+    ALALocationInterpreter.interpretStateProvince(kvStore).accept(er, lr);
 
     assertArrayEquals(lr.getIssues().getIssueList().toArray(),
         new String[]{OccurrenceIssue.ZERO_COORDINATE.name()});
@@ -257,7 +253,7 @@ public class AlaLocationInterpreterTest {
 
     store.put(new LatLng(-2.752778d, -58.653057d), toGeocodeResponse("San Luise"));
 
-    GeocodeService SERVICE = GeocodeService.create(store);
+
     MetadataRecord mdr = MetadataRecord.newBuilder().setId(ID).build();
 
     Map<String, String> coreMap = new HashMap<>();
@@ -271,7 +267,7 @@ public class AlaLocationInterpreterTest {
 
     Optional<LocationRecord> lrResult = Interpretation.from(source)
         .to(er -> LocationRecord.newBuilder().setId(er.getId()).build())
-        .via(ALALocationInterpreter.interpretCountryAndCoordinates(SERVICE, mdr))
+        .via(ALALocationInterpreter.interpretCountryAndCoordinates(store, mdr))
         .get();
 
     //country matches
@@ -297,7 +293,7 @@ public class AlaLocationInterpreterTest {
     store.put(new LatLng(-2.752778d, -58.653057d),
         new GeocodeResponse(Arrays.asList(invalidlocation)));
 
-    GeocodeService SERVICE = GeocodeService.create(store);
+    GeocodeKvStore SERVICE = GeocodeKvStore.create(store);
     MetadataRecord mdr = MetadataRecord.newBuilder().setId(ID).build();
 
     Map<String, String> coreMap = new HashMap<>();

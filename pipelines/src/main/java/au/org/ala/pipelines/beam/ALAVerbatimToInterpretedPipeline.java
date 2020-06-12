@@ -21,6 +21,7 @@ import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
+import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
@@ -33,6 +34,7 @@ import org.slf4j.MDC;
 import au.org.ala.pipelines.transforms.ALAAttributionTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import au.org.ala.pipelines.transforms.LocationTransform;
+
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -156,10 +158,10 @@ public class ALAVerbatimToInterpretedPipeline {
         .apply("Check verbatim transform condition", verbatimTransform.check(types))
         .apply("Write verbatim to avro", verbatimTransform.write(pathFn));
 
-    uniqueRecords
+/*    uniqueRecords
         .apply("Check basic transform condition", basicTransform.check(types))
         .apply("Interpret basic", basicTransform.interpret())
-        .apply("Write basic to avro", basicTransform.write(pathFn));
+        .apply("Write basic to avro", basicTransform.write(pathFn));*/
 
     uniqueRecords
         .apply("Check temporal transform condition", temporalTransform.check(types))

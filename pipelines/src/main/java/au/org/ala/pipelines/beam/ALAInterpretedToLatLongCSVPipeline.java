@@ -24,7 +24,7 @@ import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.transforms.core.LocationTransform;
-import org.gbif.pipelines.transforms.core.MetadataTransform;
+import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.slf4j.MDC;
 
 import java.io.File;

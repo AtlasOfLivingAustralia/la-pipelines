@@ -8,6 +8,7 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.common.parsers.CountryParser;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.core.interpreters.core.LocationInterpreter;
 import org.gbif.pipelines.core.interpreters.core.TemporalInterpreter;
@@ -15,7 +16,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
-import org.gbif.pipelines.parsers.parsers.location.GeocodeService;
+import org.gbif.pipelines.parsers.parsers.location.GeocodeKvStore;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.geocode.Location;
 import com.google.common.collect.Range;
@@ -56,7 +57,7 @@ public class ALALocationInterpreter {
    * @param service GBIF country related service
    */
   public static BiConsumer<ExtendedRecord, LocationRecord> interpretCountryAndCoordinates(
-      GeocodeService service, MetadataRecord mdr) {
+      KeyValueStore<LatLng, GeocodeResponse> service, MetadataRecord mdr) {
     return (er, lr) -> {
       if (service != null) {
         ParsedField<LatLng> parsedLatLon = CoordinatesParser.parseCoords(er);
@@ -116,7 +117,7 @@ public class ALALocationInterpreter {
    * @param service Provided by ALA coutry/state SHP file
    */
   public static BiConsumer<ExtendedRecord, LocationRecord> interpretStateProvince(
-      org.gbif.pipelines.parsers.parsers.location.GeocodeService service) {
+      KeyValueStore<LatLng, GeocodeResponse> service) {
     return (er, lr) -> {
       ParsedField<LatLng> parsedLatLon = CoordinatesParser.parseCoords(er);
 
