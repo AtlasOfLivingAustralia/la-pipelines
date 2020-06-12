@@ -7,7 +7,7 @@
   <parent>
     <groupId>au.org.ala</groupId>
     <artifactId>ala-parent-pom</artifactId>
-    <version>11</version>
+    <version>12</version>
   </parent>
 
   <groupId>au.org.ala</groupId>
@@ -23,7 +23,7 @@
     <avro-generated-path>${project.basedir}/src/main/java-generated/</avro-generated-path>
     <sonar.skip>true</sonar.skip>
     <avro.version>1.8.2</avro.version>
-    <apache.beam.version>2.17.0</apache.beam.version>
+    <apache.beam.version>2.16.0</apache.beam.version>
   </properties>
 
   <repositories>
@@ -108,6 +108,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-clean-plugin</artifactId>
+        <version>3.1.0</version>
         <configuration>
           <filesets>
             <fileset>
