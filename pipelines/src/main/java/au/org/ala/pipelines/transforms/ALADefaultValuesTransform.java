@@ -15,7 +15,7 @@ import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.transforms.common.DefaultValuesTransform;
+import org.gbif.pipelines.transforms.metadata.DefaultValuesTransform;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 
 import java.util.*;

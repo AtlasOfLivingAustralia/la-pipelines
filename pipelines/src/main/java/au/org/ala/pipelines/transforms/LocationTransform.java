@@ -39,7 +39,7 @@ public class LocationTransform extends org.gbif.pipelines.transforms.core.Locati
    */
   @Override
   public LocationTransform init() {
-    setService(GeocodeServiceFactory.create(kvConfig));
+    setGeocodeKvStore(GeocodeServiceFactory.create(kvConfig));
     return this;
   }
 
@@ -47,7 +47,7 @@ public class LocationTransform extends org.gbif.pipelines.transforms.core.Locati
   @Override
   public void setup() {
     if (kvConfig != null) {
-      this.setService(GeocodeServiceFactory.create(kvConfig));
+      this.setGeocodeKvStore(GeocodeServiceFactory.create(kvConfig));
     }
   }
 
@@ -62,7 +62,7 @@ public class LocationTransform extends org.gbif.pipelines.transforms.core.Locati
     Optional<LocationRecord> result = Interpretation.from(source)
             .to(lr)
             .when(er -> !er.getCoreTerms().isEmpty())
-            .via(LocationInterpreter.interpretCountryAndCoordinates(getService(), mdr))
+            .via(LocationInterpreter.interpretCountryAndCoordinates(getGeocodeKvStore(), mdr))
             .via(LocationInterpreter::interpretContinent)
             .via(LocationInterpreter::interpretWaterBody)
             .via(LocationInterpreter::interpretStateProvince)
