@@ -1,6 +1,7 @@
 package org.gbif.pipelines.ingest.utils;
 
 
+import au.org.ala.utils.ALAFsUtils;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -57,7 +58,7 @@ public class MetricsHandler {
 
             String countersInfo = getCountersInfo(results);
 
-            FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig, coreSiteConfig, path);
+            FileSystem fs = ALAFsUtils.getFileSystem(hdfsSiteConfig, coreSiteConfig, path);
             try {
                 FsUtils.createFile(fs, path, countersInfo);
                 log.info("Metadata was written to a file - {}", path);

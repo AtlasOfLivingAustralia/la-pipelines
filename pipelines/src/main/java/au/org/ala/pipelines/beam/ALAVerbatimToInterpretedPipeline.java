@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.function.UnaryOperator;
 
 import au.org.ala.pipelines.transforms.ALADefaultValuesTransform;
+import au.org.ala.utils.ALAFsUtils;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
@@ -105,7 +106,7 @@ public class ALAVerbatimToInterpretedPipeline {
     log.info("hdfsSiteConfig = " + hdfsSiteConfig);
     log.info("coreSiteConfig = " + coreSiteConfig);
 
-    FsUtils.deleteInterpretIfExist(hdfsSiteConfig, coreSiteConfig, targetPath, datasetId, attempt, types);
+    ALAFsUtils.deleteInterpretIfExist(hdfsSiteConfig, coreSiteConfig, targetPath, datasetId, attempt, types);
 
     Properties properties = FsUtils.readPropertiesFile(options.getHdfsSiteConfig(), options.getProperties());
 

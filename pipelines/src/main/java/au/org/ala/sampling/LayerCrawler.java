@@ -1,11 +1,11 @@
 package au.org.ala.sampling;
 
+import au.org.ala.utils.ALAFsUtils;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
-import org.gbif.pipelines.ingest.utils.FsUtils;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -75,7 +75,7 @@ public class LayerCrawler {
 
         String baseDir = options.getInputPath();
 
-        FileSystem fs = FsUtils.getFileSystem(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), "/");
+        FileSystem fs = ALAFsUtils.getFileSystem(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), "/");
 
         if (options.getDatasetId() != null) {
 
@@ -88,7 +88,7 @@ public class LayerCrawler {
 
             //delete existing sampling output
             String samplingDir = baseDir + "/" + dataSetID + "/1/sampling";
-            FsUtils.deleteIfExist(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), samplingDir);
+            ALAFsUtils.deleteIfExist(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), samplingDir);
 
 //            (re)create sampling output directories
             String sampleDownloadPath = baseDir + "/" + dataSetID + "/1/sampling/downloads";
@@ -96,12 +96,12 @@ public class LayerCrawler {
 
             //check the lat lng export directory has been created
             String latLngExportPath = baseDir +  "/" + dataSetID + "/1/latlng";
-            if (! FsUtils.exists(fs, latLngExportPath)){
+            if (! ALAFsUtils.exists(fs, latLngExportPath)){
                 log.error("LatLng export unavailable. Has LatLng export pipeline been ran ? Not available at path {}", latLngExportPath);
                 throw new RuntimeException("LatLng export unavailable. Has LatLng export pipeline been ran ? Not available:" + latLngExportPath);
             }
 
-            Collection<String> latLngFiles = FsUtils.listPaths(fs, latLngExportPath);
+            Collection<String> latLngFiles = ALAFsUtils.listPaths(fs, latLngExportPath);
             String layerList = lc.getRequiredLayers();
 
             for (Iterator<String> i = latLngFiles.iterator(); i.hasNext(); ) {
@@ -163,7 +163,7 @@ public class LayerCrawler {
         // partition the coordinates into batches of N to submit
         log.info("Partitioning coordinates from file {}", inputFilePath);
 
-        InputStream inputStream = FsUtils.openInputStream(fs, inputFilePath);
+        InputStream inputStream = ALAFsUtils.openInputStream(fs, inputFilePath);
         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
         Collection<List<String>> partitioned = partition(reader.lines(), BATCH_SIZE);
 
@@ -196,7 +196,7 @@ public class LayerCrawler {
                     downloadFile(fs, outputDirectoryPath, batchId, batchStatus);
 
                     String zipFilePath = outputDirectoryPath + "/" + batchId + ".zip";
-                    ReadableByteChannel readableByteChannel = FsUtils.openByteChannel(fs, zipFilePath);
+                    ReadableByteChannel readableByteChannel = ALAFsUtils.openByteChannel(fs, zipFilePath);
                     InputStream zipInput = Channels.newInputStream(readableByteChannel);
 
                     try (ZipInputStream zipInputStream = new ZipInputStream(zipInput)) {
@@ -215,7 +215,7 @@ public class LayerCrawler {
                     }
 
                     //delete zip file
-                    FsUtils.deleteIfExist(fs, zipFilePath);
+                    ALAFsUtils.deleteIfExist(fs, zipFilePath);
 
                     log.info("Sampling done for file {}", inputFilePath);
                 }
@@ -243,7 +243,7 @@ public class LayerCrawler {
             try {
                 try (
                         ReadableByteChannel inputChannel = Channels.newChannel(new URL(batchStatus.getDownloadUrl()).openStream());
-                        WritableByteChannel outputChannel = FsUtils.createByteChannel(fs, outputDirectoryPath + "/" + batchId + ".zip");
+                        WritableByteChannel outputChannel = ALAFsUtils.createByteChannel(fs, outputDirectoryPath + "/" + batchId + ".zip");
                 ) {
                     ByteBuffer buffer = ByteBuffer.allocate(512);
                     while (inputChannel.read(buffer) != -1) {
@@ -365,7 +365,7 @@ public class LayerCrawler {
      * Unzip the file to the path.
      */
     public static void unzipFiles(final FileSystem fs, final ZipInputStream zipInputStream, final String unzippedFilePath) throws IOException {
-        try (BufferedOutputStream bos = new BufferedOutputStream(FsUtils.openOutputStream(fs, unzippedFilePath))) {
+        try (BufferedOutputStream bos = new BufferedOutputStream(ALAFsUtils.openOutputStream(fs, unzippedFilePath))) {
             byte[] bytesIn = new byte[1024];
             int read = 0;
             while ((read = zipInputStream.read(bytesIn)) != -1) {

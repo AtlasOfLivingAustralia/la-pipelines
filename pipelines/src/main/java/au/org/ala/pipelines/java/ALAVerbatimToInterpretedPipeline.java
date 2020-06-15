@@ -4,6 +4,7 @@ import au.org.ala.pipelines.transforms.ALAAttributionTransform;
 import au.org.ala.pipelines.transforms.ALADefaultValuesTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import au.org.ala.pipelines.transforms.LocationTransform;
+import au.org.ala.utils.ALAFsUtils;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
@@ -134,7 +135,7 @@ public class ALAVerbatimToInterpretedPipeline {
         String coreSiteConfig = options.getCoreSiteConfig();
         Properties properties = PropertiesFactory.getInstance(hdfsSiteConfig, options.getProperties()).get();
 
-        FsUtils.deleteInterpretIfExist(hdfsSiteConfig, coreSiteConfig, targetPath, datasetId, attempt, types);
+        ALAFsUtils.deleteInterpretIfExist(hdfsSiteConfig, coreSiteConfig, targetPath, datasetId, attempt, types);
 
         MDC.put("datasetId", datasetId);
         MDC.put("attempt", attempt.toString());
