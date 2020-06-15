@@ -184,7 +184,7 @@ public class ALASolrDocumentTransform implements Serializable {
         Map<String,String> raw = er.getCoreTerms();
         for (Map.Entry<String, String> entry : raw.entrySet()) {
             String key = entry.getKey();
-            if(key.startsWith("http")){
+            if (key.startsWith("http")){
                 key = key.substring(key.lastIndexOf("/") + 1);
             }
             doc.setField("raw_" + key, entry.getValue().toString());
@@ -199,8 +199,7 @@ public class ALASolrDocumentTransform implements Serializable {
             List<Schema.Field> fields = atxr.getSchema().getFields();
             for (Schema.Field field: fields){
                 Object value = atxr.get(field.name());
-                if (value != null && !field.name().equals("speciesGroup") && !field.name().equals("speciesSubgroup")){
-
+                if (value != null && !field.name().equals("speciesGroup") && !field.name().equals("speciesSubgroup") && !skipKeys.contains(field.name())){
                     if (field.name().equalsIgnoreCase("issues")){
                         doc.setField("assertions", value);
                     } else {
@@ -223,7 +222,7 @@ public class ALASolrDocumentTransform implements Serializable {
             doc.setField("rank", atxr.getRank());
             doc.setField("rank_id", atxr.getRankID());
 
-            if(atxr.getVernacularName() != null) {
+            if (atxr.getVernacularName() != null) {
                 doc.setField("common_name", atxr.getVernacularName());
             }
 
@@ -268,7 +267,7 @@ public class ALASolrDocumentTransform implements Serializable {
         //legacy fields reference directly in biocache-service code
         if (txr != null) {
             IssueRecord taxonomicIssues = txr.getIssues();
-            for(String issue : taxonomicIssues.getIssueList()){
+            for (String issue : taxonomicIssues.getIssueList()){
                 doc.setField("assertions", issue);
             }
         }
@@ -291,6 +290,7 @@ public class ALASolrDocumentTransform implements Serializable {
         for (String issue : mdr.getIssues().getIssueList()){
             doc.setField("assertions", issue);
         }
+
         return doc;
     }
 

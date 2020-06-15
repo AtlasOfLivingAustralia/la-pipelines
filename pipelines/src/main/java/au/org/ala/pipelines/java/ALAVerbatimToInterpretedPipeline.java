@@ -1,7 +1,7 @@
 package au.org.ala.pipelines.java;
 
-import au.org.ala.pipelines.options.ALAInterpretationPipelineOptions;
 import au.org.ala.pipelines.transforms.ALAAttributionTransform;
+import au.org.ala.pipelines.transforms.ALADefaultValuesTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import au.org.ala.pipelines.transforms.LocationTransform;
 import lombok.AccessLevel;
@@ -14,9 +14,9 @@ import org.apache.hadoop.fs.Path;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.converters.converter.SyncDataFileWriter;
 import org.gbif.converters.converter.SyncDataFileWriterBuilder;
+import org.gbif.pipelines.ingest.java.io.AvroReader;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetrics;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
-import org.gbif.pipelines.ingest.java.transforms.AvroReader;
 import org.gbif.pipelines.ingest.java.transforms.UniqueGbifIdTransform;
 import org.gbif.pipelines.ingest.java.utils.PropertiesFactory;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
@@ -26,10 +26,9 @@ import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
-import org.gbif.pipelines.ingest.java.transforms.DefaultValuesTransform;
 import org.gbif.pipelines.ingest.java.transforms.OccurrenceExtensionTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
-import org.gbif.pipelines.transforms.core.MetadataTransform;
+import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
@@ -100,11 +99,11 @@ public class ALAVerbatimToInterpretedPipeline {
     }
 
     public static void run(String[] args) {
-        ALAInterpretationPipelineOptions options = (ALAInterpretationPipelineOptions) PipelinesOptionsFactory.create(ALAInterpretationPipelineOptions.class, args);
+        InterpretationPipelineOptions options = (InterpretationPipelineOptions) PipelinesOptionsFactory.create(InterpretationPipelineOptions.class, args);
         run(options);
     }
 
-    public static void run(ALAInterpretationPipelineOptions options) {
+    public static void run(InterpretationPipelineOptions options) {
         ExecutorService executor = Executors.newWorkStealingPool();
         try {
             run(options, executor);
@@ -162,7 +161,7 @@ public class ALAVerbatimToInterpretedPipeline {
 
         // Extra
         OccurrenceExtensionTransform occExtensionTransform = OccurrenceExtensionTransform.create().counterFn(incMetricFn);
-        DefaultValuesTransform defaultValuesTransform = DefaultValuesTransform.create(properties, datasetId, skipRegistryCalls);
+        ALADefaultValuesTransform defaultValuesTransform = ALADefaultValuesTransform.create(properties, datasetId);
 
         // ALA specific
 //        ALAUUIDTransform alaUuidTransform = ALAUUIDTransform.create(properties).counterFn(incMetricFn).init();
@@ -225,7 +224,6 @@ public class ALAVerbatimToInterpretedPipeline {
                 measurementTransform.processElement(er).ifPresent(measurementWriter::append);
                 locationTransform.processElement(er, mdr).ifPresent(locationWriter::append);
                 //ALA specific
-//                alaUuidTransform.processElement(er, mdr).ifPresent(alaUuidWriter::append);
                 alaTaxonomyTransform.processElement(er).ifPresent(alaTaxonWriter::append);
                 alaAttributionTransform.processElement(er, mdr).ifPresent(alaAttributionWriter::append);
             };

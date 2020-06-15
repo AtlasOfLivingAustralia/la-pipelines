@@ -17,17 +17,16 @@ import au.org.ala.utils.ALAFsUtils;
 import org.apache.solr.common.SolrInputDocument;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.core.converters.MultimediaConverter;
+import org.gbif.pipelines.ingest.java.io.AvroReader;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetrics;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
-import org.gbif.pipelines.ingest.java.transforms.AvroReader;
-import org.gbif.pipelines.ingest.options.BasePipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
-import org.gbif.pipelines.transforms.core.MetadataTransform;
+import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
@@ -107,12 +106,6 @@ public class ALAInterpretedToSolrIndexPipeline {
             executor.shutdown();
         }
     }
-
-    public static void run(String[] args, ExecutorService executor) {
-        ALASolrPipelineOptions options = PipelinesOptionsFactory.create(ALASolrPipelineOptions.class, args);
-        run(options, executor);
-    }
-
 
     @SneakyThrows
     public static void run(ALASolrPipelineOptions options, ExecutorService executor) {

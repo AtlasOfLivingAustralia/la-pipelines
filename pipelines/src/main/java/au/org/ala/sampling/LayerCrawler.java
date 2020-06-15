@@ -3,6 +3,8 @@ package au.org.ala.sampling;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.codehaus.plexus.util.FileUtils;
+import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
+import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -67,14 +69,17 @@ public class LayerCrawler {
                     .build();
 
     public static void main(String[] args) throws Exception  {
+        InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
+        run(options);
+    }
 
+    public static void run(InterpretationPipelineOptions options) throws Exception {
 
-        String baseDir = "/data/pipelines-data/";
-        String samplingAllDir = "/data/pipelines-sampling/";
+        String baseDir = options.getInputPath();
 
-        if (args.length == 1) {
+        if (options.getDatasetId() != null) {
 
-            String dataSetID = args[0];
+            String dataSetID = options.getDatasetId();
 
             Instant batchStart = Instant.now();
 
@@ -82,16 +87,16 @@ public class LayerCrawler {
             LayerCrawler lc = new LayerCrawler();
 
             //delete existing sampling output
-            File samplingDir = new File(baseDir + dataSetID + "/1/sampling");
+            File samplingDir = new File(baseDir + "/" + dataSetID + "/1/sampling");
             if (samplingDir.exists()){
                 FileUtils.forceDelete(samplingDir);
             }
 
             //(re)create sampling output directories
-            File samples = new File(baseDir + dataSetID + "/1/sampling/downloads");
+            File samples = new File(baseDir + "/" + dataSetID + "/1/sampling/downloads");
             FileUtils.forceMkdir(samples);
 
-            File latLngExportDir = new File(baseDir + dataSetID + "/1/latlng");
+            File latLngExportDir = new File(baseDir +  "/" + dataSetID + "/1/latlng");
             if (!latLngExportDir.exists()){
                 throw new RuntimeException("LatLng export unavailable. Has LatLng export pipeline been ran ? " + latLngExportDir.getAbsolutePath());
             }
@@ -107,19 +112,17 @@ public class LayerCrawler {
             Instant batchFinish = Instant.now();
 
             log.info("Finished sampling for {}. Time taken {} minutes", dataSetID, Duration.between(batchStart, batchFinish).toMinutes());
-        }
-
-        if (args.length == 0) {
+        } else  {
 
             Instant batchStart = Instant.now();
             //list file in directory
             LayerCrawler lc = new LayerCrawler();
 
-            File samples = new File(samplingAllDir + "sampling/downloads");
+            File samples = new File(options.getTargetPath() + "/sampling/downloads");
             FileUtils.forceMkdir(samples);
 
             Stream<File> latLngFiles = Stream.of(
-                new File(samplingAllDir + "latlng/").listFiles()
+                    new File(options.getTargetPath() + "/latlng/").listFiles()
             );
 
             String layerList = lc.getRequiredLayers();
@@ -132,7 +135,9 @@ public class LayerCrawler {
 
             log.info("Finished sampling for complete lat lng export. Time taken {} minutes", Duration.between(batchStart, batchFinish).toMinutes());
         }
+
     }
+
 
     public LayerCrawler(){
         log.info("Initialising crawler....");

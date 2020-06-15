@@ -12,6 +12,7 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.kvs.KeyValueStore;
 
+import java.util.ArrayList;
 import java.util.function.BiConsumer;
 
 import static org.gbif.pipelines.parsers.utils.ModelUtils.addIssue;
@@ -50,12 +51,7 @@ public class ALATaxonomyInterpreter {
 
                 atr.setId(er.getId());
 
-                ALANameUsageMatch usageMatch = null;
-                try {
-                    usageMatch = kvStore.get(matchRequest);
-                } catch (Exception ex) {
-                    log.error(ex.getMessage(), ex);
-                }
+                ALANameUsageMatch usageMatch = kvStore.get(matchRequest);
 
                 if (usageMatch == null || isEmpty(usageMatch)) {
                     // "NO_MATCHING_RESULTS". This
@@ -69,6 +65,13 @@ public class ALATaxonomyInterpreter {
 
                     try {
                         BeanUtils.copyProperties(atr, usageMatch);
+                        //initialise to avoid AVRO serialisation error
+                        if(usageMatch.getSpeciesGroup() == null){
+                            atr.setSpeciesGroup(new ArrayList<String>());
+                        }
+                        if(usageMatch.getSpeciesSubgroup() == null){
+                            atr.setSpeciesSubgroup(new ArrayList<String>());
+                        }
                     } catch (Exception e) {
                         log.error(e.getMessage(), e);
                     }
@@ -108,6 +111,6 @@ public class ALATaxonomyInterpreter {
     }
 
     private static boolean isEmpty(ALANameUsageMatch response) {
-        return response == null || !response.isSuccess();
+        return response == ALANameUsageMatch.FAIL;
     }
 }

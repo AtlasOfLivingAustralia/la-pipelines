@@ -23,6 +23,8 @@ import org.apache.beam.sdk.values.TypeDescriptor;
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.plexus.util.FileUtils;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.Term;
+import org.gbif.dwc.terms.UnknownTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
@@ -66,6 +68,8 @@ public class ALAUUIDMintingPipeline {
     private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
 
     public static final String NO_ID_MARKER = "NO_ID";
+    public static final String REMOVED_PREFIX_MARKER  = "REMOVED_";
+    public static final String UNIQUE_COMPOSITE_KEY_JOIN_CHAR = "|";
 
     public static void main(String[] args) throws Exception {
         InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
@@ -98,15 +102,18 @@ public class ALAUUIDMintingPipeline {
 
         //construct unique list of darwin core terms
         final List<String> uniqueTerms = collectoryMetadata.getConnectionParameters().getTermsForUniqueKey();
-        final List<DwcTerm> uniqueDwcTerms = new ArrayList<DwcTerm>();
+        final List<Term> uniqueDwcTerms = new ArrayList<Term>();
         for (String uniqueTerm : uniqueTerms){
             Optional<DwcTerm> dwcTerm = getDwcTerm(uniqueTerm);
-            if(dwcTerm.isPresent()){
+            if (dwcTerm.isPresent()){
                 uniqueDwcTerms.add(dwcTerm.get());
             } else {
-                throw new RuntimeException("Unrecognised unique term configured for datasource " + options.getDatasetId() + ", term: " + uniqueTerm);
+                //create a UnknownTerm for non DWC fields
+                uniqueDwcTerms.add(UnknownTerm.build(uniqueTerm.trim()));
             }
         }
+
+        final String datasetID = options.getDatasetId();
 
         log.info("Transform 1: ExtendedRecord er ->  <uniqueKey, er.getId()> - this generates the UniqueKey.....");
         PCollection<KV<String, String>> extendedRecords =
@@ -114,7 +121,7 @@ public class ALAUUIDMintingPipeline {
                 .apply(ParDo.of(new DoFn<ExtendedRecord, KV<String, String>>() {
                     @ProcessElement
                     public void processElement(@Element ExtendedRecord source, OutputReceiver<KV<String, String>> out, ProcessContext c) {
-                        out.output(KV.of(generateUniqueKey(source, uniqueDwcTerms), source.getId()));
+                        out.output(KV.of(generateUniqueKey(datasetID, source, uniqueDwcTerms), source.getId()));
                     }
         }));
 
@@ -130,7 +137,7 @@ public class ALAUUIDMintingPipeline {
         } else {
 
             TypeDescriptor<KV<String,String>> td = new TypeDescriptor<KV<String,String>>() {};
-            log.warn("[WARNING] Previous ALAUUIDRecord records where not found. This is expected for new datasets, but is a problem" +
+            log.warn("[WARNING] Previous ALAUUIDRecord records where not found. This is expected for new datasets, but is a problem " +
                     "for previously loaded datasets - will mint new ones......");
             alaUuids = p.apply(Create.empty(td));
         }
@@ -152,7 +159,7 @@ public class ALAUUIDMintingPipeline {
         result.waitUntilFinish();
         MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
 
-        //TODO duplicate check of ALAUUIDRecord entries and report them.....
+        //TODO duplicate check of ALAUUIDRecord entries and report them.....see issue #62
 
         //rename existing
         if (new File(alaRecordDirectoryPath).exists()){
@@ -168,21 +175,31 @@ public class ALAUUIDMintingPipeline {
      * in the biocache-store. This is repeated to maintain backwards compatibility with existing data holdings.
      *
      * @param source
-     * @param uniqueDwcTerms
+     * @param uniqueTerms
      * @return
      * @throws RuntimeException
      */
-    public static String generateUniqueKey(ExtendedRecord source, List<DwcTerm> uniqueDwcTerms) throws RuntimeException {
+    public static String generateUniqueKey(String datasetID, ExtendedRecord source, List<Term> uniqueTerms) throws RuntimeException {
         List<String> uniqueValues = new ArrayList<String>();
-        for (DwcTerm dwcTerm : uniqueDwcTerms) {
-            String value = ModelUtils.extractNullAwareValue(source, dwcTerm);
-            if (value == null || StringUtils.trimToNull(value) == null) {
-                throw new RuntimeException("Unable to load dataset. Unique term empty for record term: " + dwcTerm);
+        boolean allUniqueValuesAreEmpty = true;
+        for (Term term : uniqueTerms) {
+            String value = ModelUtils.extractNullAwareValue(source, term);
+            if (value != null && StringUtils.trimToNull(value) != null) {
+                //we have a term with a value
+                allUniqueValuesAreEmpty = false;
+                uniqueValues.add(value.trim());
             }
-            uniqueValues.add(value.trim());
         }
+
+        if (allUniqueValuesAreEmpty){
+            throw new RuntimeException("Unable to load dataset. All supplied unique terms where empty record with ID " + source.getId());
+        }
+
+        //add the datasetID
+        uniqueValues.add(0, datasetID);
+
         //create the unique key
-        return String.join("|", uniqueValues);
+        return String.join(UNIQUE_COMPOSITE_KEY_JOIN_CHAR, uniqueValues);
     }
 
     /**
@@ -190,6 +207,7 @@ public class ALAUUIDMintingPipeline {
      */
     static class CreateALAUUIDRecordFcn extends DoFn<KV<String, KV<String, String>>, ALAUUIDRecord> {
 
+        //TODO this counts are inaccurate when using SparkRunner
         private Counter orphanedUniqueKeys = Metrics.counter(CreateALAUUIDRecordFcn.class, "orphanedUniqueKeys");
         private Counter newUuids = Metrics.counter(CreateALAUUIDRecordFcn.class, "newUuids");
         private Counter preservedUuids = Metrics.counter(CreateALAUUIDRecordFcn.class, "preservedUuids");
@@ -197,20 +215,21 @@ public class ALAUUIDMintingPipeline {
         @ProcessElement
         public void processElement(@Element KV<String, KV<String, String>> uniqueKeyMap, OutputReceiver<ALAUUIDRecord> out) {
 
-            // get the constructed key
-            String uniqueKey = uniqueKeyMap.getKey();
-
             //get the matched ExtendedRecord.getId()
             String id = uniqueKeyMap.getValue().getKey();
 
             //get the UUID
             String uuid = uniqueKeyMap.getValue().getValue();
 
+            // get the constructed key
+            String uniqueKey = uniqueKeyMap.getKey();
+
             //if UUID == NO_ID_MARKER, we have a new record so we need a new UUID.
             if (uuid.equals(NO_ID_MARKER)){
                 newUuids.inc();
                 uuid = UUID.randomUUID().toString();
             } else if(id.equals(NO_ID_MARKER)){
+                id = REMOVED_PREFIX_MARKER + UUID.randomUUID().toString();
                 orphanedUniqueKeys.inc();
             } else {
                 preservedUuids.inc();

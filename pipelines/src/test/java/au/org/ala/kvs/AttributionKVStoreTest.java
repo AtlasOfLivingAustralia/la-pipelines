@@ -12,6 +12,8 @@ import org.junit.Test;
 
 import java.util.Properties;
 
+import static org.junit.Assert.fail;
+
 /**
  * Unit tests for Attribution KV store
  */
@@ -36,6 +38,23 @@ public class AttributionKVStoreTest {
         assert m.getProvenance() != null;
         assert m.getTaxonomyCoverageHints() != null;
         assert m.getTaxonomyCoverageHints().size() == 0;
+
+        kvs.close();
+    }
+
+    @Test
+    public void testAttributionConnectionIssues() throws Exception {
+
+        ClientConfiguration cc = ClientConfiguration.builder().withBaseApiUrl("https://collections.ala.org.auXXXX").build();
+        ALAKvConfig alaKvConfig = ALAKvConfigFactory.create(new Properties());
+        KeyValueStore<String, ALACollectoryMetadata> kvs = ALAAttributionKVStoreFactory.alaAttributionKVStore(cc, alaKvConfig);
+        try {
+            ALACollectoryMetadata m = kvs.get("dr893XXXXXX");
+            fail("Exception not thrown");
+        } catch(RuntimeException e){
+            //expected
+        }
+        kvs.close();
     }
 
     @Test
@@ -44,8 +63,12 @@ public class AttributionKVStoreTest {
         ClientConfiguration cc = ClientConfiguration.builder().withBaseApiUrl("https://collections.ala.org.au").build();
         ALAKvConfig alaKvConfig = ALAKvConfigFactory.create(new Properties());
         KeyValueStore<String, ALACollectoryMetadata> kvs = ALAAttributionKVStoreFactory.alaAttributionKVStore(cc, alaKvConfig);
-        ALACollectoryMetadata m = kvs.get("dr893XXXXXXX");
-        assert m.equals(ALACollectoryMetadata.EMPTY);
+        try {
+            ALACollectoryMetadata m = kvs.get("dr893XXXXXXX");
+            fail("Exception not thrown");
+        } catch(RuntimeException e){
+            //expected
+        }
     }
 
     @Test
@@ -70,5 +93,6 @@ public class AttributionKVStoreTest {
         ALACollectionMatch m = kvs.get(lookup);
         assert m.getCollectionUid() == null;
         assert m.equals(ALACollectionMatch.EMPTY);
+        kvs.close();
     }
 }
