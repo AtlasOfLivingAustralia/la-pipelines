@@ -7,7 +7,7 @@
   <parent>
     <groupId>au.org.ala</groupId>
     <artifactId>ala-parent-pom</artifactId>
-    <version>11</version>
+    <version>12</version>
   </parent>
 
   <groupId>au.org.ala</groupId>
@@ -21,16 +21,14 @@
 
 
   <repositories>
+
+
     <repository>
-      <id>ala</id>
-      <url>https://nexus.ala.org.au/</url>
-    </repository>
-    <repository>
-      <id>gbif-all</id>
-      <url>http://repository.gbif.org/content/groups/gbif</url>
+            <id>gbif-all</id>
+            <url>https://repository.gbif.org/content/groups/gbif</url>
     </repository>
 
-   <repository>
+    <repository>
       <id>cloudera-release</id>
       <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
     </repository>
@@ -38,7 +36,16 @@
       <id>osgeo</id>
       <url>https://repo.osgeo.org/repository/release/</url>
     </repository>
+    <repository>
+      <id>boundless</id>
+      <url>https://repo.osgeo.org/repository/release/</url>
+    </repository>
   </repositories>
+
+  <!--  <modules>
+      <module>../models</module>
+    </modules>-->
+
 
   <build>
     <plugins>
@@ -75,6 +82,10 @@
                 <transformer
                   implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                   <mainClass>org.gbif.pipelines.ingest.pipelines.DwcaToVerbatimPipeline</mainClass>
+                </transformer>
+                <!-- append default configs -->
+                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                  <resource>reference.conf</resource>
                 </transformer>
               </transformers>
               <relocations>
@@ -144,6 +155,10 @@
           </dependency>
         </dependencies>
       </plugin>
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+      </plugin>
     </plugins>
   </build>
 
@@ -173,7 +188,7 @@
 
     <!-- Common libraries -->
     <avro.version>1.8.2</avro.version>
-    <apache.beam.version>2.16.0</apache.beam.version>
+    <apache.beam.version>2.17.0</apache.beam.version>
     <hadoop.version>2.6.0-cdh5.16.2</hadoop.version>
     <hadoop-core.version>2.6.0-mr1-cdh5.16.2</hadoop-core.version>
     <hbase.version>1.2.0-cdh5.16.2</hbase.version>
@@ -191,7 +206,7 @@
     <!-- Logging -->
     <slf4j.version>1.7.5</slf4j.version>
     <logback.version>1.2.3</logback.version>
-    <log4j.version>1.2.17</log4j.version>
+    <log4j.version>2.13.2</log4j.version>
     <logstash-gelf.version>1.11.2</logstash-gelf.version>
 
     <elasticsearch.version>6.5.4</elasticsearch.version>
@@ -235,7 +250,7 @@
     <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
     <maven-plugin-plugin.version>3.6.0</maven-plugin-plugin.version>
     <maven-javadoc-plugin.version>3.0.1</maven-javadoc-plugin.version>
-    <jacoco-maven-plugin.version>0.8.3</jacoco-maven-plugin.version>
+    <jacoco-maven-plugin.version>0.8.5</jacoco-maven-plugin.version>
     <sonar-maven-plugin.version>3.6.0.1398</sonar-maven-plugin.version>
 
     <!-- Checkstyle -->
@@ -481,21 +496,6 @@
     </dependency>
     <dependency>
       <groupId>org.gbif</groupId>
-      <artifactId>hbase-utils</artifactId>
-      <version>${hbase-utils.version}</version>
-      <exclusions>
-        <exclusion>
-          <artifactId>org.apache.hbase</artifactId>
-          <groupId>hbase</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>org.apache.hadoop</artifactId>
-          <groupId>hadoop-core</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif</groupId>
       <artifactId>gbif-wrangler</artifactId>
       <version>${gbif-wrangler.version}</version>
     </dependency>
@@ -674,14 +674,14 @@
       <artifactId>slf4j-api</artifactId>
       <version>${slf4j.version}</version>
     </dependency>
-    <!--    <dependency>-->
-    <!--      <groupId>ch.qos.logback</groupId>-->
-    <!--      <artifactId>logback-classic</artifactId>-->
-    <!--      <version>${logback.version}</version>-->
-    <!--    </dependency>-->
     <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
+      <version>${log4j.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-api</artifactId>
       <version>${log4j.version}</version>
     </dependency>
     <dependency>
@@ -741,7 +741,28 @@
     </dependency>
 
     <!-- Http clients -->
-
+    <dependency>
+      <groupId>com.squareup.retrofit2</groupId>
+      <artifactId>retrofit</artifactId>
+      <version>${retrofit.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.jetbrains.kotlin</groupId>
+          <artifactId>kotlin-stdlib</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>com.squareup.retrofit2</groupId>
+      <artifactId>converter-jackson</artifactId>
+      <version>${retrofit.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.jetbrains.kotlin</groupId>
+          <artifactId>kotlin-stdlib</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
     <dependency>
       <groupId>com.squareup.okhttp3</groupId>
       <artifactId>okhttp</artifactId>
@@ -764,6 +785,49 @@
         </exclusion>
       </exclusions>
     </dependency>
+
+    <!-- Geotools -->
+    <dependency>
+      <groupId>org.geotools</groupId>
+      <artifactId>gt-referencing</artifactId>
+      <version>${geotools.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.geotools</groupId>
+      <artifactId>gt-metadata</artifactId>
+      <version>${geotools.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.geotools</groupId>
+      <artifactId>gt-opengis</artifactId>
+      <version>${geotools.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.geotools</groupId>
+      <artifactId>gt-main</artifactId>
+      <version>${geotools.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.geotools</groupId>
+      <artifactId>gt-api</artifactId>
+      <version>${geotools.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.geotools</groupId>
+      <artifactId>gt-transform</artifactId>
+      <version>${geotools.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.geotools</groupId>
+      <artifactId>gt-geometry</artifactId>
+      <version>${geotools.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.geotools</groupId>
+      <artifactId>gt-epsg-wkt</artifactId>
+      <version>${geotools.version}</version>
+    </dependency>
+
     <!-- Mini Pipeline-->
     <dependency>
       <groupId>org.apache.spark</groupId>
@@ -869,46 +933,6 @@
       <artifactId>embedded-elasticsearch</artifactId>
       <version>${embedded.elasticsearch.version}</version>
       <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-minicluster</artifactId>
-      <version>${hadoop.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>log4j</groupId>
-          <artifactId>log4j</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-log4j12</artifactId>
-        </exclusion>
-      </exclusions>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-testing-util</artifactId>
-      <version>${hbase.version}</version>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>log4j</groupId>
-          <artifactId>log4j</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-log4j12</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-core</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-minicluster</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
