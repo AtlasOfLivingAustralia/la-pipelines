@@ -68,6 +68,28 @@ public class AlaTemporalInterpreterTest {
 
   }
 
+  @Test
+  public void testAUformatDatessertions() {
+    Map<String, String> map = new HashMap<>();
+    map.put(DwcTerm.year.qualifiedName(), "");
+    map.put(DwcTerm.month.qualifiedName(), " "); //keep the space at the end
+    map.put(DwcTerm.day.qualifiedName(), "");
+    map.put(DwcTerm.eventDate.qualifiedName(), "2/2/1980");
+    map.put(DwcTerm.dateIdentified.qualifiedName(), "1979-2-3");
+    map.put(DwcTerm.georeferencedDate.qualifiedName(), "1981-1-1");
+
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
+    TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
+
+    ALATemporalInterpreter.interpretTemporal(er, tr);
+
+    assertArrayEquals(tr.getIssues().getIssueList().toArray(),
+        new String[]{ALAOccurrenceIssue.ID_PRE_OCCURRENCE.name(),
+            ALAOccurrenceIssue.GEOREFERENCE_POST_OCCURRENCE.name()});
+
+  }
+
+
 
 
 /*    @Test

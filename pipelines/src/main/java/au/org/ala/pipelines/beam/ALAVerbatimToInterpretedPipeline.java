@@ -158,10 +158,10 @@ public class ALAVerbatimToInterpretedPipeline {
         .apply("Check verbatim transform condition", verbatimTransform.check(types))
         .apply("Write verbatim to avro", verbatimTransform.write(pathFn));
 
-/*    uniqueRecords
+    uniqueRecords
         .apply("Check basic transform condition", basicTransform.check(types))
         .apply("Interpret basic", basicTransform.interpret())
-        .apply("Write basic to avro", basicTransform.write(pathFn));*/
+        .apply("Write basic to avro", basicTransform.write(pathFn));
 
     uniqueRecords
         .apply("Check temporal transform condition", temporalTransform.check(types))
