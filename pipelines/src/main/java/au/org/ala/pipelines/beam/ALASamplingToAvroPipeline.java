@@ -117,7 +117,6 @@ public class ALASamplingToAvroPipeline {
         final TupleTag<String> latLngIDTag = new TupleTag<>();
         final TupleTag<Map<String, String>> alaSamplingTag = new TupleTag<>();
 
-
         // Join collections by LatLng
         PCollection<KV<String, CoGbkResult>> results =
                 KeyedPCollectionTuple.of(latLngIDTag, latLngID)

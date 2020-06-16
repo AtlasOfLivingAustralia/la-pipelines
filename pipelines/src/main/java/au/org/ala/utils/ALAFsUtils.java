@@ -17,7 +17,6 @@ import java.util.*;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.DIRECTORY_NAME;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALL;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE_HDFS_RECORD;
 
 /**
  * Extensions to FSUtils.
@@ -67,8 +66,6 @@ public class ALAFsUtils {
         return FsUtils.buildPath(FsUtils.buildDatasetAttemptPath(options, "sampling", false), "downloads").toString();
     }
 
-
-
     /**
      * Helper method to get file system based on provided configuration.
      */
@@ -76,7 +73,6 @@ public class ALAFsUtils {
     public static FileSystem getFileSystem(String hdfsSiteConfig, String coreSiteConfig, String path) {
         return FileSystemFactory.getInstance(hdfsSiteConfig, coreSiteConfig, path).getFs(path);
     }
-
 
     /**
      * Removes a directory with content if the folder exists
@@ -110,14 +106,6 @@ public class ALAFsUtils {
         }
     }    
 
-
-    /**
-     * Helper method to write/overwrite a file
-     */
-    public static void createDirectory(FileSystem fs, String path) throws IOException {
-        fs.create(new Path(path), true);
-    }
-
     /**
      * Helper method to write/overwrite a file
      */
@@ -148,8 +136,6 @@ public class ALAFsUtils {
         return fs.open(new Path(path));
     }
 
-
-
     public static boolean exists(FileSystem fs, String directoryPath) throws IOException {
         Path path = new Path(directoryPath);
         return fs.exists(path);
@@ -167,7 +153,6 @@ public class ALAFsUtils {
         }
         return filePaths;
     }
-
 
     /**
      * Read a properties file from HDFS/Local FS
