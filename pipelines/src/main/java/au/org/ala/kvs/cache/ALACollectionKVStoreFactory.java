@@ -14,15 +14,13 @@ import java.io.IOException;
 @Slf4j
 public class ALACollectionKVStoreFactory {
 
-  private static KeyValueStore<ALACollectionLookup, ALACollectionMatch> mapDBCache = null;
-
-  /**
-   * @param clientConfiguration
-   * @return
-   * @throws IOException
-   */
-  public static KeyValueStore<ALACollectionLookup, ALACollectionMatch> alaCollectionKVStore(
-      ClientConfiguration clientConfiguration, ALAKvConfig kvConfig) throws IOException {
+    /**
+     *
+     * @param clientConfiguration
+     * @return
+     * @throws IOException
+     */
+    public static KeyValueStore<ALACollectionLookup, ALACollectionMatch> alaCollectionKVStore(ClientConfiguration clientConfiguration, ALAKvConfig kvConfig) throws IOException {
 
     ALACollectoryServiceClient wsClient = new ALACollectoryServiceClient(clientConfiguration);
     Command closeHandler = () -> {

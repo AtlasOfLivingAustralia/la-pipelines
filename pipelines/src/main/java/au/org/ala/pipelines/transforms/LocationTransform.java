@@ -31,10 +31,7 @@ public class LocationTransform extends org.gbif.pipelines.transforms.core.Locati
   public static LocationTransform create(Properties properties) {
     ALAKvConfig alaKvConfig = ALAKvConfigFactory.create(properties);
     KvConfig kv = KvConfigFactory.create(properties, KvConfigFactory.GEOCODE_PREFIX);
-    KvConfig kvConfig = KvConfig
-        .create(alaKvConfig.getGeocodeBasePath(), kv.getTimeout(), kv.getCacheSizeMb(),
-            kv.getTableName(), kv.getZookeeperUrl(), kv.getNumOfKeyBuckets(), true,
-            kv.getImagePath());
+    KvConfig kvConfig = KvConfig.create(alaKvConfig.getGeocodeBasePath(), kv.getTimeout(), kv.getCacheSizeMb(), kv.getTableName(), kv.getZookeeperUrl(), kv.getNumOfKeyBuckets(), true,  kv.getImagePath());
     return new LocationTransform(kvConfig, alaKvConfig);
   }
 
@@ -43,7 +40,7 @@ public class LocationTransform extends org.gbif.pipelines.transforms.core.Locati
    */
   @Override
   public LocationTransform init() {
-    setGeocodeKvStore(GeocodeServiceFactory.create(kvConfig, alaKvConfig));
+    setGeocodeKvStore(GeocodeServiceFactory.create(kvConfig));
     return this;
   }
 
@@ -51,7 +48,7 @@ public class LocationTransform extends org.gbif.pipelines.transforms.core.Locati
   @Override
   public void setup() {
     if (kvConfig != null) {
-      this.setGeocodeKvStore(GeocodeServiceFactory.create(kvConfig, alaKvConfig));
+      this.setGeocodeKvStore(GeocodeServiceFactory.create(kvConfig));
     }
   }
 

@@ -12,6 +12,7 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.kvs.KeyValueStore;
 
+import java.util.ArrayList;
 import java.util.function.BiConsumer;
 
 import static org.gbif.pipelines.parsers.utils.ModelUtils.addIssue;
@@ -50,28 +51,30 @@ public class ALATaxonomyInterpreter {
 
         atr.setId(er.getId());
 
-        ALANameUsageMatch usageMatch = null;
-        try {
-          usageMatch = kvStore.get(matchRequest);
-        } catch (Exception ex) {
-          log.error(ex.getMessage(), ex);
-        }
+                ALANameUsageMatch usageMatch = kvStore.get(matchRequest);
 
-        if (usageMatch == null || isEmpty(usageMatch)) {
-          // "NO_MATCHING_RESULTS". This
-          // happens when we get an empty response from the WS
-          addIssue(atr, TAXON_MATCH_NONE);
+                if (usageMatch == null || isEmpty(usageMatch)) {
+                    // "NO_MATCHING_RESULTS". This
+                    // happens when we get an empty response from the WS
+                    addIssue(atr, TAXON_MATCH_NONE);
 //                    atr.setUsage(INCERTAE_SEDIS);
 //                    atr.setClassification(Collections.singletonList(INCERTAE_SEDIS));
-        } else {
+                } else {
 
 //                    for (Map.Entry<String, Object> entry : usageMatch.) {
 
-          try {
-            BeanUtils.copyProperties(atr, usageMatch);
-          } catch (Exception e) {
-            log.error(e.getMessage(), e);
-          }
+                    try {
+                        BeanUtils.copyProperties(atr, usageMatch);
+                        //initialise to avoid AVRO serialisation error
+                        if(usageMatch.getSpeciesGroup() == null){
+                            atr.setSpeciesGroup(new ArrayList<String>());
+                        }
+                        if(usageMatch.getSpeciesSubgroup() == null){
+                            atr.setSpeciesSubgroup(new ArrayList<String>());
+                        }
+                    } catch (Exception e) {
+                        log.error(e.getMessage(), e);
+                    }
 //                    }
 
 //                    String matchType = usageMatch.getMatchType();
@@ -105,7 +108,7 @@ public class ALATaxonomyInterpreter {
     };
   }
 
-  private static boolean isEmpty(ALANameUsageMatch response) {
-    return response == null || !response.isSuccess();
-  }
+    private static boolean isEmpty(ALANameUsageMatch response) {
+        return response == ALANameUsageMatch.FAIL;
+    }
 }

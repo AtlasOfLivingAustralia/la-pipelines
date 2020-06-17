@@ -11,7 +11,7 @@ echo 'Step 1. Spark job to export all lat longs'
 --executor-memory 16G \
 --driver-memory 4G \
 --class au.org.ala.pipelines.beam.ExportAllLatLongCSVPipeline  \
---master spark://172.30.2.127:7077 \
+--master spark://172.30.1.102:7077 \
 --driver-java-options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
 /efs-mount-point/pipelines.jar \
 --appName="Lat Long export" \

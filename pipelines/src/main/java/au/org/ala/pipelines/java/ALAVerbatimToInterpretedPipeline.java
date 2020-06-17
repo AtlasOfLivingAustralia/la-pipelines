@@ -1,7 +1,7 @@
 package au.org.ala.pipelines.java;
 
-import au.org.ala.pipelines.options.ALAInterpretationPipelineOptions;
 import au.org.ala.pipelines.transforms.ALAAttributionTransform;
+import au.org.ala.pipelines.transforms.ALADefaultValuesTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import au.org.ala.pipelines.transforms.ALATemporalTransform;
 import au.org.ala.pipelines.transforms.LocationTransform;
@@ -27,7 +27,6 @@ import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
-import org.gbif.pipelines.ingest.java.transforms.DefaultValuesTransform;
 import org.gbif.pipelines.ingest.java.transforms.OccurrenceExtensionTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
@@ -55,9 +54,9 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 
 /**
  * WARNING - this is not suitable for use for archives over 50k records due to in-memory cache use.
- * <p>
+ *
  * Pipeline sequence:
- * <p>
+ *
  * <pre>
  *    1) Reads verbatim.avro file
  *    2) Interprets and converts avro {@link org.gbif.pipelines.io.avro.ExtendedRecord} file to:
@@ -72,9 +71,9 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
  *      {@link org.gbif.pipelines.io.avro.LocationRecord}
  *    3) Writes data to independent files
  * </pre>
- * <p>
+ *
  * <p>How to run:
- * <p>
+ *
  * <pre>{@code
  * java -jar target/ingest-gbif-java-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.java.pipelines.ALAVerbatimToInterpretedPipeline some.properties
  *
@@ -101,11 +100,11 @@ public class ALAVerbatimToInterpretedPipeline {
     }
 
     public static void run(String[] args) {
-        ALAInterpretationPipelineOptions options = (ALAInterpretationPipelineOptions) PipelinesOptionsFactory.create(ALAInterpretationPipelineOptions.class, args);
+        InterpretationPipelineOptions options = (InterpretationPipelineOptions) PipelinesOptionsFactory.create(InterpretationPipelineOptions.class, args);
         run(options);
     }
 
-    public static void run(ALAInterpretationPipelineOptions options) {
+    public static void run(InterpretationPipelineOptions options) {
         ExecutorService executor = Executors.newWorkStealingPool();
         try {
             run(options, executor);
@@ -163,7 +162,7 @@ public class ALAVerbatimToInterpretedPipeline {
 
         // Extra
         OccurrenceExtensionTransform occExtensionTransform = OccurrenceExtensionTransform.create().counterFn(incMetricFn);
-        DefaultValuesTransform defaultValuesTransform = DefaultValuesTransform.create(properties, datasetId, skipRegistryCalls);
+        ALADefaultValuesTransform defaultValuesTransform = ALADefaultValuesTransform.create(properties, datasetId);
 
         // ALA specific
 //        ALAUUIDTransform alaUuidTransform = ALAUUIDTransform.create(properties).counterFn(incMetricFn).init();
@@ -228,7 +227,6 @@ public class ALAVerbatimToInterpretedPipeline {
                 measurementTransform.processElement(er).ifPresent(measurementWriter::append);
                 locationTransform.processElement(er, mdr).ifPresent(locationWriter::append);
                 //ALA specific
-//                alaUuidTransform.processElement(er, mdr).ifPresent(alaUuidWriter::append);
                 alaTaxonomyTransform.processElement(er).ifPresent(alaTaxonWriter::append);
                 alaAttributionTransform.processElement(er, mdr).ifPresent(alaAttributionWriter::append);
             };
@@ -271,9 +269,7 @@ public class ALAVerbatimToInterpretedPipeline {
         log.info("Pipeline has been finished - " + LocalDateTime.now());
     }
 
-    /**
-     * Create an AVRO file writer
-     */
+    /** Create an AVRO file writer */
     @SneakyThrows
     private static <T> SyncDataFileWriter<T> createWriter(InterpretationPipelineOptions options, Schema schema,
                                                           Transform transform, String id, boolean useInvalidName) {

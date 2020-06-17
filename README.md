@@ -1,4 +1,4 @@
-# Living Atlas Pipelines extensions [![Build Status](https://travis-ci.org/AtlasOfLivingAustralia/la-pipelines.svg?branch=master)](http://travis-ci.org/AtlasOfLivingAustralia/la-pipelines)
+# Living Atlas Pipelines extensions [![Build Status](https://travis-ci.org/AtlasOfLivingAustralia/la-pipelines.svg?branch=master)](http://travis-ci.org/AtlasOfLivingAustralia/la-pipelines) [![Coverage Status](https://coveralls.io/repos/github/AtlasOfLivingAustralia/la-pipelines/badge.svg?branch=master)](https://coveralls.io/github/AtlasOfLivingAustralia/la-pipelines?branch=master)
 
 This project is **proof of concept quality code** aimed at identifying work required
  to use of pipelines as a replacement to [biocache-store](https://github.com/AtlasOfLivingAustralia/biocache-store)
@@ -56,11 +56,6 @@ The aim for this proof of concept is to make very minimal changes to biocache-se
 #### ala-namematching-service
 A simple **drop wizard wrapper around the [ala-name-matching](https://github.com/AtlasOfLivingAustralia/ala-name-matching) library** has been prototyped to support integration with pipelines.
  
-#### spatial-service
-[intersect-cache branch](https://github.com/AtlasOfLivingAustralia/spatial-service/tree/intersect-cache) An additional webservice to allow a point
-lookup for all layers. This needs to be supplement with additional work to populate a key value store cache using the spatial-service batch API.
-
-
 ## Getting started
 
 In the absence of ansible scripts, here are some instructions for setting up a local development environment for pipelines.
@@ -74,19 +69,14 @@ Requirements of softwares:
 * lombok plugin for intelliJ needs to be installed for slf4 annotation  
 
 ### Prerequisite services
-1. Run ala-namematching-service on port 9179
-   There are two ways of running ala-nameservice
-   1. Use the docker-compose file in the root of this project like so:
-      `docker-compose -f ala-nameservice.yml up -d`
-   2. Or we can checkout ala-namematching-service via `git clone https://github.com/AtlasOfLivingAustralia/ala-namematching-service`
-      run `mvn package` to build `ala-namematching-service-1.0-SNAPSHOT.jar`. Jar name may change based on version  
-      Copy jar file from ./target to ./docker
-      `cd ./docker`
-      `docker-compose up`
-      Check docker-compose.yml to get more hints how ala-namematching-service is built
-    
-    You can test it by checking this url: http://localhost:9179/api/search?q=Acacia
-    
+1. Run ala-namematching-service on port 9179 using the dock-compose file like so:
+`docker-compose -f ala-nameservice.yml up -d`
+You can test it by checking this url: http://localhost:9179/api/search?q=Acacia
+1. Run solr on port 8983 using the dock-compose file like so:   
+`docker-compose -f solr8.yml up -d`
+and then setup the collection using the following script:
+`./update-solr-config.sh`
+You can test it by checking this url: http://localhost:8983
       
 ### Run la-pipeline   
 1. Download shape files from [here](https://pipelines-shp.s3-ap-southeast-2.amazonaws.com/pipelines-shapefiles.zip) and expand into `/data/pipelines-shp` directory
@@ -100,26 +90,22 @@ Requirements of softwares:
     1. `./export-latlng.sh dr893`
     1. `./sample.sh dr893`
     1. `./sample-avro-embedded.sh dr893`
-1. To setup SOLR:
-    1. Install docker
-    1. Follow the instructions in [solr8/docker/README.md](solr/docker/solr8/README.md)
-    1. Run `docker-compose -f solr8.yml up -d`
-    1. Run `./update-solr-config.sh`
 1. To index, run `./index.sh dr893`
-
 
 ## Integration Tests
 
-Integration testing is supported using docker containers.
+Integration testing is supported using docker containers. The tests will
 To start the required containers, run the following:
 
 ```
 docker-compose -f ala-nameservice.yml up -d
+docker-compose -f solr8.yml up -d
 ```
 
 To shutdown, run the following:
 ```
-docker-compose -f ala-nameservice.yml up kill
+docker-compose -f ala-nameservice.yml kill
+docker-compose -f solr8.yml kill
 ```
 
 ## Code style and tools

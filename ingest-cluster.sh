@@ -8,11 +8,12 @@ fi
 
 SECONDS=0
 ./dwca-avro.sh $1
-groovy interpret.groovy $1
-groovy export-latlng.groovy $1
+./interpret-spark-cluster.sh $1
+./export-latlng-cluster.sh $1
 ./sample.sh $1
 ./sample-avro-cluster.sh $1
-groovy index.groovy $1
+./uuid-spark-cluster.sh  $1
+./index-spark-cluster.sh $1
 
 duration=$SECONDS
 echo "Full ingest took $(($duration / 60)) minutes and $(($duration % 60)) seconds."

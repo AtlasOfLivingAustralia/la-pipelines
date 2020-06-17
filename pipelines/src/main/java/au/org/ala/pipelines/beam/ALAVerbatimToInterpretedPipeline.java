@@ -6,6 +6,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 
+import au.org.ala.pipelines.transforms.ALADefaultValuesTransform;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
@@ -14,6 +15,7 @@ import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.transforms.metadata.DefaultValuesTransform;
 import org.gbif.pipelines.transforms.common.UniqueIdTransform;
 import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
 import org.gbif.pipelines.transforms.core.*;
@@ -34,30 +36,32 @@ import org.slf4j.MDC;
 import au.org.ala.pipelines.transforms.ALAAttributionTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import au.org.ala.pipelines.transforms.LocationTransform;
-
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Pipeline sequence: <p>
+ * ALA interpretation pipeline sequence:
+ *
  * <pre>
  *    1) Reads verbatim.avro file
  *    2) Interprets and converts avro {@link ExtendedRecord} file to:
  *      {@link MetadataRecord},
+ *      {@link DefaultValuesTransform},
  *      {@link BasicRecord},
  *      {@link org.gbif.pipelines.io.avro.TemporalRecord},
  *      {@link org.gbif.pipelines.io.avro.MultimediaRecord},
  *      {@link org.gbif.pipelines.io.avro.ImageRecord},
  *      {@link org.gbif.pipelines.io.avro.AudubonRecord},
  *      {@link org.gbif.pipelines.io.avro.MeasurementOrFactRecord},
- *      {@link org.gbif.pipelines.io.avro.TaxonRecord},
- *      {@link org.gbif.pipelines.io.avro.LocationRecord}
+ *      {@link LocationTransform}
  *    3) Writes data to independent files
  * </pre>
- * <p> <p>How to run: <p>
+ *
+ * <p>How to run:
+ *
  * <pre>{@code
- * java -jar target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar some.properties
+ * java -jar target/pipelines-BUILD_VERSION-shaded.jar some.properties
  *
  * or pass all parameters:
  *
@@ -96,8 +100,7 @@ public class ALAVerbatimToInterpretedPipeline {
 
     String targetPath = options.getTargetPath();
     String hdfsSiteConfig = options.getHdfsSiteConfig();
-    Properties properties = FsUtils
-        .readPropertiesFile(options.getHdfsSiteConfig(), options.getProperties());
+    Properties properties = FsUtils.readPropertiesFile(options.getHdfsSiteConfig(), options.getProperties());
 
     FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, types);
 
@@ -114,13 +117,10 @@ public class ALAVerbatimToInterpretedPipeline {
     Pipeline p = Pipeline.create(options);
 
     // Core
-    MetadataTransform metadataTransform = MetadataTransform
-        .create(properties, endPointType, attempt, skipRegistryCalls);
-    BasicTransform basicTransform = BasicTransform
-        .create(properties, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId);
+    MetadataTransform metadataTransform = MetadataTransform.create(properties, endPointType, attempt, skipRegistryCalls);
+    BasicTransform basicTransform =  BasicTransform.create(properties, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId);
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.create();
-//    TaxonomyTransform taxonomyTransform = TaxonomyTransform.create(properties);
 
     // Extension
     MeasurementOrFactTransform measurementOrFactTransform = MeasurementOrFactTransform.create();
@@ -152,7 +152,8 @@ public class ALAVerbatimToInterpretedPipeline {
         verbatimTransform.emptyCollection(p) :
         p.apply("Read ExtendedRecords", verbatimTransform.read(options.getInputPath()))
             .apply("Read occurrences from extension", OccurrenceExtensionTransform.create())
-            .apply("Filter duplicates", UniqueIdTransform.create());
+            .apply("Filter duplicates", UniqueIdTransform.create())
+            .apply("Set default values", ALADefaultValuesTransform.create(properties, datasetId));
 
     uniqueRecords
         .apply("Check verbatim transform condition", verbatimTransform.check(types))
@@ -190,7 +191,7 @@ public class ALAVerbatimToInterpretedPipeline {
 
     uniqueRecords
         .apply("Check collection attribution", alaAttributionTransform.check(types))
-        .apply("Interpret collection attribution", alaAttributionTransform.interpret(metadataView))
+        .apply("Interpret ALA collection attribution", alaAttributionTransform.interpret(metadataView))
         .apply("Write attribution to avro", alaAttributionTransform.write(pathFn));
 
     uniqueRecords

@@ -13,7 +13,7 @@ java -Xmx8g -Xmx8g -XX:+UseG1GC  -cp pipelines/target/pipelines-1.0-SNAPSHOT-sha
  --runner=SparkRunner \
  --inputPath=/data/pipelines-data \
  --targetPath=/data/pipelines-data \
- --metaFileName=indexing-metrics.txt \
+ --metaFileName=indexing-metrics.yml \
  --properties=pipelines.properties \
  --zkHost=localhost:9983 \
  --solrCollection=biocache  \

@@ -16,36 +16,26 @@
   <version>1.0-SNAPSHOT</version>
 
   <name>Living Atlas Pipelines</name>
-  <description>GBIF standalone pipelines for interpreting and indexing biodiversity data
-  </description>
+  <description>GBIF standalone pipelines for interpreting and indexing biodiversity data</description>
 
-
-  <repositories>
-
-
-    <repository>
+    <repositories>
+        <repository>
             <id>gbif-all</id>
             <url>https://repository.gbif.org/content/groups/gbif</url>
-    </repository>
-
-    <repository>
-      <id>cloudera-release</id>
-      <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
-    </repository>
-    <repository>
-      <id>osgeo</id>
-      <url>https://repo.osgeo.org/repository/release/</url>
-    </repository>
-    <repository>
-      <id>boundless</id>
-      <url>https://repo.osgeo.org/repository/release/</url>
-    </repository>
-  </repositories>
-
-  <!--  <modules>
-      <module>../models</module>
-    </modules>-->
-
+        </repository>
+        <repository>
+            <id>cloudera-release</id>
+            <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
+        </repository>
+        <repository>
+            <id>osgeo</id>
+            <url>https://repo.osgeo.org/repository/release/</url>
+        </repository>
+        <repository>
+            <id>boundless</id>
+            <url>https://repo.osgeo.org/repository/release/</url>
+        </repository>
+    </repositories>
 
   <build>
     <plugins>
@@ -77,10 +67,8 @@
               <shadedArtifactAttached>true</shadedArtifactAttached>
               <shadedClassifierName>shaded</shadedClassifierName>
               <transformers>
-                <transformer
-                  implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
-                <transformer
-                  implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                   <mainClass>org.gbif.pipelines.ingest.pipelines.DwcaToVerbatimPipeline</mainClass>
                 </transformer>
                 <!-- append default configs -->
@@ -739,6 +727,11 @@
       <artifactId>jackson-dataformat-avro</artifactId>
       <version>${jackson.version}</version>
     </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>${jackson.version}</version>
+    </dependency>
 
     <!-- Http clients -->
     <dependency>
@@ -870,6 +863,7 @@
       <artifactId>lz4</artifactId>
       <version>${lz4.version}</version>
     </dependency>
+
     <!-- Used for indexing locks -->
     <dependency>
       <groupId>org.apache.curator</groupId>
