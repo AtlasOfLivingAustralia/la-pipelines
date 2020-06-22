@@ -22,6 +22,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.io.avro.AustraliaSpatialRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.transforms.specific.AustraliaSpatialTransform;
@@ -58,8 +59,7 @@ public class ALASamplingToAvroPipeline {
         String outputPath = ALAFsUtils.buildPathSamplingOutputUsingTargetPath(options);
         log.info("Outputting results to " + outputPath);
 
-        FileSystem fs = ALAFsUtils.getFileSystem(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), "/");
-
+        FileSystem fs = FsUtils.getFileSystem(options.getHdfsSiteConfig(),  "/");
 
         // Read column headers
         final String[] columnHeaders = getColumnHeaders(fs, samplingPath);

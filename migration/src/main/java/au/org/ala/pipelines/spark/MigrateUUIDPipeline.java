@@ -6,11 +6,6 @@ import com.beust.jcommander.Parameters;
 import com.google.common.base.Strings;
 import org.apache.avro.Schema;
 import org.apache.commons.lang3.StringUtils;
-//import org.apache.hadoop.conf.Configuration;
-//import org.apache.hadoop.fs.FileSystem;
-//import org.apache.hadoop.fs.LocatedFileStatus;
-//import org.apache.hadoop.fs.Path;
-//import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
@@ -22,6 +17,7 @@ import org.apache.spark.sql.*;
 import scala.Tuple4;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +26,10 @@ import static org.apache.spark.sql.functions.col;
 
 /**
  * A Spark only pipeline that generates AVRO files for UUIDs based on a CSV export from Cassandra.
+ *
+ * Previous runs should be cleaned up like so:
+ *
+ * hdfs dfs -rm -R  /pipelines-data/<globstar>/1/identifiers
  */
 @Parameters(separators = "=")
 public class MigrateUUIDPipeline implements Serializable {
@@ -45,22 +45,6 @@ public class MigrateUUIDPipeline implements Serializable {
 
     @Parameter(names = "--hdfsSiteConfig", description = "Debug mode")
     private String hdfsSiteConfig;
-
-    @Parameters(separators = "=")
-    private class PipelineArgs {
-
-        @Parameter
-        private List<String> parameters = new ArrayList<>();
-
-        @Parameter(names = "--inputPath", description = "Comma-separated list of group names to be run")
-        private String inputPath;
-
-        @Parameter(names = "--targetPath", description = "Comma-separated list of group names to be run")
-        private String targetPath;
-
-        @Parameter(names = "--hdfsSiteConfig", description = "Debug mode")
-        private String hdfsSiteConfig;
-    }
 
     public static void main(String[] args) throws Exception {
         MigrateUUIDPipeline m = new MigrateUUIDPipeline();
@@ -78,6 +62,9 @@ public class MigrateUUIDPipeline implements Serializable {
 
     private void run() throws Exception {
 
+        FileSystem fileSystem = getFileSystem();
+        fileSystem.delete(new Path(targetPath + "/migration-tmp/avro"), true);
+
         System.out.println("Starting spark job to migrate UUIDs");
         Schema schemaAvro = new Schema.Parser().parse(MigrateUUIDPipeline.class
                 .getClassLoader().getResourceAsStream("ala-uuid-record.avsc"));
@@ -85,8 +72,8 @@ public class MigrateUUIDPipeline implements Serializable {
         System.out.println("Starting spark session");
         SparkSession spark = SparkSession
                 .builder()
-                .master("local[*]")
                 .appName("Migration UUIDs")
+                .master("local[*]")
                 .getOrCreate();
 
         System.out.println("Load CSV");
@@ -104,10 +91,11 @@ public class MigrateUUIDPipeline implements Serializable {
             @Override
             public Tuple4<String, String, String, String> call(Row row) throws Exception {
                 String datasetID = row.getString(0).substring(0, row.getString(0).indexOf("|"));
-                return Tuple4.apply(datasetID,
-                        datasetID + "_" + row.getString(1),
-                        row.getString(0),
-                        row.getString(1)
+                return Tuple4.apply(
+                        datasetID,
+                        "temp_" + datasetID + "_" + row.getString(1),
+                        row.getString(1),
+                        row.getString(0)
                 );
             }
         }, Encoders.tuple(Encoders.STRING(), Encoders.STRING(), Encoders.STRING(), Encoders.STRING()));
@@ -125,6 +113,37 @@ public class MigrateUUIDPipeline implements Serializable {
                 .mode(SaveMode.Overwrite)
                 .save(targetPath + "/migration-tmp/avro");
 
+
+        Path path = new Path(targetPath + "/migration-tmp/avro/");
+        RemoteIterator<LocatedFileStatus> iterator = fileSystem.listFiles(path, true);
+        while (iterator.hasNext()){
+
+            //datasetID=dr1
+            LocatedFileStatus locatedFileStatus = iterator.next();
+            Path sourcePath = locatedFileStatus.getPath();
+            String fullPath =  sourcePath.toString();
+
+            if (fullPath.lastIndexOf("=") > 0 ) {
+                String dataSetID = fullPath.substring(fullPath.lastIndexOf("=") + 1, fullPath.lastIndexOf("/") );
+
+                //move to correct location
+                String newPath = targetPath + "/" + dataSetID + "/1/identifiers/ala_uuid/";
+                fileSystem.mkdirs(new Path(newPath));
+
+                Path destination = new Path(newPath + sourcePath.getName());
+                fileSystem.rename(sourcePath, destination);
+            }
+        }
+
+        System.out.println("Remove temp directories");
+        fileSystem.delete(new Path(targetPath + "/migration-tmp"), true);
+
+        System.out.println("Close session");
+        spark.close();
+        System.out.println("Closed session. Job finished.");
+    }
+
+    private FileSystem getFileSystem() throws IOException {
         //move to correct directory structure
         // check if the hdfs-site.xml is provided
         Configuration configuration = new Configuration();
@@ -136,39 +155,7 @@ public class MigrateUUIDPipeline implements Serializable {
         }
 
         //get a list of paths & move to correct directories
-        FileSystem fileSystem = FileSystem.get(configuration);
-        Path path = new Path(targetPath + "/migration-tmp/avro/");
-        RemoteIterator<LocatedFileStatus> iterator = fileSystem.listFiles(path, true);
-        List<String> filePaths = new ArrayList<String>();
-        while (iterator.hasNext()){
-
-            //datasetID=dr1
-            LocatedFileStatus locatedFileStatus = iterator.next();
-            Path sourcePath = locatedFileStatus.getPath();
-            String fullPath =  sourcePath.toString();
-
-            if (fullPath.lastIndexOf("=") > 0 ) {
-                String dataSetID = fullPath.substring(fullPath.lastIndexOf("=") + 1, fullPath.lastIndexOf("/") );
-
-//                System.out.println("Moving file : " + fullPath);
-//                System.out.println("Moving to dataSetID : " + dataSetID);
-
-                //move to correct location
-                String newPath = targetPath + "/" + dataSetID + "/1/identifiers/ala_uuid/";
-//                System.out.println("Moving to directory : " + newPath);
-                fileSystem.mkdirs(new Path(newPath));
-
-//                System.out.println("Moving to file : " + newPath + sourcePath.getName());
-
-                Path destination = new Path(newPath + sourcePath.getName());
-                boolean successful = fileSystem.rename(sourcePath, destination);
-//                System.out.println("##### SUCCESS: " + successful);
-            }
-        }
-
-        System.out.println("Close session");
-        spark.close();
-        System.out.println("Closed session. Job finished.");
+        return FileSystem.get(configuration);
     }
 }
 

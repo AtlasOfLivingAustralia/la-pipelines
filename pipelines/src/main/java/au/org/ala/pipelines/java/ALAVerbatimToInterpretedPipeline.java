@@ -4,7 +4,6 @@ import au.org.ala.pipelines.transforms.ALAAttributionTransform;
 import au.org.ala.pipelines.transforms.ALADefaultValuesTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import au.org.ala.pipelines.transforms.LocationTransform;
-import au.org.ala.utils.ALAFsUtils;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
@@ -132,10 +131,9 @@ public class ALAVerbatimToInterpretedPipeline {
         String targetPath = options.getTargetPath();
         String endPointType = options.getEndPointType();
         String hdfsSiteConfig = options.getHdfsSiteConfig();
-        String coreSiteConfig = options.getCoreSiteConfig();
         Properties properties = PropertiesFactory.getInstance(hdfsSiteConfig, options.getProperties()).get();
 
-        ALAFsUtils.deleteInterpretIfExist(hdfsSiteConfig, coreSiteConfig, targetPath, datasetId, attempt, types);
+        FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, types);
 
         MDC.put("datasetId", datasetId);
         MDC.put("attempt", attempt.toString());
@@ -166,7 +164,6 @@ public class ALAVerbatimToInterpretedPipeline {
         ALADefaultValuesTransform defaultValuesTransform = ALADefaultValuesTransform.create(properties, datasetId);
 
         // ALA specific
-//        ALAUUIDTransform alaUuidTransform = ALAUUIDTransform.create(properties).counterFn(incMetricFn).init();
         ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.create(properties).counterFn(incMetricFn).init();
         ALAAttributionTransform alaAttributionTransform = ALAAttributionTransform.create(properties).counterFn(incMetricFn).init();
 
@@ -183,7 +180,6 @@ public class ALAVerbatimToInterpretedPipeline {
                 SyncDataFileWriter<AudubonRecord> audubonWriter = createWriter(options, AudubonRecord.getClassSchema(), audubonTransform, id, false);
 
                 //ALA specific
-//                SyncDataFileWriter<ALAUUIDRecord> alaUuidWriter = createWriter(options, ALAUUIDRecord.getClassSchema(), alaUuidTransform, id, false);
                 SyncDataFileWriter<ALATaxonRecord> alaTaxonWriter = createWriter(options, ALATaxonRecord.getClassSchema(), alaTaxonomyTransform, id, false);
                 SyncDataFileWriter<ALAAttributionRecord> alaAttributionWriter = createWriter(options, ALAAttributionRecord.getClassSchema(), alaAttributionTransform, id, false);
         ) {

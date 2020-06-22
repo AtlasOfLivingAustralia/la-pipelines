@@ -106,7 +106,7 @@ public class ALAVerbatimToInterpretedPipeline {
     log.info("hdfsSiteConfig = " + hdfsSiteConfig);
     log.info("coreSiteConfig = " + coreSiteConfig);
 
-    ALAFsUtils.deleteInterpretIfExist(hdfsSiteConfig, coreSiteConfig, targetPath, datasetId, attempt, types);
+    FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, types);
 
     Properties properties = FsUtils.readPropertiesFile(options.getHdfsSiteConfig(), options.getProperties());
 

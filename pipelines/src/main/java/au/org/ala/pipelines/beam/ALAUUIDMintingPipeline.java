@@ -80,7 +80,7 @@ public class ALAUUIDMintingPipeline {
     public static void run(InterpretationPipelineOptions options) throws Exception {
 
         Pipeline p = Pipeline.create(options);
-        Properties properties = ALAFsUtils.readPropertiesFile(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getProperties());
+        Properties properties = FsUtils.readPropertiesFile(options.getHdfsSiteConfig(), options.getProperties());
 
         //build the directory path for existing identifiers
         String alaRecordDirectoryPath = options.getTargetPath() + "/" + options.getDatasetId().trim() + "/1/identifiers/" + ALARecordTypes.ALA_UUID.name().toLowerCase();
@@ -130,8 +130,7 @@ public class ALAUUIDMintingPipeline {
         PCollection<KV<String, String>> alaUuids = null;
 
         log.info("Transform 2: ALAUUIDRecord ur ->  <uniqueKey, uuid> (assume incomplete)");
-
-        FileSystem fs = ALAFsUtils.getFileSystem(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), null);
+        FileSystem fs = FsUtils.getFileSystem(options.getHdfsSiteConfig(), null);
         Path path = new Path(alaRecordDirectoryPath);
 
         if (fs.exists(path)){

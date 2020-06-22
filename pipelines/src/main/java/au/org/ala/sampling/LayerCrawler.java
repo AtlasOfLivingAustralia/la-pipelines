@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.ingest.utils.FsUtils;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -37,8 +38,6 @@ import java.util.zip.ZipInputStream;
 /**
  * A utility to crawl the ALA layers. Requires an input csv containing lat, lng (no header)
  * and an output directory.
- *
- * TODO This needs improvement to make it a more useable commandline tool with options.
  */
 @Slf4j
 public class LayerCrawler {
@@ -75,7 +74,7 @@ public class LayerCrawler {
 
         String baseDir = options.getInputPath();
 
-        FileSystem fs = ALAFsUtils.getFileSystem(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), "/");
+        FileSystem fs = FsUtils.getFileSystem(options.getHdfsSiteConfig(),  "/");
 
         if (options.getDatasetId() != null) {
 
@@ -88,11 +87,10 @@ public class LayerCrawler {
 
             //delete existing sampling output
             String samplingDir = baseDir + "/" + dataSetID + "/1/sampling";
-            ALAFsUtils.deleteIfExist(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), samplingDir);
+            FsUtils.deleteIfExist(options.getHdfsSiteConfig(),  samplingDir);
 
-//            (re)create sampling output directories
+            //(re)create sampling output directories
             String sampleDownloadPath = baseDir + "/" + dataSetID + "/1/sampling/downloads";
-//            FsUtils.createDirectory(fs, sampleDownloadPath);
 
             //check the lat lng export directory has been created
             String latLngExportPath = baseDir +  "/" + dataSetID + "/1/latlng";
