@@ -1,5 +1,6 @@
 package au.org.ala.kvs.cache;
 
+import au.org.ala.kvs.GeocodeShpIntersectConfig;
 import au.org.ala.kvs.client.GeocodeShpIntersectService;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
@@ -12,12 +13,12 @@ public class GeocodeCache2kKeyValueStore implements KeyValueStore<LatLng, Geocod
 
   private final GeocodeService service;
 
-  private GeocodeCache2kKeyValueStore() {
-    this.service = GeocodeShpIntersectService.getInstance();
+  private GeocodeCache2kKeyValueStore(GeocodeShpIntersectConfig config) {
+    this.service = GeocodeShpIntersectService.getInstance(config);
   }
 
-  public static GeocodeCache2kKeyValueStore create() {
-    return new GeocodeCache2kKeyValueStore();
+  public static GeocodeCache2kKeyValueStore create(GeocodeShpIntersectConfig config) {
+    return new GeocodeCache2kKeyValueStore(config);
   }
 
   @Override

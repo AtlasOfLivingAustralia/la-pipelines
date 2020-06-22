@@ -90,14 +90,6 @@ public class AlaTemporalInterpreterTest {
   }
 
 
-
-
-/*    @Test
-    public void testBadDay() {
-        OccurrenceParseResult<TemporalAccessor> result = interpretRecordedDate("1984", "31", "3", null);
-        assertEquals(result, OccurrenceIssue.RECORDED_DATE_INVALID);
-    }*/
-
   private OccurrenceParseResult<TemporalAccessor> interpretRecordedDate(String y, String m,
       String d, String date) {
     Map<String, String> map = new HashMap<>();

@@ -250,17 +250,12 @@ public class AlaLocationInterpreterTest {
 
     KeyValueTestStoreStub store = new KeyValueTestStoreStub();
     store.put(new LatLng(15.958333d, -85.908333d), toGeocodeResponse(Country.HONDURAS));
-
     store.put(new LatLng(-2.752778d, -58.653057d), toGeocodeResponse("San Luise"));
-
-
     MetadataRecord mdr = MetadataRecord.newBuilder().setId(ID).build();
 
     Map<String, String> coreMap = new HashMap<>();
     coreMap.put(DwcTerm.verbatimLatitude.qualifiedName(), "-2.752778d");
     coreMap.put(DwcTerm.verbatimLongitude.qualifiedName(), "-58.653057d");
-//        coreMap.put(DwcTerm.decimalLatitude.qualifiedName(),"-2.752778d");
-//        coreMap.put(DwcTerm.decimalLatitude.qualifiedName(),"-58.653057d");
     coreMap.put(DwcTerm.geodeticDatum.qualifiedName(), "EPSG:4326");
 
     ExtendedRecord source = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();

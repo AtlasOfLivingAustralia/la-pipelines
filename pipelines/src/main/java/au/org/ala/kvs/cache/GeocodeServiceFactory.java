@@ -16,11 +16,17 @@ import lombok.SneakyThrows;
  */
 public class GeocodeServiceFactory {
 
+/*  @Deprecated
   public static GeocodeKvStore create(KvConfig config) {
     return GeocodeKvStore.create(createKvStore(), BitmapFactory.getInstance(config));
+  }*/
+
+  public static GeocodeKvStore create(ALAKvConfig alaConfig) {
+    return GeocodeKvStore.create(createKvStore(alaConfig), BitmapFactory.getInstance(alaConfig.getCommonConfig()));
   }
 
-  private static KeyValueStore<LatLng, GeocodeResponse> createKvStore() {
-    return GeocodeCache2kKeyValueStore.create();
+
+  private static KeyValueStore<LatLng, GeocodeResponse> createKvStore(ALAKvConfig alaConfig) {
+    return GeocodeCache2kKeyValueStore.create(alaConfig.getGeocodeShpIntersectConfig());
   }
 }

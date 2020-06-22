@@ -1,6 +1,9 @@
 package au.org.ala.pipelines.vocabulary;
 
 import au.org.ala.pipelines.util.Stemmer;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.Map.Entry;
 import lombok.extern.slf4j.Slf4j;
@@ -19,11 +22,16 @@ public class Vocab {
   private Map<String, String[]> terms = new HashMap<>();
 
   public static Vocab loadVocabFromFile(String filePath) {
+    return loadVocabFromFile(StateCentrePoints.class.getResourceAsStream(filePath));
+  }
+
+  public static Vocab loadVocabFromFile(InputStream is) {
     if (vocab == null) {
       try {
         vocab = new Vocab();
         Stemmer stemmer = new Stemmer();
-        Files.lines(new File(filePath).getAbsoluteFile().toPath())
+
+        new BufferedReader(new InputStreamReader(is)).lines()
             .map(s -> s.trim())
             .forEach(l -> {
               String[] ss = l.split("\t");
@@ -35,11 +43,12 @@ public class Vocab {
         log.info(vocab.terms.size() + " vocabs/records have been loaded.");
 
       } catch (Exception e) {
-        log.warn(e.getMessage());
+        log.error(e.getMessage());
       }
     }
     return vocab;
   }
+
 
   public Entry<String, String[]> matchTerm(String string2match) {
     Stemmer stemmer = new Stemmer();

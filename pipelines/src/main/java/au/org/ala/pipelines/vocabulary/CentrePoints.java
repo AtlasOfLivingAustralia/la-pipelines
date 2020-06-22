@@ -1,5 +1,6 @@
 package au.org.ala.pipelines.vocabulary;
 
+import java.io.FileInputStream;
 import lombok.extern.slf4j.Slf4j;
 
 import org.gbif.kvs.geocode.LatLng;
@@ -10,6 +11,9 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.io.InputStream;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 
 /**
  * CentrePoints is used by coutryCentres and stateCentres, so it can be a singleton Singleton should
@@ -33,9 +37,20 @@ public class CentrePoints {
   }
 
   public static CentrePoints getInstance(String filePath) {
+    try {
+      InputStream is = new FileInputStream(new File(filePath));
+      getInstance(is);
+    } catch (Exception e) {
+      log.error(e.getMessage());
+    }
+
+    return cp;
+  }
+
+  public static CentrePoints getInstance(InputStream is) {
     cp = new CentrePoints();
     try {
-      Files.lines(new File(filePath).getAbsoluteFile().toPath())
+      new BufferedReader(new InputStreamReader(is)).lines()
           .map(s -> s.trim())
           .filter(l -> l.split("\t").length == 7)
           .forEach(l -> {
@@ -48,7 +63,7 @@ public class CentrePoints {
             cp.statesBBox.put(state, bbox);
           });
     } catch (Exception e) {
-      log.warn(e.getMessage());
+      log.error(e.getMessage());
     }
 
     return cp;
@@ -58,10 +73,10 @@ public class CentrePoints {
    * Precision of coordinate is determined by the given lat and lng for exmaple, given lat 14.39,
    * will only compare to the second decimal
    */
-  public boolean coordinatesMatchCentre(String state, double decimalLatitude,
+  public boolean coordinatesMatchCentre(String location, double decimalLatitude,
       double decimalLongitude) {
 
-    LatLng supposedCentre = statesCentre.get(state.toLowerCase());
+    LatLng supposedCentre = statesCentre.get(location.toLowerCase());
     if (supposedCentre != null) {
       int latDecPlaces = noOfDecimalPlace(decimalLatitude);
       int longDecPlaces = noOfDecimalPlace(decimalLongitude);
@@ -75,7 +90,7 @@ public class CentrePoints {
           + approximatedLong);
       return approximatedLat == decimalLatitude && approximatedLong == decimalLongitude;
     } else {
-      log.error(state + "is not found in records");
+      log.error("{} is not found in records", location);
       return false;
     }
   }

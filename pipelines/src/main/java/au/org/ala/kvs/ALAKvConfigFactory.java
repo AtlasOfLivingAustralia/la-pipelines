@@ -1,8 +1,11 @@
 package au.org.ala.kvs;
 
+import au.org.ala.kvs.GeocodeShpIntersectConfig;
+import lombok.Data;
 import lombok.NonNull;
 
 import java.util.Properties;
+
 
 public class ALAKvConfigFactory {
 
@@ -28,6 +31,14 @@ public class ALAKvConfigFactory {
   private static final String TAXONOMY_CACHE_FILENAME = "taxonomy_cache_filename";
   private static final String COLLECTION_CACHE_FILENAME = "collection_cache_filename";
   private static final String METADATA_CACHE_FILENAME = "metadata_cache_filename";
+
+  //Provide SHP files for interpret country/state info
+  private static final String COUNTRY_SHP_FILE = "country_shp_file";
+  private static final String COUNTRY_SHP_NAME_FIELD ="country_name_field";
+  private static final String EEZ_SHP_FILE = "eez_shp_file";
+  private static final String EEZ_SHP_NAME_FIELD ="eez_country_name_field";
+  private static final String STATE_SHP_FILE = "state_shp_file";
+  private static final String STATE_SHP_NAME_FIELD ="state_name_field";
 
 
   public static ALAKvConfig create(@NonNull Properties props) {
@@ -65,6 +76,7 @@ public class ALAKvConfigFactory {
     String cacheDirectoryPath = props
         .getProperty(KV_CACHE_DIRECTORY_PATH_PROP, "/data/pipelines-cache");
 
+
     return ALAKvConfig.builder()
         .taxonomyBasePath(taxonomyBasePath)
         .spatialBasePath(spatialBasePath)
@@ -84,6 +96,10 @@ public class ALAKvConfigFactory {
         .taxonomyCacheFileName(taxonomyCacheFileName)
         .collectionCacheFileName(collectionCacheFileName)
         .metadataCacheFileName(metadataCacheFileName)
+        .geocodeShpIntersectConfig(new GeocodeShpIntersectConfig(
+            props.getProperty(COUNTRY_SHP_FILE),props.getProperty(COUNTRY_SHP_NAME_FIELD),props.getProperty(EEZ_SHP_FILE), props.getProperty(EEZ_SHP_NAME_FIELD),props.getProperty(STATE_SHP_FILE),props.getProperty(STATE_SHP_NAME_FIELD))
+        )
         .build();
   }
+
 }
