@@ -211,11 +211,6 @@ public class ALALocationInterpreter {
 
   public static void interpretGeodetic(ExtendedRecord er, LocationRecord lr) {
 
-    //check for missing geodeticDatum
-    if (Strings.isNullOrEmpty(extractNullAwareValue(er, DwcTerm.geodeticDatum))) {
-      addIssue(lr, ALAOccurrenceIssue.MISSING_GEODETICDATUM.name());
-    }
-
     //check for missing georeferencedBy
     if (Strings.isNullOrEmpty(extractNullAwareValue(er, DwcTerm.georeferencedBy))) {
       addIssue(lr, ALAOccurrenceIssue.MISSING_GEOREFERENCEDBY.name());

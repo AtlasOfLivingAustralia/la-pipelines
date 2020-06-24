@@ -32,7 +32,6 @@ public class GeocodeShpIntersectService implements GeocodeService {
 
 
   private GeocodeShpIntersectService(GeocodeShpIntersectConfig config) {
-    //initialise references to SHP files....
     synchronized (this) {
       checkResouceFiles(config);
       countries = new SimpleShapeFile(config.getCountry_shp_file(), config.getCountry_name_field());
@@ -41,6 +40,7 @@ public class GeocodeShpIntersectService implements GeocodeService {
     }
   }
 
+  //initialise references to SHP files....
   private void checkResouceFiles(GeocodeShpIntersectConfig config){
     String error = "";
     if(! new File(config.getCountry_shp_file()+".dbf").exists()) {
@@ -58,7 +58,7 @@ public class GeocodeShpIntersectService implements GeocodeService {
       error += Strings.LINE_SEPARATOR + "The following properties are compulsory for location interpretation:";
       error += Strings.LINE_SEPARATOR + "Those properties need to be defined in a property file given by -- properties argument.";
       error += Strings.LINE_SEPARATOR;
-      error += Strings.LINE_SEPARATOR +"\t" + String.format("%-32s%-48s%-32s","country_shp_file","SHP file for country searching.", "Example: //data//pipelines-shp//political (DO NOT INCLUDE extension)");
+      error += Strings.LINE_SEPARATOR +"\t" + String.format("%-32s%-48s%-32s","country_shp_file","SHP file for country searching.", "Example: /data/pipelines-shp/political (DO NOT INCLUDE extension)");
       error += Strings.LINE_SEPARATOR +"\t" + String.format("%-32s%-48s","country_name_field","SHP field of country name");
       error += Strings.LINE_SEPARATOR +"\t" + String.format("%-32s%-48s%-32s","eez_shp_file","SHP file for country searching.", "Example: /data/pipelines-shp/eez (DO NOT INCLUDE extension)");
       error += Strings.LINE_SEPARATOR +"\t" + String.format("%-32s%-48s","eez_country_name_field","SHP field of country name");

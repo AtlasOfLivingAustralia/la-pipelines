@@ -89,6 +89,20 @@ public class AlaTemporalInterpreterTest {
 
   }
 
+  @Test
+  public void testInvalidAssertions(){
+    Map<String, String> map = new HashMap<>();
+    map.put(DwcTerm.eventDate.qualifiedName(), "2/2/1599");
+
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
+    TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
+
+    ALATemporalInterpreter.interpretTemporal(er, tr);
+
+    assertArrayEquals(tr.getIssues().getIssueList().toArray(),
+        new String[]{OccurrenceIssue.RECORDED_DATE_UNLIKELY.name()});
+  }
+
 
   private OccurrenceParseResult<TemporalAccessor> interpretRecordedDate(String y, String m,
       String d, String date) {
@@ -101,4 +115,6 @@ public class AlaTemporalInterpreterTest {
 
     return TemporalInterpreter.interpretRecordedDate(er);
   }
+
+
 }

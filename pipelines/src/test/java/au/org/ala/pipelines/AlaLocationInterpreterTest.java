@@ -137,7 +137,7 @@ public class AlaLocationInterpreterTest {
   }
 
   @Test
-  public void assertionStateProvinceValidTest() {
+  public void assertionMissingGeodeticTest() {
     Location state = new Location();
     state.setCountryName("New South Wales");
     state.setType("State");
@@ -159,8 +159,64 @@ public class AlaLocationInterpreterTest {
     assertEquals(lr.getStateProvince(), "New South Wales");
 
     assertArrayEquals(lr.getIssues().getIssueList().toArray(),
+        new String[]{ALAOccurrenceIssue.COORDINATES_CENTRE_OF_STATEPROVINCE.name(), OccurrenceIssue.GEODETIC_DATUM_ASSUMED_WGS84.name(), ALAOccurrenceIssue.MISSING_GEODETICDATUM.name()});
+
+  }
+
+
+  @Test
+  public void assertionValidGeodeticStateProvinceValidTest() {
+    Location state = new Location();
+    state.setCountryName("New South Wales");
+    state.setType("State");
+
+    KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
+    kvStore.put(new LatLng(-31.25d, 146.921099d),
+        new GeocodeResponse(Collections.singletonList(state)));
+
+
+    LocationRecord lr = LocationRecord.newBuilder().setId(ID).build();
+    Map<String, String> coreMap = new HashMap<>();
+
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+    coreMap.put(DwcTerm.verbatimLatitude.qualifiedName(), "-31.25d");
+    coreMap.put(DwcTerm.verbatimLongitude.qualifiedName(), "146.921099d");
+    coreMap.put(DwcTerm.geodeticDatum.qualifiedName(), "WGS84");
+
+    ALALocationInterpreter.interpretStateProvince(kvStore).accept(er, lr);
+
+    assertEquals(lr.getStateProvince(), "New South Wales");
+
+    assertArrayEquals(lr.getIssues().getIssueList().toArray(),
         new String[]{ALAOccurrenceIssue.COORDINATES_CENTRE_OF_STATEPROVINCE.name()});
 
+  }
+
+  @Test
+  public void assertionInvalidGeodeticTest() {
+    Location state = new Location();
+    state.setCountryName("New South Wales");
+    state.setType("State");
+
+    KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
+    kvStore.put(new LatLng(-31.25d, 146.921099d),
+        new GeocodeResponse(Collections.singletonList(state)));
+
+
+    LocationRecord lr = LocationRecord.newBuilder().setId(ID).build();
+    Map<String, String> coreMap = new HashMap<>();
+
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+    coreMap.put(DwcTerm.verbatimLatitude.qualifiedName(), "-31.25d");
+    coreMap.put(DwcTerm.verbatimLongitude.qualifiedName(), "146.921099d");
+    coreMap.put(DwcTerm.geodeticDatum.qualifiedName(), "TEST");
+
+    ALALocationInterpreter.interpretStateProvince(kvStore).accept(er, lr);
+
+    assertEquals(lr.getStateProvince(), "New South Wales");
+
+    assertArrayEquals(lr.getIssues().getIssueList().toArray(),
+        new String[]{ALAOccurrenceIssue.COORDINATES_CENTRE_OF_STATEPROVINCE.name(), OccurrenceIssue.GEODETIC_DATUM_ASSUMED_WGS84.name(),OccurrenceIssue.GEODETIC_DATUM_INVALID.name()});
 
   }
 
@@ -181,6 +237,7 @@ public class AlaLocationInterpreterTest {
     ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
     coreMap.put(DwcTerm.verbatimLatitude.qualifiedName(), "146.921099d");
     coreMap.put(DwcTerm.verbatimLongitude.qualifiedName(), "-31.25d");
+    coreMap.put(DwcTerm.geodeticDatum.qualifiedName(), "WGS84");
 
     ALALocationInterpreter.interpretStateProvince(kvStore).accept(er, lr);
 
@@ -238,7 +295,7 @@ public class AlaLocationInterpreterTest {
     ALALocationInterpreter.interpretStateProvince(kvStore).accept(er, lr);
 
     assertArrayEquals(lr.getIssues().getIssueList().toArray(),
-        new String[]{OccurrenceIssue.ZERO_COORDINATE.name()});
+        new String[]{OccurrenceIssue.GEODETIC_DATUM_ASSUMED_WGS84.name(), ALAOccurrenceIssue.MISSING_GEODETICDATUM.name() ,OccurrenceIssue.ZERO_COORDINATE.name()});
 
 
   }

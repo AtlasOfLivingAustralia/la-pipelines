@@ -1,6 +1,7 @@
 package au.org.ala.pipelines.parser;
 
 import au.org.ala.pipelines.vocabulary.ALAOccurrenceIssue;
+import com.google.common.base.Strings;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.gbif.api.vocabulary.OccurrenceIssue;
@@ -15,6 +16,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Function;
+import org.gbif.pipelines.parsers.parsers.location.parser.Wgs84Projection;
+import org.spark_project.jetty.util.ArrayUtil;
 
 import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
 
@@ -57,6 +60,9 @@ public class CoordinatesParser {
    * DwcTerm#verbatimLatitude} and {@link DwcTerm#verbatimLongitude} <li>{@link
    * DwcTerm#verbatimCoordinates} </ol>
    *
+   * Coordinates will try to reproject WGS84.
+   * Always return coordinates with success or fail status
+   *
    * @param extendedRecord {@link ExtendedRecord} with the fields to parse.
    * @return {@link ParsedField<LatLng>} for the coordinates parsed.
    */
@@ -66,7 +72,22 @@ public class CoordinatesParser {
       ParsedField<LatLng> result = parsingFunction.apply(extendedRecord);
       if (result.isSuccessful()) {
         // return the first successful result
-        return result;
+        // Try to reproject, always returns lat/lng
+        String geodeticDatum = extractValue(extendedRecord, DwcTerm.geodeticDatum);
+        if (Strings.isNullOrEmpty(geodeticDatum))
+          result.getIssues().add(ALAOccurrenceIssue.MISSING_GEODETICDATUM.name());
+
+        ParsedField<LatLng> projectedLatLng =
+            Wgs84Projection.reproject(
+                result.getResult().getLatitude(),
+                result.getResult().getLongitude(),
+                geodeticDatum
+                );
+
+        //Convert failure to success status with valid lat/lng
+        //Add existing issues.
+        projectedLatLng.getIssues().addAll(result.getIssues());
+        return ParsedField.success(projectedLatLng.getResult(),projectedLatLng.getIssues());
       }
       issues.addAll(result.getIssues());
     }
