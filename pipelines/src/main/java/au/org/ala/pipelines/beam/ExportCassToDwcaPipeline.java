@@ -1,9 +1,7 @@
 package au.org.ala.pipelines.beam;
 
 import au.com.bytecode.opencsv.CSVReader;
-import au.org.ala.pipelines.common.ALARecordTypes;
 import au.org.ala.pipelines.model.CassandraOccurrence;
-import au.org.ala.pipelines.model.CassandraQid;
 import au.org.ala.pipelines.options.ALAExportPipelineOptions;
 import com.google.common.base.Joiner;
 import lombok.AccessLevel;
@@ -14,32 +12,20 @@ import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.coders.SerializableCoder;
 import org.apache.beam.sdk.coders.StringUtf8Coder;
-import org.apache.beam.sdk.io.AvroIO;
-import org.apache.beam.sdk.io.Compression;
 import org.apache.beam.sdk.io.FileIO;
-import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.cassandra.CassandraIO;
-import org.apache.beam.sdk.metrics.Counter;
-import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.TypeDescriptors;
-import org.apache.hadoop.hdfs.tools.CacheAdmin;
-import org.gbif.pipelines.common.PipelinesVariables;
-import org.gbif.pipelines.ingest.options.BasePipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.io.avro.ALAUUIDRecord;
 
-import javax.xml.soap.Text;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.Serializable;
 import java.io.StringReader;
 import java.nio.channels.Channels;
 import java.nio.channels.WritableByteChannel;
 import java.util.Arrays;
-import java.util.List;
 
 import static org.apache.beam.sdk.io.FileIO.Write.defaultNaming;
 
@@ -100,11 +86,11 @@ public class ExportCassToDwcaPipeline {
          records.apply(
                 FileIO.<String, CassandraOccurrence>writeDynamic()
                         .by(CassandraOccurrence::getDataResourceUid)
-                        .withCompression(Compression.ZIP)
-                        .via(occ -> new CSVSink(occ))
+//                        .withCompression(Compression.ZIP)
+                        .via(new CSVSink()).withDestinationCoder(StringUtf8Coder.of())
+//                                .via(Contextful.fn(occ -> new CSVSink(occ)))
                         .to(options.getExportFolder())
-                        .withNaming(dr -> defaultNaming(dr+"", ".csv")))
-                        .withNumShards(1);
+                        .withNaming(dr -> defaultNaming(dr+"", ".csv")));
 
         PipelineResult result = p.run();
         result.waitUntilFinish();
@@ -114,8 +100,11 @@ public class ExportCassToDwcaPipeline {
         private String header;
         private PrintWriter writer;
 
+        public CSVSink() {
+        }
+
         public CSVSink(CassandraOccurrence occurrence) {
-            this.header = Joiner.on(",").join(occurrence.getFieldNames());
+            this.header = Joiner.on(",").join(occurrence.fieldNames());
         }
 
         public void open(WritableByteChannel channel) throws IOException {

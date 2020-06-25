@@ -4194,7 +4194,7 @@ public class CassandraOccurrence implements Serializable {
         this.zone = zone;
     }
 
-    public List<String> getFieldNames() {
+    public List<String> fieldNames() {
         return Arrays.asList("acceptedNameUsage",
                 "acceptedNameUsageID",
                 "accessRights",
@@ -4533,5 +4533,8 @@ public class CassandraOccurrence implements Serializable {
         rec.put("year", this.getYear());
         return rec;
 
+    }
+    public CassandraOccurrence returnItself(){
+        return this;
     }
 }
