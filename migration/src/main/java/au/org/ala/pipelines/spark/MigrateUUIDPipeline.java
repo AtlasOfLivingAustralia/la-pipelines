@@ -37,13 +37,13 @@ public class MigrateUUIDPipeline implements Serializable {
     @Parameter
     private List<String> parameters = new ArrayList<>();
 
-    @Parameter(names = "--inputPath", description = "Comma-separated list of group names to be run")
+    @Parameter(names = "--inputPath", description = "The input path to a CSV export from occ_uuid in cassandra e.g /data/occ_uuid.csv or hdfs://localhost:8020/occ_uuid.csv")
     private String inputPath;
 
-    @Parameter(names = "--targetPath", description = "Comma-separated list of group names to be run")
+    @Parameter(names = "--targetPath", description = "The output path e.g /data or hdfs://localhost:8020")
     private String targetPath;
 
-    @Parameter(names = "--hdfsSiteConfig", description = "Debug mode")
+    @Parameter(names = "--hdfsSiteConfig", description = "The absolute path to a hdfs-site.xml with default.FS configuration")
     private String hdfsSiteConfig;
 
     public static void main(String[] args) throws Exception {

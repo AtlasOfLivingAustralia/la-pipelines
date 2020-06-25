@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+
+source set-env.sh
+
 /data/spark/bin/spark-submit \
 --name "Migrate UUIDs" \
 --conf spark.default.parallelism=192 \
@@ -7,9 +10,9 @@
 --executor-memory 7G \
 --driver-memory 1G \
 --class au.org.ala.pipelines.spark.MigrateUUIDPipeline \
---master spark://aws-spark-quoll-1.ala:7077 \
+--master $SPARK_MASTER \
 --driver-java-options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
-/efs-mount-point/migration.jar \
---inputPath=hdfs://aws-spark-quoll-1.ala:9000/migration/occ_uuid.csv \
---targetPath=hdfs://aws-spark-quoll-1.ala:9000/pipelines-data \
---hdfsSiteConfig=/efs-mount-point/hdfs-site.xml
+$MIGRATION_JAR \
+--inputPath=$DATA_PATH/migration/occ_uuid.csv \
+--targetPath=$DATA_PATH/pipelines-data \
+--hdfsSiteConfig=$HDFS_CONF

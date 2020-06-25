@@ -409,6 +409,12 @@
       <groupId>org.gbif.occurrence</groupId>
       <artifactId>occurrence-hdfs-table</artifactId>
       <version>${gbif-occurrence.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.beust</groupId>
+          <artifactId>jcommander</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <!-- GBIF -->
@@ -806,6 +812,12 @@
       <groupId>net.jpountz.lz4</groupId>
       <artifactId>lz4</artifactId>
       <version>${lz4.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.beust</groupId>
+      <artifactId>jcommander</artifactId>
+      <version>1.78</version>
     </dependency>
 
     <!-- Used for indexing locks -->

@@ -41,23 +41,6 @@ public class FileSystemFactory {
         }
         localFs = FileSystem.get(getHdfsConfiguration(hdfsSiteConfig));
     }
-//
-//    @SneakyThrows
-//    private FileSystemFactory(String hdfsSiteConfig, String coreSiteConfig, String hdfsPrefix) {
-//        if (!Strings.isNullOrEmpty(hdfsSiteConfig)) {
-//
-//            Configuration configuration = getHdfsConfiguration(hdfsSiteConfig, coreSiteConfig);
-//            String hdfsPrefixToUse = configuration.get("fs.default.name");
-//            if (hdfsPrefixToUse == null){
-//                hdfsPrefixToUse = configuration.get("fs.defaultFS");
-//            }
-//
-//            hdfsFs = FileSystem.get(URI.create(hdfsPrefixToUse), configuration);
-//        } else {
-//            hdfsFs = null;
-//        }
-//        localFs = FileSystem.get(getHdfsConfiguration(hdfsSiteConfig, coreSiteConfig));
-//    }
 
     public static FileSystemFactory getInstance(String hdfsSiteConfig, String hdfsPrefix) {
         if (instance == null) {
@@ -123,18 +106,6 @@ public class FileSystemFactory {
         } else {
             log.info("hdfs-site.xml not provided");
         }
-
-//        if (!Strings.isNullOrEmpty(coreSiteConfig)) {
-//            File coreSite = new File(coreSiteConfig);
-//            if (coreSite.exists() && coreSite.isFile()) {
-//                log.info("using core-site.xml");
-//                config.addResource(coreSite.toURI().toURL());
-//            } else {
-//                log.warn("core-site.xml does not exist");
-//            }
-//        } else {
-//            log.info("core-site.xml not provided");
-//        }
         return config;
     }
 }

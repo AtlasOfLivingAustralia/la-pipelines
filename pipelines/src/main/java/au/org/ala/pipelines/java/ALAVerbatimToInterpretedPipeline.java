@@ -21,6 +21,7 @@ import org.gbif.pipelines.ingest.java.transforms.UniqueGbifIdTransform;
 import org.gbif.pipelines.ingest.java.utils.PropertiesFactory;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.ingest.utils.FileSystemFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.*;
@@ -271,7 +272,9 @@ public class ALAVerbatimToInterpretedPipeline {
         UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, id + AVRO_EXTENSION);
         String baseName = useInvalidName ? transform.getBaseInvalidName() : transform.getBaseName();
         Path path = new Path(pathFn.apply(baseName));
-        FileSystem fs = createParentDirectories(path, options.getHdfsSiteConfig());
+        FileSystem fs = FileSystemFactory.getInstance(options.getHdfsSiteConfig()).getFs(path.toString());
+        fs.mkdirs(path.getParent());
+
         return SyncDataFileWriterBuilder.builder()
                 .schema(schema)
                 .codec(options.getAvroCompressionType())
