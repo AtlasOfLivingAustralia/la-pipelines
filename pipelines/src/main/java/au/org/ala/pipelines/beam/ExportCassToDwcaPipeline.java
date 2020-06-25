@@ -101,6 +101,8 @@ public class ExportCassToDwcaPipeline {
         private PrintWriter writer;
 
         public CSVSink() {
+            this.header = Joiner.on(",").join(CassandraOccurrence.fieldNames());
+
         }
 
         public CSVSink(CassandraOccurrence occurrence) {
