@@ -95,6 +95,7 @@ public class ALAInterpretedToSolrIndexPipeline {
 
     public static void run(String[] args) {
         ALASolrPipelineOptions options = PipelinesOptionsFactory.create(ALASolrPipelineOptions.class, args);
+        PipelinesOptionsFactory.registerHdfs(options);
         run(options);
     }
 
