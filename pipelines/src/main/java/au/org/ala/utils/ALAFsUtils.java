@@ -129,6 +129,18 @@ public class ALAFsUtils {
     }
 
     /**
+     * Returns true if the supplied path exists.
+     * @param fs
+     * @param directoryPath
+     * @return
+     * @throws IOException
+     */
+    public static boolean createDirectory(FileSystem fs, String directoryPath) throws IOException {
+        Path path = new Path(directoryPath);
+        return fs.mkdirs(new Path(directoryPath));
+    }
+
+    /**
      * Retrieve a list of files in the supplied path.
      *
      * @param fs

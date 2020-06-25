@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+source set-env.sh
+
 if [ $# -eq 0 ]
   then
     echo "Please supply a data resource UID"
@@ -10,27 +12,29 @@ echo $(date)
 SECONDS=0
 
 /data/spark/bin/spark-submit \
+--name "SOLR indexing for $1" \
 --conf spark.default.parallelism=192 \
---conf spark.yarn.submit.waitAppCompletion=false \
 --num-executors 24 \
 --executor-cores 8 \
 --executor-memory 7G \
 --driver-memory 1G \
 --class au.org.ala.pipelines.beam.ALAInterpretedToSolrIndexPipeline  \
---master spark://172.30.2.127:7077 \
+--master $SPARK_MASTER \
 --driver-java-options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
-/efs-mount-point/pipelines.jar \
+$PIPELINES_JAR \
 --appName="SOLR indexing for $1" \
 --datasetId=$1 \
 --attempt=1 \
 --runner=SparkRunner \
---inputPath=/data/pipelines-data \
---targetPath=/data/pipelines-data \
+--inputPath=$HDFS_PATH/$DATA_DIR \
+--targetPath=$HDFS_PATH/$DATA_DIR \
+--coreSiteConfig=$HDFS_CONF \
+--hdfsSiteConfig=$HDFS_CONF \
 --metaFileName=indexing-metrics.yml \
---properties=pipelines.properties \
+--properties=$HDFS_PATH/pipelines.properties \
 --includeSampling=true \
---zkHost=aws-quoll-zoo-1.ala:2181,aws-quoll-zoo-2.ala:2181,aws-quoll-zoo-3.ala:2181,aws-quoll-zoo-4.ala:2181,aws-quoll-zoo-5.ala:2181 \
---solrCollection=biocache
+--zkHost=$SOLR_ZK_HOST \
+--solrCollection=$SOLR_COLLECTION
 
 echo $(date)
 duration=$SECONDS

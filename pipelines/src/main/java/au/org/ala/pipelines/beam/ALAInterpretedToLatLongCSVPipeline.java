@@ -1,6 +1,7 @@
 package au.org.ala.pipelines.beam;
 
 import au.org.ala.pipelines.transforms.ALACSVDocumentTransform;
+import au.org.ala.utils.ALAFsUtils;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,8 +16,10 @@ import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.commons.io.FileUtils;
+import org.apache.hadoop.fs.FileSystem;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.ingest.utils.FileSystemFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.LocationRecord;
@@ -74,8 +77,10 @@ public class ALAInterpretedToLatLongCSVPipeline {
 
         String outputPath = FsUtils.buildDatasetAttemptPath(options, "latlng", true);
 
-        log.info("Output path = " + outputPath);
-        FileUtils.forceMkdir(new File(outputPath));
+        //delete previous runs
+        FsUtils.deleteIfExist(options.getHdfsSiteConfig(),  outputPath);
+        FileSystem fs = FileSystemFactory.getInstance(options.getHdfsSiteConfig()).getFs("/");
+        ALAFsUtils.createDirectory(fs, outputPath);
 
         csvCollection
                 .apply(Distinct.<String>create())

@@ -14,8 +14,8 @@ java -Xmx8g -Xmx8g -XX:+UseG1GC  -cp $PIPELINES_JAR au.org.ala.pipelines.beam.AL
  --datasetId=$1\
  --attempt=1 \
  --runner=SparkRunner \
- --inputPath=$HDFS_PATH/pipelines-data \
- --targetPath=$HDFS_PATH/pipelines-data \
+ --inputPath=$HDFS_PATH/$DATA_DIR \
+ --targetPath=$HDFS_PATH/$DATA_DIR \
  --coreSiteConfig=$HDFS_CONF \
  --hdfsSiteConfig=$HDFS_CONF \
  --metaFileName=indexing-metrics.yml \

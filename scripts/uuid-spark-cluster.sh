@@ -1,20 +1,10 @@
 #!/usr/bin/env bash
 
+source set-env.sh
+
 if [ $# -eq 0 ]
   then
     echo "Please supply a data resource UID"
-    exit 1
-fi
-
-if [[ !  -d "/data/pipelines-data" ]]
-then
-    echo "/data/pipelines-data does not exists on your filesystem."
-    exit 1
-fi
-
-if [[ !  -f "/data/pipelines-data/$1/1/verbatim.avro" ]]
-then
-    echo "/data/pipelines-data/$1/1/verbatim.avro does not exists on your filesystem. Have you ran ingest ?"
     exit 1
 fi
 
@@ -28,18 +18,20 @@ SECONDS=0
 --executor-memory 7G \
 --driver-memory 1G \
 --class au.org.ala.pipelines.beam.ALAUUIDMintingPipeline \
---master spark://172.30.2.127:7077 \
+--master $SPARK_MASTER \
 --driver-java-options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
-/efs-mount-point/pipelines.jar \
+$PIPELINES_JAR \
 --appName="UUID minting for $1" \
 --datasetId=$1 \
 --attempt=1 \
 --interpretationTypes=ALL \
 --runner=SparkRunner \
---targetPath=/data/pipelines-data \
---inputPath=/data/pipelines-data/$1/1/verbatim.avro \
+--inputPath=$HDFS_PATH/$DATA_DIR \
+--targetPath=$HDFS_PATH/$DATA_DIR \
+--coreSiteConfig=$HDFS_CONF \
+--hdfsSiteConfig=$HDFS_CONF \
 --metaFileName=uuid-metrics.yml \
---properties=/efs-mount-point/pipelines.properties \
+--properties=$HDFS_PATH/pipelines.properties \
 --useExtendedRecordId=true \
 --skipRegisrtyCalls=true
 

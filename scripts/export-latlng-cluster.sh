@@ -7,8 +7,6 @@ if [ $# -eq 0 ]
     exit 1
 fi
 
-dwca_dir="/data/pipelines-data/$1"
-
 /data/spark/bin/spark-submit \
 --name "Export $1" \
 --num-executors 8 \
@@ -16,12 +14,14 @@ dwca_dir="/data/pipelines-data/$1"
 --executor-memory 16G \
 --driver-memory 4G \
 --class au.org.ala.pipelines.beam.ALAInterpretedToLatLongCSVPipeline  \
---master spark://aws-spark-quoll-1.ala:7077 \
+--master $SPARK_MASTER \
 --driver-java-options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
-/efs-mount-point/pipelines.jar \
+$PIPELINES_JAR \
 --appName="Lat Long export for $1" \
 --datasetId=$1 \
 --attempt=1 \
 --runner=SparkRunner \
---inputPath=/data/pipelines-data \
---targetPath=/data/pipelines-data
+--inputPath=$HDFS_PATH/$DATA_DIR \
+--targetPath=$HDFS_PATH/$DATA_DIR \
+--coreSiteConfig=$HDFS_CONF \
+--hdfsSiteConfig=$HDFS_CONF

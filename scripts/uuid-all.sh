@@ -6,17 +6,20 @@ java -cp $PIPELINES_JAR au.org.ala.utils.DumpDatasetSize \
 --inputPath=/$DATA_DIR/ \
 --targetPath=/tmp/dataset-counts.csv
 
+################################################################
+# Step 1: Set UUIDs
+################################################################
+
 while IFS=, read -r datasetID recordCount
 do
     echo "Dataset = $datasetID and count = $recordCount"
     if [ "$recordCount" -gt "50000" ]; then
       if [ "$USE_CLUSTER" == "TRUE" ]; then
-        ./interpret-spark-cluster.sh $datasetID
+        ./uuid-spark-cluster.sh $datasetID
       else
-        ./interpret-spark-embedded.sh $datasetID
+        ./uuid-spark-embedded.sh $datasetID
       fi
     else
-      ./interpret-java.sh $datasetID
+      ./uuid-spark-embedded.sh $datasetID
     fi
 done < /tmp/dataset-counts.csv
-

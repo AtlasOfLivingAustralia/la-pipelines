@@ -94,7 +94,7 @@ public class LayerCrawler {
 
             //check the lat lng export directory has been created
             String latLngExportPath = baseDir +  "/" + dataSetID + "/1/latlng";
-            if (! ALAFsUtils.exists(fs, latLngExportPath)){
+            if (!ALAFsUtils.exists(fs, latLngExportPath)){
                 log.error("LatLng export unavailable. Has LatLng export pipeline been ran ? Not available at path {}", latLngExportPath);
                 throw new RuntimeException("LatLng export unavailable. Has LatLng export pipeline been ran ? Not available:" + latLngExportPath);
             }

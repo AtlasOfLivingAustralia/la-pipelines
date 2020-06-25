@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 source set-env.sh
 
 echo "UUID pipeline - Preserve or add UUIDs."

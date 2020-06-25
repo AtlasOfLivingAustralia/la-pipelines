@@ -7,8 +7,6 @@ if [ $# -eq 0 ]
     exit 1
 fi
 
-dwca_dir="/data/pipelines-data/$1"
-
 java -cp $PIPELINES_JAR au.org.ala.pipelines.beam.ALAInterpretedToLatLongCSVPipeline \
  --appName="Lat Long export for $1" \
  --datasetId=$1 \

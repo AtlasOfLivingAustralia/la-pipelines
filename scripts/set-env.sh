@@ -14,6 +14,10 @@ export SPARK_TMP="/data/spark-tmp"
 #export SOLR_ZK_HOST="localhost:9983"
 export SOLR_ZK_HOST="localhost:9983"
 
+export SOLR_COLLECTION="biocache"
+
 export SPARK_MASTER="spark://aws-spark-quoll-1.ala:7077"
 
 export DATA_DIR="pipelines-data"
+
+export USE_CLUSTER="FALSE"
