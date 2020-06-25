@@ -4,8 +4,11 @@ import com.datastax.driver.mapping.annotations.Column;
 import com.datastax.driver.mapping.annotations.Field;
 import com.datastax.driver.mapping.annotations.PartitionKey;
 import com.datastax.driver.mapping.annotations.Table;
+import org.apache.beam.sdk.values.KV;
 
 import java.io.Serializable;
+import java.util.*;
+
 @Table(keyspace = "occ", name = "occ",
         readConsistency = "ONE")
 public class CassandraOccurrence implements Serializable {
@@ -15,7 +18,7 @@ public class CassandraOccurrence implements Serializable {
     @Column(name = "IdentificationQualifierProcessor_qa", caseSensitive = true)
     private String identificationQualifierProcessor_qa;
     @Column(name = "_class", caseSensitive = true)
-    private String _class;
+    private String _class = "";
     @Column(name = "_qa", caseSensitive = true)
     private String _qa;
     @Column(name = "abcdIdentificationQualifier", caseSensitive = true)
@@ -79,7 +82,7 @@ public class CassandraOccurrence implements Serializable {
     @Column(name = "cl_p", caseSensitive = true)
     private String cl_p;
     @Column(name = "class", caseSensitive = true)
-    private String classField;
+    private String classField = "";
     @Column(name = "classID", caseSensitive = true)
     private String classID;
     @Column(name = "classID_p", caseSensitive = true)
@@ -89,7 +92,7 @@ public class CassandraOccurrence implements Serializable {
     @Column(name = "class_qa", caseSensitive = true)
     private String class_qa;
     @Column(name = "classs", caseSensitive = true)
-    private String classs;
+    private String classs = "";
     @Column(name = "classs_p", caseSensitive = true)
     private String classs_p;
     @Column(name = "collectionCode", caseSensitive = true)
@@ -4189,5 +4192,346 @@ public class CassandraOccurrence implements Serializable {
 
     public void setZone(String zone) {
         this.zone = zone;
+    }
+
+    public List<String> getFieldNames() {
+        return Arrays.asList("acceptedNameUsage",
+                "acceptedNameUsageID",
+                "accessRights",
+                "associatedMedia",
+                "associatedOccurrences",
+                "associatedReferences",
+                "associatedSequences",
+                "associatedTaxa",
+                "basisOfRecord",
+                "behavior",
+                "bibliographicCitation",
+                "catalogNumber",
+                "class",
+                "collectionCode",
+                "collectionID",
+                "continent",
+                "coordinatePrecision",
+                "coordinateUncertaintyInMeters",
+                "country",
+                "countryCode",
+                "county",
+                "dataGeneralizations",
+                "datasetID",
+                "datasetName",
+                "dateIdentified",
+                "day",
+                "decimalLatitude",
+                "decimalLongitude",
+                "disposition",
+                "dynamicProperties",
+                "endDayOfYear",
+                "establishmentMeans",
+                "eventAttributes",
+                "eventDate",
+                "eventID",
+                "eventRemarks",
+                "eventTime",
+                "family",
+                "fieldNotes",
+                "fieldNumber",
+                "footprintSpatialFit",
+                "footprintSRS",
+                "footprintWKT",
+                "genus",
+                "geodeticDatum",
+                "georeferencedBy",
+                "georeferencedDate",
+                "georeferenceProtocol",
+                "georeferenceRemarks",
+                "georeferenceSources",
+                "georeferenceVerificationStatus",
+                "habitat",
+                "higherClassification",
+                "higherGeography",
+                "higherGeographyID",
+                "identificationID",
+                "identificationQualifier",
+                "identificationReferences",
+                "identificationRemarks",
+                "identificationVerificationStatus",
+                "identifiedBy",
+                "individualCount",
+                "individualID",
+                "informationWithheld",
+                "infraspecificEpithet",
+                "institutionCode",
+                "institutionID",
+                "island",
+                "islandGroup",
+                "kingdom",
+                "language",
+                "license",
+                "lifeStage",
+                "locality",
+                "locationAccordingTo",
+                "locationAttributes",
+                "locationID",
+                "locationRemarks",
+                "maximumDepthInMeters",
+                "maximumDistanceAboveSurfaceInMeters",
+                "maximumElevationInMeters",
+                "measurementAccuracy",
+                "measurementDeterminedBy",
+                "measurementDeterminedDate",
+                "measurementID",
+                "measurementMethod",
+                "measurementRemarks",
+                "measurementType",
+                "measurementUnit",
+                "measurementValue",
+                "minimumDepthInMeters",
+                "minimumDistanceAboveSurfaceInMeters",
+                "minimumElevationInMeters",
+                "modified",
+                "month",
+                "municipality",
+                "nameAccordingTo",
+                "nameAccordingToID",
+                "namePublishedIn",
+                "namePublishedInID",
+                "namePublishedInYear",
+                "nomenclaturalCode",
+                "nomenclaturalStatus",
+                "occurrenceAttributes",
+                "occurrenceDetails",
+                "occurrenceID",
+                "occurrenceRemarks",
+                "occurrenceStatus",
+                "order",
+                "organismQuantity",
+                "organismQuantityType",
+                "originalNameUsage",
+                "originalNameUsageID",
+                "otherCatalogNumbers",
+                "ownerInstitutionCode",
+                "parentNameUsage",
+                "parentNameUsageID",
+                "phylum",
+                "pointRadiusSpatialFit",
+                "preparations",
+                "previousIdentifications",
+                "recordedBy",
+                "recordNumber",
+                "relatedResourceID",
+                "relationshipAccordingTo",
+                "relationshipEstablishedDate",
+                "relationshipOfResource",
+                "relationshipRemarks",
+                "reproductiveCondition",
+                "resourceID",
+                "resourceRelationshipID",
+                "rightsholder",
+                "samplingEffort",
+                "samplingProtocol",
+                "scientificName",
+                "scientificNameAuthorship",
+                "scientificNameID",
+                "sex",
+                "specificEpithet",
+                "startDayOfYear",
+                "stateProvince",
+                "subgenus",
+                "taxonConceptID",
+                "taxonID",
+                "taxonomicStatus",
+                "taxonRank",
+                "taxonRemarks",
+                "type",
+                "typeStatus",
+                "verbatimCoordinates",
+                "verbatimCoordinateSystem",
+                "verbatimDepth",
+                "verbatimElevation",
+                "verbatimEventDate",
+                "verbatimLatitude",
+                "verbatimLocality",
+                "verbatimLongitude",
+                "verbatimSRS",
+                "verbatimTaxonRank",
+                "vernacularName",
+                "waterBody",
+                "year");
+    }
+
+    public  Map<String, String> mapDwca() {
+        Map<String, String> rec = new HashMap<>();
+        rec.put("acceptedNameUsage", this.getAcceptedNameUsage());
+        rec.put("acceptedNameUsageID", this.getAcceptedNameUsageID());
+        rec.put("accessRights", this.getAccessRights());
+        rec.put("associatedMedia", this.getAssociatedMedia());
+        rec.put("associatedOccurrences", this.getAssociatedOccurrences());
+        rec.put("associatedReferences", this.getAssociatedReferences());
+        rec.put("associatedSequences", this.getAssociatedSequences());
+        rec.put("associatedTaxa", this.getAssociatedTaxa());
+        rec.put("basisOfRecord", this.getBasisOfRecord());
+        rec.put("behavior", this.getBehavior());
+        rec.put("bibliographicCitation", this.getBibliographicCitation());
+        rec.put("catalogNumber", this.getCatalogNumber());
+        if (this.getClassField().isEmpty()) {
+            if (this.getClasss().isEmpty()) {
+                rec.put("class", this.get_class());
+            } else {
+                rec.put("class", this.getClasss());
+            }
+        } else {
+            rec.put("class", this.getClassField());
+        }
+        rec.put("collectionCode", this.getCollectionCode());
+        rec.put("collectionID", this.getCollectionID());
+        rec.put("continent", this.getContinent());
+        rec.put("coordinatePrecision", this.getCoordinatePrecision());
+        rec.put("coordinateUncertaintyInMeters", this.getCoordinateUncertaintyInMeters());
+        rec.put("country", this.getCountry());
+        rec.put("countryCode", this.getCountryCode());
+        rec.put("county", this.getCounty());
+        rec.put("dataGeneralizations", this.getDataGeneralizations());
+        rec.put("datasetID", this.getDatasetID());
+        rec.put("datasetName", this.getDatasetName());
+        rec.put("dateIdentified", this.getDateIdentified());
+        rec.put("day", this.getDay());
+        rec.put("decimalLatitude", this.getDecimalLatitude());
+        rec.put("decimalLongitude", this.getDecimalLongitude());
+        rec.put("disposition", this.getDisposition());
+        rec.put("dynamicProperties", this.getDynamicProperties());
+        rec.put("endDayOfYear", this.getEndDayOfYear());
+        rec.put("establishmentMeans", this.getEstablishmentMeans());
+        rec.put("eventAttributes", this.getEventAttributes());
+        rec.put("eventDate", this.getEventDate());
+        rec.put("eventID", this.getEventID());
+        rec.put("eventRemarks", this.getEventRemarks());
+        rec.put("eventTime", this.getEventTime());
+        rec.put("family", this.getFamily());
+        rec.put("fieldNotes", this.getFieldNotes());
+        rec.put("fieldNumber", this.getFieldNumber());
+        rec.put("footprintSpatialFit", this.getFootprintSpatialFit());
+        rec.put("footprintSRS", this.getFootprintSRS());
+        rec.put("footprintWKT", this.getFootprintWKT());
+        rec.put("genus", this.getGenus());
+        rec.put("geodeticDatum", this.getGeodeticDatum());
+        rec.put("georeferencedBy", this.getGeoreferencedBy());
+        rec.put("georeferencedDate", this.getGeoreferencedDate());
+        rec.put("georeferenceProtocol", this.getGeoreferenceProtocol());
+        rec.put("georeferenceRemarks", this.getGeoreferenceRemarks());
+        rec.put("georeferenceSources", this.getGeoreferenceSources());
+        rec.put("georeferenceVerificationStatus", this.getGeoreferenceVerificationStatus());
+        rec.put("habitat", this.getHabitat());
+        rec.put("higherClassification", this.getHigherClassification());
+        rec.put("higherGeography", this.getHigherGeography());
+        rec.put("higherGeographyID", this.getHigherGeographyID());
+        rec.put("identificationID", this.getIdentificationID());
+        rec.put("identificationQualifier", this.getIdentificationQualifier());
+        rec.put("identificationReferences", this.getIdentificationReferences());
+        rec.put("identificationRemarks", this.getIdentificationRemarks());
+        rec.put("identificationVerificationStatus", this.getIdentificationVerificationStatus());
+        rec.put("identifiedBy", this.getIdentifiedBy());
+        rec.put("individualCount", this.getIndividualCount());
+        rec.put("individualID", this.getIndividualID());
+        rec.put("informationWithheld", this.getInformationWithheld());
+        rec.put("infraspecificEpithet", this.getInfraspecificEpithet());
+        rec.put("institutionCode", this.getInstitutionCode());
+        rec.put("institutionID", this.getInstitutionID());
+        rec.put("island", this.getIsland());
+        rec.put("islandGroup", this.getIslandGroup());
+        rec.put("kingdom", this.getKingdom());
+        rec.put("language", this.getLanguage());
+        rec.put("license", this.getLicense());
+        rec.put("lifeStage", this.getLifeStage());
+        rec.put("locality", this.getLocality());
+        rec.put("locationAccordingTo", this.getLocationAccordingTo());
+        rec.put("locationAttributes", this.getLocationAttributes());
+        rec.put("locationID", this.getLocationID());
+        rec.put("locationRemarks", this.getLocationRemarks());
+        rec.put("maximumDepthInMeters", this.getMaximumDepthInMeters());
+        rec.put("maximumDistanceAboveSurfaceInMeters", this.getMaximumDistanceAboveSurfaceInMeters());
+        rec.put("maximumElevationInMeters", this.getMaximumElevationInMeters());
+        rec.put("measurementAccuracy", this.getMeasurementAccuracy());
+        rec.put("measurementDeterminedBy", this.getMeasurementDeterminedBy());
+        rec.put("measurementDeterminedDate", this.getMeasurementDeterminedDate());
+        rec.put("measurementID", this.getMeasurementID());
+        rec.put("measurementMethod", this.getMeasurementMethod());
+        rec.put("measurementRemarks", this.getMeasurementRemarks());
+        rec.put("measurementType", this.getMeasurementType());
+        rec.put("measurementUnit", this.getMeasurementUnit());
+        rec.put("measurementValue", this.getMeasurementValue());
+        rec.put("minimumDepthInMeters", this.getMinimumDepthInMeters());
+        rec.put("minimumDistanceAboveSurfaceInMeters", this.getMinimumDistanceAboveSurfaceInMeters());
+        rec.put("minimumElevationInMeters", this.getMinimumElevationInMeters());
+        rec.put("modified", this.getModified());
+        rec.put("month", this.getMonth());
+        rec.put("municipality", this.getMunicipality());
+        rec.put("nameAccordingTo", this.getNameAccordingTo());
+        rec.put("nameAccordingToID", this.getNameAccordingToID());
+        rec.put("namePublishedIn", this.getNamePublishedIn());
+        rec.put("namePublishedInID", this.getNamePublishedInID());
+        rec.put("namePublishedInYear", this.getNamePublishedInYear());
+        rec.put("nomenclaturalCode", this.getNomenclaturalCode());
+        rec.put("nomenclaturalStatus", this.getNomenclaturalStatus());
+        rec.put("occurrenceAttributes", this.getOccurrenceAttributes());
+        rec.put("occurrenceDetails", this.getOccurrenceDetails());
+        rec.put("occurrenceID", this.getOccurrenceID());
+        rec.put("occurrenceRemarks", this.getOccurrenceRemarks());
+        rec.put("occurrenceStatus", this.getOccurrenceStatus());
+        rec.put("order", this.getOrder());
+        rec.put("organismQuantity", this.getOrganismQuantity());
+        rec.put("organismQuantityType", this.getOrganismQuantityType());
+        rec.put("originalNameUsage", this.getOriginalNameUsage());
+        rec.put("originalNameUsageID", this.getOriginalNameUsageID());
+        rec.put("otherCatalogNumbers", this.getOtherCatalogNumbers());
+        rec.put("ownerInstitutionCode", this.getOwnerInstitutionCode());
+        rec.put("parentNameUsage", this.getParentNameUsage());
+        rec.put("parentNameUsageID", this.getParentNameUsageID());
+        rec.put("phylum", this.getPhylum());
+        rec.put("pointRadiusSpatialFit", this.getPointRadiusSpatialFit());
+        rec.put("preparations", this.getPreparations());
+        rec.put("previousIdentifications", this.getPreviousIdentifications());
+        rec.put("recordedBy", this.getRecordedBy());
+        rec.put("recordNumber", this.getRecordNumber());
+        rec.put("relatedResourceID", this.getRelatedResourceID());
+        rec.put("relationshipAccordingTo", this.getRelationshipAccordingTo());
+        rec.put("relationshipEstablishedDate", this.getRelationshipEstablishedDate());
+        rec.put("relationshipOfResource", this.getRelationshipOfResource());
+        rec.put("relationshipRemarks", this.getRelationshipRemarks());
+        rec.put("reproductiveCondition", this.getReproductiveCondition());
+        rec.put("resourceID", this.getResourceID());
+        rec.put("resourceRelationshipID", this.getResourceRelationshipID());
+        rec.put("rightsholder", this.getRightsholder());
+        rec.put("samplingEffort", this.getSamplingEffort());
+        rec.put("samplingProtocol", this.getSamplingProtocol());
+        rec.put("scientificName", this.getScientificName());
+        rec.put("scientificNameAuthorship", this.getScientificNameAuthorship());
+        rec.put("scientificNameID", this.getScientificNameID());
+        rec.put("sex", this.getSex());
+        rec.put("specificEpithet", this.getSpecificEpithet());
+        rec.put("startDayOfYear", this.getStartDayOfYear());
+        rec.put("stateProvince", this.getStateProvince());
+        rec.put("subgenus", this.getSubgenus());
+        rec.put("taxonConceptID", this.getTaxonConceptID());
+        rec.put("taxonID", this.getTaxonID());
+        rec.put("taxonomicStatus", this.getTaxonomicStatus());
+        rec.put("taxonRank", this.getTaxonRank());
+        rec.put("taxonRemarks", this.getTaxonRemarks());
+        rec.put("type", this.getType());
+        rec.put("typeStatus", this.getTypeStatus());
+        rec.put("verbatimCoordinates", this.getVerbatimCoordinates());
+        rec.put("verbatimCoordinateSystem", this.getVerbatimCoordinateSystem());
+        rec.put("verbatimDepth", this.getVerbatimDepth());
+        rec.put("verbatimElevation", this.getVerbatimElevation());
+        rec.put("verbatimEventDate", this.getVerbatimEventDate());
+        rec.put("verbatimLatitude", this.getVerbatimLatitude());
+        rec.put("verbatimLocality", this.getVerbatimLocality());
+        rec.put("verbatimLongitude", this.getVerbatimLongitude());
+        rec.put("verbatimSRS", this.getVerbatimSRS());
+        rec.put("verbatimTaxonRank", this.getVerbatimTaxonRank());
+        rec.put("vernacularName", this.getVernacularName());
+        rec.put("waterBody", this.getWaterBody());
+        rec.put("year", this.getYear());
+        return rec;
+
     }
 }
