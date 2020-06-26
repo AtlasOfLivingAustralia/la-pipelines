@@ -13,6 +13,6 @@ source set-env.sh
 --master $SPARK_MASTER \
 --driver-java-options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
 $MIGRATION_JAR \
---inputPath=$DATA_PATH/migration/occ_uuid.csv \
---targetPath=$DATA_PATH/pipelines-data \
+--inputPath=$FS_PATH/migration/occ_uuid.csv \
+--targetPath=$FS_PATH/$DATA_PATH \
 --hdfsSiteConfig=$HDFS_CONF

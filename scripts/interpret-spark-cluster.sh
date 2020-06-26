@@ -27,10 +27,10 @@ $PIPELINES_JAR \
 --attempt=1 \
 --interpretationTypes=ALL \
 --runner=SparkRunner \
---targetPath=$HDFS_PATH/$DATA_DIR \
---inputPath=$HDFS_PATH/$DATA_DIR/$1/1/verbatim.avro \
+--targetPath=$FS_PATH/$DATA_DIR \
+--inputPath=$FS_PATH/$DATA_DIR/$1/1/verbatim.avro \
 --metaFileName=interpretation-metrics.yml \
---properties=$HDFS_PATH/pipelines.properties \
+--properties=$FS_PATH/pipelines.properties \
 --coreSiteConfig=$HDFS_CONF \
 --hdfsSiteConfig=$HDFS_CONF \
 --useExtendedRecordId=true \

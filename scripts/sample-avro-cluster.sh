@@ -26,8 +26,8 @@ $PIPELINES_JAR \
 --attempt=1 \
 --interpretationTypes=ALL \
 --runner=SparkRunner \
---inputPath=$HDFS_PATH/$DATA_DIR \
---targetPath=$HDFS_PATH/$DATA_DIR \
+--inputPath=$FS_PATH/$DATA_DIR \
+--targetPath=$FS_PATH/$DATA_DIR \
 --metaFileName=interpretation-metrics.yml \
 --properties=/efs-mount-point/pipelines.properties \
 --useExtendedRecordId=true \

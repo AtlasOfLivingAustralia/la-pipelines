@@ -21,7 +21,7 @@ $PIPELINES_JAR \
 --datasetId=$1 \
 --attempt=1 \
 --runner=SparkRunner \
---inputPath=$HDFS_PATH/$DATA_DIR \
---targetPath=$HDFS_PATH/$DATA_DIR \
+--inputPath=$FS_PATH/$DATA_DIR \
+--targetPath=$FS_PATH/$DATA_DIR \
 --coreSiteConfig=$HDFS_CONF \
 --hdfsSiteConfig=$HDFS_CONF

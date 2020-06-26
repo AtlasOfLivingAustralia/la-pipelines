@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 source set-env.sh
 
-#java -cp $PIPELINES_JAR au.org.ala.utils.DumpDatasetSize \
-#--hdfsSiteConfig=$HDFS_CONF \
-#--inputPath=/$DATA_DIR/ \
-#--targetPath=/tmp/dataset-counts.csv
+java -cp $PIPELINES_JAR au.org.ala.utils.DumpDatasetSize \
+--hdfsSiteConfig=$HDFS_CONF \
+--inputPath=/$DATA_DIR/ \
+--targetPath=/tmp/dataset-counts.csv
 
 while IFS=, read -r datasetID recordCount
 do

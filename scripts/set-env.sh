@@ -4,10 +4,10 @@
 export PIPELINES_JAR="$HOME/dev/la-pipelines/pipelines/target/pipelines-1.0-SNAPSHOT-shaded.jar"
 
 #HDFS_CONF=/efs-mount-point/hdfs-site.xml
-export HDFS_CONF="/usr/local/Cellar/hadoop/3.2.1_1/libexec/etc/hadoop/hdfs-site.xml"
+export HDFS_CONF="$HOME/dev/la-pipelines/scripts/hdfs-site.xml"
 
-#HDFS_PATH=hdfs://aws-spark-quoll-1.ala:9000
-export HDFS_PATH="hdfs://localhost:8020"
+#FS_PATH=hdfs://aws-spark-quoll-1.ala:9000
+export FS_PATH="hdfs://localhost:8020"
 
 export SPARK_TMP="/data/spark-tmp"
 

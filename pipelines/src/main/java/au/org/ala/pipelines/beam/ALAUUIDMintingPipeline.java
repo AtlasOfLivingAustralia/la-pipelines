@@ -104,6 +104,10 @@ public class ALAUUIDMintingPipeline {
 
         //construct unique list of darwin core terms
         final List<String> uniqueTerms = collectoryMetadata.getConnectionParameters().getTermsForUniqueKey();
+        if (uniqueTerms == null || uniqueTerms.isEmpty()){
+            throw new RuntimeException("No unique terms specified for dataset: " + options.getDatasetId());
+        }
+
         final List<Term> uniqueDwcTerms = new ArrayList<Term>();
         for (String uniqueTerm : uniqueTerms){
             Optional<DwcTerm> dwcTerm = getDwcTerm(uniqueTerm);
@@ -198,7 +202,7 @@ public class ALAUUIDMintingPipeline {
         }
 
         if (allUniqueValuesAreEmpty){
-            throw new RuntimeException("Unable to load dataset. All supplied unique terms where empty record with ID " + source.getId());
+            throw new RuntimeException("Unable to load dataset " + datasetID + ". All supplied unique terms where empty record with ID " + source.getId());
         }
 
         //add the datasetID

@@ -4,7 +4,7 @@ export PIPELINES_JAR="/efs-mount-point/pipelines-hdfs.jar"
 
 export HDFS_CONF="/efs-mount-point/hdfs-site.xml"
 
-export HDFS_PATH="hdfs://aws-spark-quoll-1.ala:9000"
+export FS_PATH="hdfs://aws-spark-quoll-1.ala:9000"
 
 export SPARK_TMP="/data/spark-tmp"
 

@@ -22,3 +22,5 @@ hdfs dfs -copyFromLocal /data/occ_uuid.csv /migration/occ_uuid.csv
 The pipeline in this module creates a shaded jar that can be copied to the cluster
 and ran using the bash scripts in the [scripts directory](scripts).
 
+After running, the 
+

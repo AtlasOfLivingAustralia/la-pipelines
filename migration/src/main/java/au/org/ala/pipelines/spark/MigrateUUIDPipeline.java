@@ -73,7 +73,6 @@ public class MigrateUUIDPipeline implements Serializable {
         SparkSession spark = SparkSession
                 .builder()
                 .appName("Migration UUIDs")
-                .master("local[*]")
                 .getOrCreate();
 
         System.out.println("Load CSV");
