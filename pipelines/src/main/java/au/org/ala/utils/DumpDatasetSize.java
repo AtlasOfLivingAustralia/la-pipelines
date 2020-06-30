@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import static java.util.Collections.reverseOrder;
 
 @Parameters(separators = "=")
 public class DumpDatasetSize {
@@ -46,7 +47,7 @@ public class DumpDatasetSize {
         FileSystem fs = FileSystemFactory.getInstance(hdfsSiteConfig).getFs("/");
         Map<String, Long> counts = new HashMap<String, Long>();
 
-        FileStatus[] fileStatuses = fs.listStatus(new Path("/pipelines-data/"));
+        FileStatus[] fileStatuses = fs.listStatus(new Path(inputPath));
         for (FileStatus fileStatus: fileStatuses){
             if (fileStatus.isDirectory()) {
                 String datasetID = fileStatus.getPath().toString().substring(fileStatus.getPath().toString().lastIndexOf("/") + 1);
@@ -54,14 +55,16 @@ public class DumpDatasetSize {
                 if (fs.exists(metrics)){
                     //read YAML
                     Yaml yaml = new Yaml();
+                    //the YAML files created by metrics are UTF-16 encoded
                     Map<String, Object> yamlObject = (Map) yaml.load(new InputStreamReader(fs.open(metrics), "UTF-16"));
                     counts.put(datasetID,  Long.parseLong(yamlObject.getOrDefault("archiveToErCountAttempted", 0L).toString()));
                 };
             }
         }
 
+        //order by size descending
         List<Map.Entry<String, Long>> list = new ArrayList<>(counts.entrySet());
-        list.sort(Map.Entry.comparingByValue());
+        list.sort(reverseOrder(Map.Entry.comparingByValue()));
         for (Map.Entry<String, Long> entry : list) {
             fw.write(entry.getKey() + "," + entry.getValue() + "\n");
         }
