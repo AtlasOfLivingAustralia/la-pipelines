@@ -176,18 +176,21 @@ public class ALAVerbatimToInterpretedPipeline {
                 .dataResourceKvStoreSupplier(ALAAttributionKVStoreFactory.getInstanceSupplier(config))
                 .collectionKvStoreSupplier(ALACollectionKVStoreFactory.getInstanceSupplier(config))
                 .create();
+        alaAttributionTransform.setup();
 
         // ALA specific - Taxonomy
         ALATaxonomyTransform alaTaxonomyTransform =
                 ALATaxonomyTransform.builder()
                         .kvStoreSupplier(ALANameMatchKVStoreFactory.getInstanceSupplier(config))
                         .create();
+        alaTaxonomyTransform.setup();
 
         // ALA specific - Location
         LocationTransform locationTransform =
                 LocationTransform.builder()
                         .geocodeKvStoreSupplier(GeocodeKvStoreFactory.getInstanceSupplier(config))
                         .create();
+        locationTransform.setup();
 
         // ALA specific - Default values
         ALADefaultValuesTransform alaDefaultValuesTransform = ALADefaultValuesTransform.builder()
@@ -202,12 +205,12 @@ public class ALAVerbatimToInterpretedPipeline {
                 SyncDataFileWriter<BasicRecord> basicWriter = createWriter(options, BasicRecord.getClassSchema(), basicTransform, id, false);
                 SyncDataFileWriter<TemporalRecord> temporalWriter = createWriter(options, TemporalRecord.getClassSchema(), temporalTransform, id, false);
                 SyncDataFileWriter<MeasurementOrFactRecord> measurementWriter = createWriter(options, MeasurementOrFactRecord.getClassSchema(), measurementTransform, id, false);
-                SyncDataFileWriter<LocationRecord> locationWriter = createWriter(options, LocationRecord.getClassSchema(), locationTransform, id, false);
                 SyncDataFileWriter<MultimediaRecord> multimediaWriter = createWriter(options, MultimediaRecord.getClassSchema(), multimediaTransform, id, false);
                 SyncDataFileWriter<ImageRecord> imageWriter = createWriter(options, ImageRecord.getClassSchema(), imageTransform, id, false);
                 SyncDataFileWriter<AudubonRecord> audubonWriter = createWriter(options, AudubonRecord.getClassSchema(), audubonTransform, id, false);
 
                 //ALA specific
+                SyncDataFileWriter<LocationRecord> locationWriter = createWriter(options, LocationRecord.getClassSchema(), locationTransform, id, false);
                 SyncDataFileWriter<ALATaxonRecord> alaTaxonWriter = createWriter(options, ALATaxonRecord.getClassSchema(), alaTaxonomyTransform, id, false);
                 SyncDataFileWriter<ALAAttributionRecord> alaAttributionWriter = createWriter(options, ALAAttributionRecord.getClassSchema(), alaAttributionTransform, id, false);
         ) {
@@ -242,16 +245,19 @@ public class ALAVerbatimToInterpretedPipeline {
             // Create interpretation function
             log.info("Create interpretation function");
             Consumer<ExtendedRecord> interpretAllFn = er -> {
+
                 verbatimWriter.append(er);
                 temporalTransform.processElement(er).ifPresent(temporalWriter::append);
                 multimediaTransform.processElement(er).ifPresent(multimediaWriter::append);
                 imageTransform.processElement(er).ifPresent(imageWriter::append);
                 audubonTransform.processElement(er).ifPresent(audubonWriter::append);
                 measurementTransform.processElement(er).ifPresent(measurementWriter::append);
-                locationTransform.processElement(er, mdr).ifPresent(locationWriter::append);
+
                 //ALA specific
+                locationTransform.processElement(er, mdr).ifPresent(locationWriter::append);
                 alaTaxonomyTransform.processElement(er).ifPresent(alaTaxonWriter::append);
                 alaAttributionTransform.processElement(er, mdr).ifPresent(alaAttributionWriter::append);
+
             };
 
             // Run async writing for BasicRecords

@@ -206,6 +206,9 @@ public class ALAFsUtils {
                 mapper.configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
                 mapper.findAndRegisterModules();
                 ALAPipelinesConfig config =  mapper.readValue(br, ALAPipelinesConfig.class);
+                if(config.getGbifConfig() == null){
+                    config.setGbifConfig(new PipelinesConfig());
+                }
                 return config;
             }
         }

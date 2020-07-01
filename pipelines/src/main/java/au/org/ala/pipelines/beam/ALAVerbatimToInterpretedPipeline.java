@@ -15,7 +15,6 @@ import au.org.ala.kvs.cache.GeocodeKvStoreFactory;
 import au.org.ala.pipelines.transforms.ALADefaultValuesTransform;
 import au.org.ala.utils.ALAFsUtils;
 import org.gbif.api.model.pipelines.StepType;
-import org.gbif.pipelines.ingest.java.utils.PipelinesConfigFactory;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
@@ -23,7 +22,6 @@ import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.parsers.config.model.PipelinesConfig;
 import org.gbif.pipelines.transforms.metadata.DefaultValuesTransform;
 import org.gbif.pipelines.transforms.common.UniqueIdTransform;
 import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
@@ -115,7 +113,6 @@ public class ALAVerbatimToInterpretedPipeline {
 
     FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, types);
 
-    Properties properties = ALAFsUtils.readPropertiesFile(options.getHdfsSiteConfig(), options.getProperties());
     ALAPipelinesConfig config = ALAPipelinesConfigFactory.getInstance(options.getHdfsSiteConfig(), options.getProperties()).get();
 
     MDC.put("datasetId", datasetId);

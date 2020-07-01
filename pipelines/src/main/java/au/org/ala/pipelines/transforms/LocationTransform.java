@@ -12,7 +12,6 @@ import org.gbif.pipelines.core.interpreters.core.LocationInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.SerializableSupplier;
 import org.gbif.pipelines.transforms.Transform;
 import org.gbif.rest.client.geocode.GeocodeResponse;
