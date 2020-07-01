@@ -6,9 +6,6 @@ rm config.zip
 zip config.zip *
 
 echo 'Deleting existing collection'
-curl -X GET "http://localhost:8985/solr/admin/collections?action=DELETE&name=avro-test"
-
-echo 'Deleting existing collection'
 curl -X GET "http://localhost:8985/solr/admin/collections?action=DELETE&name=biocache"
 
 echo 'Deleting existing configset'

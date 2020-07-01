@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
@@ -164,19 +162,19 @@
 
     <!-- GBIF libraries -->
     <gbif-parsers.version>0.46</gbif-parsers.version>
-    <gbif-pipelines.version>2.4.8-SNAPSHOT</gbif-pipelines.version>
-    <dwca-io.version>2.6</dwca-io.version>
-    <gbif-api.version>0.114-SNAPSHOT</gbif-api.version>
+    <gbif-pipelines.version>2.5.2-SNAPSHOT</gbif-pipelines.version>
+    <dwca-io.version>2.8</dwca-io.version>
+    <gbif-api.version>0.98</gbif-api.version>
     <gbif-common.version>0.47</gbif-common.version>
     <dwc-api.version>1.27</dwc-api.version>
-    <kvs.version>1.7-SNAPSHOT</kvs.version>
+    <kvs.version>1.6</kvs.version>
     <hbase-utils.version>0.12</hbase-utils.version>
     <gbif-wrangler.version>0.3</gbif-wrangler.version>
     <gbif-occurrence.version>0.106</gbif-occurrence.version>
 
     <!-- Common libraries -->
     <avro.version>1.8.2</avro.version>
-    <apache.beam.version>2.17.0</apache.beam.version>
+    <apache.beam.version>2.16.0</apache.beam.version>
     <hadoop.version>2.6.0-cdh5.16.2</hadoop.version>
     <hadoop-core.version>2.6.0-mr1-cdh5.16.2</hadoop-core.version>
     <hbase.version>1.2.0-cdh5.16.2</hbase.version>
@@ -259,24 +257,17 @@
   <scm>
     <connection>scm:git:git@github.com:AtlasOfLivingAustralia/la-pipelines.git</connection>
     <url>https://github.com/AtlasOfLivingAustralia/la-pipelines</url>
-    <developerConnection>scm:git:git@github.com:AtlasOfLivingAustralia/la-pipelines.git
-    </developerConnection>
+    <developerConnection>scm:git:git@github.com:AtlasOfLivingAustralia/la-pipelines.git</developerConnection>
     <tag>HEAD</tag>
   </scm>
 
   <dependencies>
-    <!-- https://mvnrepository.com/artifact/au.com.bytecode/opencsv -->
-    <dependency>
-      <groupId>au.com.bytecode</groupId>
-      <artifactId>opencsv</artifactId>
-      <version>2.4</version>
-    </dependency>
 
     <!-- ALA specific -->
     <dependency>
       <groupId>org.jetbrains.kotlin</groupId>
       <artifactId>kotlin-stdlib</artifactId>
-      <version>[1.3.61,)</version>
+      <version>[1.3.61,) </version>
       <scope>runtime</scope>
     </dependency>
     <dependency>
@@ -387,10 +378,10 @@
       <artifactId>beam-common</artifactId>
       <version>${gbif-pipelines.version}</version>
       <exclusions>
-        <exclusion>
-          <groupId>org.jetbrains.kotlin</groupId>
-          <artifactId>kotlin-stdlib</artifactId>
-        </exclusion>
+          <exclusion>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib</artifactId>
+          </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -418,6 +409,12 @@
       <groupId>org.gbif.occurrence</groupId>
       <artifactId>occurrence-hdfs-table</artifactId>
       <version>${gbif-occurrence.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.beust</groupId>
+          <artifactId>jcommander</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <!-- GBIF -->
@@ -527,7 +524,6 @@
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-common</artifactId>
       <version>${hadoop.version}</version>
-      <scope>provided</scope>
       <exclusions>
         <exclusion>
           <groupId>log4j</groupId>
@@ -552,61 +548,20 @@
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-core</artifactId>
       <version>${hadoop-core.version}</version>
-      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-client</artifactId>
+      <version>${hadoop.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-hdfs</artifactId>
       <version>${hadoop.version}</version>
-      <scope>provided</scope>
       <exclusions>
         <exclusion>
           <groupId>io.netty</groupId>
           <artifactId>netty</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-
-    <!-- HBase -->
-    <dependency>
-      <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-client</artifactId>
-      <version>${hbase.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>log4j</groupId>
-          <artifactId>log4j</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-log4j12</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-common</artifactId>
-      <version>${hbase.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>commons-logging</groupId>
-          <artifactId>commons-logging</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-core</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>commons-logging</groupId>
-          <artifactId>commons-logging</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-log4j12</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>log4j</groupId>
-          <artifactId>log4j</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -725,11 +680,6 @@
     <dependency>
       <groupId>com.fasterxml.jackson.dataformat</groupId>
       <artifactId>jackson-dataformat-avro</artifactId>
-      <version>${jackson.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
       <version>${jackson.version}</version>
     </dependency>
 
@@ -862,6 +812,12 @@
       <groupId>net.jpountz.lz4</groupId>
       <artifactId>lz4</artifactId>
       <version>${lz4.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.beust</groupId>
+      <artifactId>jcommander</artifactId>
+      <version>1.78</version>
     </dependency>
 
     <!-- Used for indexing locks -->
