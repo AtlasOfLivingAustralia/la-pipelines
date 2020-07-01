@@ -1,10 +1,9 @@
 package au.org.ala.pipelines.transforms;
 
-import au.org.ala.kvs.ALAKvConfig;
-import au.org.ala.kvs.ALAKvConfigFactory;
-import au.org.ala.kvs.cache.ALAAttributionKVStoreFactory;
 import au.org.ala.kvs.client.ALACollectoryMetadata;
 import com.google.common.base.Strings;
+import lombok.Builder;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -15,9 +14,10 @@ import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.transforms.SerializableSupplier;
 import org.gbif.pipelines.transforms.metadata.DefaultValuesTransform;
-import org.gbif.rest.client.configuration.ClientConfiguration;
 
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -27,27 +27,22 @@ import java.util.*;
  *
  * TODO Discuss with GBIF how we can make {@link DefaultValuesTransform} class extensible.
  */
+@Slf4j
 public class ALADefaultValuesTransform extends PTransform<PCollection<ExtendedRecord>, PCollection<ExtendedRecord>> {
 
     private static final String DEFAULT_TERM_NAMESPACE = TagNamespace.GBIF_DEFAULT_TERM.getNamespace();
     private static final TermFactory TERM_FACTORY = TermFactory.instance();
 
+    private SerializableSupplier<KeyValueStore<String, ALACollectoryMetadata>> dataResourceKvStoreSupplier;
+
     private final String datasetId;
-    private final ALAKvConfig kvConfig;
-    private final ClientConfiguration clientConfiguration;
 
-    private ALADefaultValuesTransform(String datasetId, ALAKvConfig kvConfig){
+    @Builder(buildMethodName = "create")
+    private ALADefaultValuesTransform(String datasetId,
+                                      KeyValueStore<String, ALACollectoryMetadata> dataResourceKvStore,
+                                      SerializableSupplier<KeyValueStore<String, ALACollectoryMetadata>> dataResourceKvStoreSupplier){
         this.datasetId = datasetId;
-        this.kvConfig = kvConfig;
-        this.clientConfiguration = ClientConfiguration.builder()
-                    .withBaseApiUrl(kvConfig.getCollectoryBasePath()) //GBIF base API url
-                    .withTimeOut(kvConfig.getTimeout()) //Geocode service connection time-out
-                    .build();
-    }
-
-    public static ALADefaultValuesTransform create(Properties properties, String datasetId) {
-        ALAKvConfig config = ALAKvConfigFactory.create(properties);
-        return new ALADefaultValuesTransform(datasetId, config);
+        this.dataResourceKvStoreSupplier = dataResourceKvStoreSupplier;
     }
 
     /**
@@ -72,8 +67,7 @@ public class ALADefaultValuesTransform extends PTransform<PCollection<ExtendedRe
     public List<MachineTag> getMachineTags() {
         try {
             List<MachineTag> tags = new ArrayList<MachineTag>();
-            KeyValueStore<String, ALACollectoryMetadata> kvStore = ALAAttributionKVStoreFactory.alaAttributionKVStore(clientConfiguration, kvConfig);
-            ALACollectoryMetadata metadata = kvStore.get(datasetId);
+            ALACollectoryMetadata metadata = dataResourceKvStoreSupplier.get().get(datasetId);
             if (metadata != null && metadata.getDefaultDarwinCoreValues() != null && !metadata.getDefaultDarwinCoreValues().isEmpty()) {
                 for (Map.Entry<String, String> entry : metadata.getDefaultDarwinCoreValues().entrySet()) {
                     tags.add(MachineTag.newInstance(DEFAULT_TERM_NAMESPACE, entry.getKey(), entry.getValue()));
@@ -81,6 +75,7 @@ public class ALADefaultValuesTransform extends PTransform<PCollection<ExtendedRe
             }
             return tags;
         } catch (Exception e){
+            log.error("Problem retrieving collectory data: " + e.getMessage(), e);
             throw new RuntimeException(e.getMessage());
         }
     }

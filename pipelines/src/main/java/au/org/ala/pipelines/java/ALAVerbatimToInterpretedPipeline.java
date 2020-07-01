@@ -1,9 +1,16 @@
 package au.org.ala.pipelines.java;
 
+import au.org.ala.kvs.ALAPipelinesConfig;
+import au.org.ala.kvs.ALAPipelinesConfigFactory;
+import au.org.ala.kvs.cache.ALAAttributionKVStoreFactory;
+import au.org.ala.kvs.cache.ALACollectionKVStoreFactory;
+import au.org.ala.kvs.cache.ALANameMatchKVStoreFactory;
+import au.org.ala.kvs.cache.GeocodeKvStoreFactory;
 import au.org.ala.pipelines.transforms.ALAAttributionTransform;
 import au.org.ala.pipelines.transforms.ALADefaultValuesTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import au.org.ala.pipelines.transforms.LocationTransform;
+import au.org.ala.utils.ALAFsUtils;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
@@ -18,13 +25,14 @@ import org.gbif.pipelines.ingest.java.io.AvroReader;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetrics;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
 import org.gbif.pipelines.ingest.java.transforms.UniqueGbifIdTransform;
-import org.gbif.pipelines.ingest.java.utils.PropertiesFactory;
+import org.gbif.pipelines.ingest.java.utils.PipelinesConfigFactory;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FileSystemFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.parsers.config.model.PipelinesConfig;
 import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 import org.gbif.pipelines.ingest.java.transforms.OccurrenceExtensionTransform;
@@ -127,12 +135,12 @@ public class ALAVerbatimToInterpretedPipeline {
         boolean tripletValid = options.isTripletValid();
         boolean occIdValid = options.isOccurrenceIdValid();
         boolean useErdId = options.isUseExtendedRecordId();
-        boolean skipRegistryCalls = options.isSkipRegisrtyCalls();
         Set<String> types = Collections.singleton(ALL.name());
         String targetPath = options.getTargetPath();
         String endPointType = options.getEndPointType();
         String hdfsSiteConfig = options.getHdfsSiteConfig();
-        Properties properties = PropertiesFactory.getInstance(hdfsSiteConfig, options.getProperties()).get();
+
+        ALAPipelinesConfig config = ALAPipelinesConfigFactory.getInstance(options.getHdfsSiteConfig(), options.getProperties()).get();
 
         FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, types);
 
@@ -147,10 +155,10 @@ public class ALAVerbatimToInterpretedPipeline {
         SerializableConsumer<String> incMetricFn = metrics::incMetric;
 
         log.info("Creating pipelines transforms");
+
         // Core
-        MetadataTransform metadataTransform = MetadataTransform.create(properties, endPointType, attempt, skipRegistryCalls).counterFn(incMetricFn).init();
-        BasicTransform basicTransform = BasicTransform.create(properties, datasetId, tripletValid, occIdValid, useErdId).counterFn(incMetricFn).init();
-        LocationTransform locationTransform = LocationTransform.create(properties).init();
+        MetadataTransform metadataTransform = MetadataTransform.builder().endpointType(endPointType).attempt(attempt).create().counterFn(incMetricFn);
+        BasicTransform basicTransform = BasicTransform.builder().isTripletValid(tripletValid).isOccurrenceIdValid(occIdValid).useExtendedRecordId(useErdId).create().counterFn(incMetricFn);
         VerbatimTransform verbatimTransform = VerbatimTransform.create().counterFn(incMetricFn);
         TemporalTransform temporalTransform = TemporalTransform.create().counterFn(incMetricFn);
 
@@ -162,11 +170,30 @@ public class ALAVerbatimToInterpretedPipeline {
 
         // Extra
         OccurrenceExtensionTransform occExtensionTransform = OccurrenceExtensionTransform.create().counterFn(incMetricFn);
-        ALADefaultValuesTransform defaultValuesTransform = ALADefaultValuesTransform.create(properties, datasetId);
 
-        // ALA specific
-        ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.create(properties).counterFn(incMetricFn).init();
-        ALAAttributionTransform alaAttributionTransform = ALAAttributionTransform.create(properties).counterFn(incMetricFn).init();
+        // ALA specific - Attribution
+        ALAAttributionTransform alaAttributionTransform = ALAAttributionTransform.builder()
+                .dataResourceKvStoreSupplier(ALAAttributionKVStoreFactory.getInstanceSupplier(config))
+                .collectionKvStoreSupplier(ALACollectionKVStoreFactory.getInstanceSupplier(config))
+                .create();
+
+        // ALA specific - Taxonomy
+        ALATaxonomyTransform alaTaxonomyTransform =
+                ALATaxonomyTransform.builder()
+                        .kvStoreSupplier(ALANameMatchKVStoreFactory.getInstanceSupplier(config))
+                        .create();
+
+        // ALA specific - Location
+        LocationTransform locationTransform =
+                LocationTransform.builder()
+                        .geocodeKvStoreSupplier(GeocodeKvStoreFactory.getInstanceSupplier(config))
+                        .create();
+
+        // ALA specific - Default values
+        ALADefaultValuesTransform alaDefaultValuesTransform = ALADefaultValuesTransform.builder()
+                .datasetId(datasetId)
+                .dataResourceKvStoreSupplier(ALAAttributionKVStoreFactory.getInstanceSupplier(config))
+                .create();
 
         log.info("Creating writers");
         try (
@@ -196,7 +223,7 @@ public class ALAVerbatimToInterpretedPipeline {
 
             log.info("Reading DwcA - extension transform");
             Map<String, ExtendedRecord> erExtMap = occExtensionTransform.transform(erMap);
-            defaultValuesTransform.replaceDefaultValues(erExtMap);
+            alaDefaultValuesTransform.replaceDefaultValues(erExtMap);
 
             boolean useSyncMode = options.getSyncThreshold() > erExtMap.size();
 

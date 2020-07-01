@@ -58,7 +58,7 @@ public class ALAInterpretedToLatLongCSVPipeline {
 
         // Use pre-processed coordinates from location transform outputs
         log.info("Adding step 2: Initialise location transform");
-        LocationTransform locationTransform = LocationTransform.create();
+        LocationTransform locationTransform = LocationTransform.builder().create();
 
         log.info("Adding step 3: Creating beam pipeline");
         PCollection<KV<String, LocationRecord>> locationCollection =

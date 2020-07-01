@@ -88,16 +88,20 @@ Requirements of softwares:
     You can test it by checking this url: http://localhost:9179/api/search?q=Acacia
     
       
-### Run la-pipeline   
+### Setting up la-pipeline   
 1. Download shape files from [here](https://pipelines-shp.s3-ap-southeast-2.amazonaws.com/pipelines-shapefiles.zip) and expand into `/data/pipelines-shp` directory
 1. Download a darwin core archive (e.g. https://archives.ala.org.au/archives/gbif/dr893/dr893.zip) and expand it into `/data/biocache-load` e.g. `/data/biocache-load/dr893`
 1. Create the following directory `/data/pipelines-data`
 1. Build with maven `mvn clean install`
+
+
+### Running la-pipeline
+1. `cd scripts`
 1. To convert DwCA to AVRO, run `./dwca-avro.sh dr893`
-1. To interpret, run `./interpret-spark-embedded.sh dr893`
+1. To interpret, run `./interpret-java.sh dr893`
 1. To mint UUIDs, run `./uuid-spark-embedded.sh dr893`
 1. To sample run
-    1. `./export-latlng.sh dr893`
+    1. `./export-latlng-embedded.sh dr893`
     1. `./sample.sh dr893`
     1. `./sample-avro-embedded.sh dr893`
 1. To setup SOLR:
@@ -105,8 +109,7 @@ Requirements of softwares:
     1. Follow the instructions in [solr8/docker/README.md](solr/docker/solr8/README.md)
     1. Run `docker-compose -f solr8.yml up -d`
     1. Run `./update-solr-config.sh`
-1. To index, run `./index.sh dr893`
-
+1. To index, run `./index-java.sh dr893`
 
 ## Integration Tests
 

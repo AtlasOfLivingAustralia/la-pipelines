@@ -23,9 +23,9 @@ import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
-import org.gbif.pipelines.io.avro.AustraliaSpatialRecord;
+import org.gbif.pipelines.io.avro.LocationFeatureRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.transforms.specific.AustraliaSpatialTransform;
+import org.gbif.pipelines.transforms.specific.LocationFeatureTransform;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
@@ -125,10 +125,10 @@ public class ALASamplingToAvroPipeline {
 
 
         // Create AustraliaSpatialRecord
-        PCollection<AustraliaSpatialRecord> australiaSpatialRecordPCollection =
+        PCollection<LocationFeatureRecord> locationFeatureRecordPCollection =
                 results.apply(
                         ParDo.of(
-                                new DoFn<KV<String, CoGbkResult>, AustraliaSpatialRecord>() {
+                                new DoFn<KV<String, CoGbkResult>, LocationFeatureRecord>() {
                                     @ProcessElement
                                     public void processElement(ProcessContext c) {
                                         KV<String, CoGbkResult> e = c.element();
@@ -137,15 +137,15 @@ public class ALASamplingToAvroPipeline {
 
                                         while (idIter.hasNext()){
                                             String id = idIter.next();
-                                            AustraliaSpatialRecord aur = AustraliaSpatialRecord.newBuilder().setItems(sampling).setId(id).build();
+                                            LocationFeatureRecord aur = LocationFeatureRecord.newBuilder().setItems(sampling).setId(id).build();
                                             c.output(aur);
                                         }
                                     }
                                 }));
 
         // Write out AustraliaSpatialRecord to disk
-        AustraliaSpatialTransform australiaSpatialTransform = AustraliaSpatialTransform.create();
-        australiaSpatialRecordPCollection.apply("Write sampling to avro", australiaSpatialTransform.write(outputPath));
+        LocationFeatureTransform locationFeatureTransform = LocationFeatureTransform.builder().create();
+        locationFeatureRecordPCollection.apply("Write sampling to avro", locationFeatureTransform.write(outputPath));
 
         log.info("Running the pipeline");
         PipelineResult result = p.run();

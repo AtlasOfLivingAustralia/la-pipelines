@@ -1,11 +1,17 @@
 package au.org.ala.utils;
 
+import au.org.ala.kvs.ALAPipelinesConfig;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.*;
 import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.ingest.options.BasePipelineOptions;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.utils.FsUtils;
+import org.gbif.pipelines.parsers.config.model.PipelinesConfig;
 
 import java.io.*;
 import java.nio.channels.Channels;
@@ -56,8 +62,8 @@ public class ALAFsUtils {
     public static String buildPathSamplingOutputUsingTargetPath(InterpretationPipelineOptions options) {
         return FsUtils.buildPath(
                 FsUtils.buildDatasetAttemptPath(options, "sampling", false),
-                PipelinesVariables.Pipeline.Interpretation.RecordType.AUSTRALIA_SPATIAL.toString().toLowerCase(),
-                PipelinesVariables.Pipeline.Interpretation.RecordType.AUSTRALIA_SPATIAL.toString().toLowerCase()
+                PipelinesVariables.Pipeline.Interpretation.RecordType.LOCATION_FEATURE.toString().toLowerCase(),
+                PipelinesVariables.Pipeline.Interpretation.RecordType.LOCATION_FEATURE.toString().toLowerCase()
         ).toString();
     }
 
@@ -159,5 +165,50 @@ public class ALAFsUtils {
             filePaths.add(filePath.toString());
         }
         return filePaths;
+    }
+
+    /**
+     * Read a properties file from HDFS/Local FS
+     *
+     * @param hdfsSiteConfig HDFS config file
+     * @param filePath properties file path
+     */
+    @SneakyThrows
+    public static Properties readPropertiesFile(String hdfsSiteConfig, String filePath) {
+        FileSystem fs = FsUtils.getLocalFileSystem(hdfsSiteConfig);
+        Path fPath = new Path(filePath);
+        if (fs.exists(fPath)) {
+            log.info("Reading properties path - {}", filePath);
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(fPath)))) {
+                Properties props = new Properties();
+                props.load(br);
+                log.info("Loaded properties - {}", props);
+                return props;
+            }
+        }
+        throw new FileNotFoundException("The properties file doesn't exist - " + filePath);
+    }
+
+    /**
+     * Read a properties file from HDFS/Local FS
+     *
+     * @param hdfsSiteConfig HDFS config file
+     * @param filePath properties file path
+     */
+    @SneakyThrows
+    public static ALAPipelinesConfig readConfigFile(String hdfsSiteConfig, String filePath) {
+        FileSystem fs = FsUtils.getLocalFileSystem(hdfsSiteConfig);
+        Path fPath = new Path(filePath);
+        if (fs.exists(fPath)) {
+            log.info("Reading properties path - {}", filePath);
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(fPath)))) {
+                ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+                mapper.configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
+                mapper.findAndRegisterModules();
+                ALAPipelinesConfig config =  mapper.readValue(br, ALAPipelinesConfig.class);
+                return config;
+            }
+        }
+        throw new FileNotFoundException("The properties file doesn't exist - " + filePath);
     }
 }

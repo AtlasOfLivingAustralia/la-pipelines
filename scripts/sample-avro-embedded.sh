@@ -19,4 +19,4 @@ java -Xmx8g -Xmx8g -XX:+UseG1GC  -cp $PIPELINES_JAR au.org.ala.pipelines.beam.AL
  --coreSiteConfig=$HDFS_CONF \
  --hdfsSiteConfig=$HDFS_CONF \
  --metaFileName=indexing-metrics.yml \
- --properties=$FS_PATH/pipelines.properties
+ --properties=$PIPELINES_CONF

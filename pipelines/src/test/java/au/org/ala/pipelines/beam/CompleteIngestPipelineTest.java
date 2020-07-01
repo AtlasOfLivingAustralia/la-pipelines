@@ -82,9 +82,8 @@ public class CompleteIngestPipelineTest {
                 "--metaFileName=interpretation-metrics.yml",
                 "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
                 "--inputPath=/tmp/la-pipelines-test/complete-pipeline/dr893/1/verbatim.avro",
-                "--properties=src/test/resources/pipelines.properties",
-                "--useExtendedRecordId=true",
-                "--skipRegisrtyCalls=true"
+                "--properties=src/test/resources/pipelines.yaml",
+                "--useExtendedRecordId=true"
         });
         ALAVerbatimToInterpretedPipeline.run(interpretationOptions);
 
@@ -95,9 +94,8 @@ public class CompleteIngestPipelineTest {
                 "--metaFileName=uuid-metrics.yml",
                 "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
                 "--inputPath=/tmp/la-pipelines-test/complete-pipeline/dr893/1/verbatim.avro",
-                "--properties=src/test/resources/pipelines.properties",
-                "--useExtendedRecordId=true",
-                "--skipRegisrtyCalls=true"
+                "--properties=src/test/resources/pipelines.yaml",
+                "--useExtendedRecordId=true"
         });
         ALAUUIDMintingPipeline.run(uuidOptions);
 
@@ -108,7 +106,7 @@ public class CompleteIngestPipelineTest {
                 "--runner=SparkRunner",
                 "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
                 "--inputPath=/tmp/la-pipelines-test/complete-pipeline",
-                "--properties=src/test/resources/pipelines.properties"
+                "--properties=src/test/resources/pipelines.yaml"
         });
         ALAInterpretedToLatLongCSVPipeline.run(latLngOptions);
 
@@ -126,7 +124,7 @@ public class CompleteIngestPipelineTest {
                 "--metaFileName=uuid-metrics.yml",
                 "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
                 "--inputPath=/tmp/la-pipelines-test/complete-pipeline/dr893/1/verbatim.avro",
-                "--properties=src/test/resources/pipelines.properties",
+                "--properties=src/test/resources/pipelines.yaml",
                 "--zkHost=localhost:9983",
                 "--solrCollection=" + SolrUtils.BIOCACHE_TEST_SOLR_COLLECTION,
                 "--includeSampling=true"

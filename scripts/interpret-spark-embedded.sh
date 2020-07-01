@@ -19,11 +19,10 @@ java -Xmx8g -XX:+UseG1GC  -Dspark.master=local[*]  -cp $PIPELINES_JAR au.org.ala
 --targetPath=$FS_PATH/$DATA_DIR \
 --inputPath=$FS_PATH/$DATA_DIR/$1/1/verbatim.avro \
 --metaFileName=interpretation-metrics.yml \
---properties=$FS_PATH/pipelines.properties \
+--properties=$PIPELINES_CONF \
 --useExtendedRecordId=true \
 --coreSiteConfig=$HDFS_CONF \
---hdfsSiteConfig=$HDFS_CONF \
---skipRegisrtyCalls=true
+--hdfsSiteConfig=$HDFS_CONF
 
 echo $(date)
 duration=$SECONDS

@@ -27,6 +27,8 @@ public class DumpDatasetSize {
     @Parameter(names = "--hdfsSiteConfig", description = "The absolute path to a hdfs-site.xml with default.FS configuration")
     private String hdfsSiteConfig;
 
+    private boolean compareToSolr;
+
     public static void main(String[] args) throws Exception {
 
         DumpDatasetSize m = new DumpDatasetSize();
@@ -43,7 +45,7 @@ public class DumpDatasetSize {
     }
 
     public void run() throws Exception {
-        FileWriter fw = new FileWriter(targetPath);
+
         FileSystem fs = FileSystemFactory.getInstance(hdfsSiteConfig).getFs("/");
         Map<String, Long> counts = new HashMap<String, Long>();
 
@@ -65,11 +67,18 @@ public class DumpDatasetSize {
         //order by size descending
         List<Map.Entry<String, Long>> list = new ArrayList<>(counts.entrySet());
         list.sort(reverseOrder(Map.Entry.comparingByValue()));
-        for (Map.Entry<String, Long> entry : list) {
-            fw.write(entry.getKey() + "," + entry.getValue() + "\n");
-        }
 
-        fw.flush();
-        fw.close();
+        //retrieve SOLR counts
+
+
+
+        if (compareToSolr) {
+            FileWriter fw = new FileWriter(targetPath);
+            for (Map.Entry<String, Long> entry : list) {
+                fw.write(entry.getKey() + "," + entry.getValue() + "\n");
+            }
+            fw.flush();
+            fw.close();
+        }
     }
 }

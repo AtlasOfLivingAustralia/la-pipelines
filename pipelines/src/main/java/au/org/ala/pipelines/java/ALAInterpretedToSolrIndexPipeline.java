@@ -35,7 +35,7 @@ import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 
-import org.gbif.pipelines.transforms.specific.AustraliaSpatialTransform;
+import org.gbif.pipelines.transforms.specific.LocationFeatureTransform;
 import org.slf4j.MDC;
 
 import lombok.AccessLevel;
@@ -125,11 +125,11 @@ public class ALAInterpretedToSolrIndexPipeline {
 
         log.info("Creating transformations");
         // Core
-        BasicTransform basicTransform = BasicTransform.create();
-        MetadataTransform metadataTransform = MetadataTransform.create();
+        BasicTransform basicTransform = BasicTransform.builder().create();
+        MetadataTransform metadataTransform = MetadataTransform.builder().create();
         VerbatimTransform verbatimTransform = VerbatimTransform.create();
         TemporalTransform temporalTransform = TemporalTransform.create();
-        TaxonomyTransform taxonomyTransform = TaxonomyTransform.create();
+        TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
 //        TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.create();
 
         // Extension
@@ -139,10 +139,10 @@ public class ALAInterpretedToSolrIndexPipeline {
         ImageTransform imageTransform = ImageTransform.create();
 
         // ALA Specific transforms
-        ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.create();
-        ALAAttributionTransform alaAttributionTransform = ALAAttributionTransform.create();
-        AustraliaSpatialTransform spatialTransform = AustraliaSpatialTransform.create();
-        LocationTransform locationTransform = LocationTransform.create();
+        ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.builder().create();
+        ALAAttributionTransform alaAttributionTransform = ALAAttributionTransform.builder().create();
+        LocationFeatureTransform spatialTransform = LocationFeatureTransform.builder().create();
+        LocationTransform locationTransform = LocationTransform.builder().create();
 
         log.info("Init metrics");
         IngestMetrics metrics = IngestMetricsBuilder.createInterpretedToEsIndexMetrics();
@@ -212,8 +212,8 @@ public class ALAInterpretedToSolrIndexPipeline {
                 () -> AvroReader.readRecords(hdfsSiteConfig, ALAAttributionRecord.class, pathFn.apply(alaAttributionTransform.getBaseName())),
                 executor);
 
-        CompletableFuture<Map<String, AustraliaSpatialRecord>> australiaSpatialMapFeature = CompletableFuture.supplyAsync(
-                () -> AvroReader.readRecords(hdfsSiteConfig, AustraliaSpatialRecord.class, samplingPathFn.apply(spatialTransform.getBaseName())),
+        CompletableFuture<Map<String, LocationFeatureRecord>> australiaSpatialMapFeature = CompletableFuture.supplyAsync(
+                () -> AvroReader.readRecords(hdfsSiteConfig, LocationFeatureRecord.class, samplingPathFn.apply(spatialTransform.getBaseName())),
                 executor);
 
         MetadataRecord metadata = metadataMapFeature.get().values().iterator().next();
@@ -230,7 +230,7 @@ public class ALAInterpretedToSolrIndexPipeline {
         Map<String, ALAUUIDRecord> aurMap = alaUuidMapFeature.get();
         Map<String, ALATaxonRecord> alaTaxonMap = alaTaxonMapFeature.get();
         Map<String, ALAAttributionRecord> alaAttributionMap = alaAttributionMapFeature.get();
-        Map<String, AustraliaSpatialRecord> australiaSpatialMap = australiaSpatialMapFeature.get();
+        Map<String, LocationFeatureRecord> australiaSpatialMap = australiaSpatialMapFeature.get();
 
         Map<String, MultimediaRecord> multimediaMap = multimediaMapFeature.get();
         Map<String, ImageRecord> imageMap = imageMapFeature.get();
@@ -257,7 +257,7 @@ public class ALAInterpretedToSolrIndexPipeline {
             ALAUUIDRecord aur = aurMap.getOrDefault(k, ALAUUIDRecord.newBuilder().setId(k).build());
             ALATaxonRecord atxr = alaTaxonMap.getOrDefault(k, ALATaxonRecord.newBuilder().setId(k).build());
             ALAAttributionRecord aar = alaAttributionMap.getOrDefault(k, ALAAttributionRecord.newBuilder().setId(k).build());
-            AustraliaSpatialRecord asr = australiaSpatialMap.getOrDefault(k, AustraliaSpatialRecord.newBuilder().setId(k).build());
+            LocationFeatureRecord asr = australiaSpatialMap.getOrDefault(k, LocationFeatureRecord.newBuilder().setId(k).build());
 
             // Extension
             MultimediaRecord mr = multimediaMap.getOrDefault(k, MultimediaRecord.newBuilder().setId(k).build());

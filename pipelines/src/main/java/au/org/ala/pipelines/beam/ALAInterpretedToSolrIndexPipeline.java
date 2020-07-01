@@ -32,7 +32,7 @@ import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
-import org.gbif.pipelines.transforms.specific.AustraliaSpatialTransform;
+import org.gbif.pipelines.transforms.specific.LocationFeatureTransform;
 import org.slf4j.MDC;
 
 import java.util.function.UnaryOperator;
@@ -68,11 +68,11 @@ public class ALAInterpretedToSolrIndexPipeline {
 
         log.info("Adding step 2: Creating transformations");
         // Core
-        BasicTransform basicTransform = BasicTransform.create();
-        MetadataTransform metadataTransform = MetadataTransform.create();
+        BasicTransform basicTransform = BasicTransform.builder().create();
+        MetadataTransform metadataTransform = MetadataTransform.builder().create();
         VerbatimTransform verbatimTransform = VerbatimTransform.create();
         TemporalTransform temporalTransform = TemporalTransform.create();
-        TaxonomyTransform taxonomyTransform = TaxonomyTransform.create();
+        TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
 
         // Extension
         MeasurementOrFactTransform measurementOrFactTransform = MeasurementOrFactTransform.create();
@@ -82,10 +82,10 @@ public class ALAInterpretedToSolrIndexPipeline {
 
         // ALA specific
         ALAUUIDTransform alaUuidTransform = ALAUUIDTransform.create();
-        ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.create();
-        AustraliaSpatialTransform australiaSpatialTransform = AustraliaSpatialTransform.create();
-        LocationTransform locationTransform = LocationTransform.create();
-        ALAAttributionTransform alaAttributionTransform = ALAAttributionTransform.create();
+        ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.builder().create();
+        LocationFeatureTransform locationFeatureTransform = LocationFeatureTransform.builder().create();
+        LocationTransform locationTransform = LocationTransform.builder().create();
+        ALAAttributionTransform alaAttributionTransform = ALAAttributionTransform.builder().create();
 
         log.info("Adding step 3: Creating beam pipeline");
         PCollectionView<MetadataRecord> metadataView =
@@ -144,11 +144,11 @@ public class ALAInterpretedToSolrIndexPipeline {
                 p.apply("Read attribution", alaAttributionTransform.read(pathFn))
                         .apply("Map attribution to KV", alaAttributionTransform.toKv());
 
-        PCollection<KV<String, AustraliaSpatialRecord>> australiaSpatialCollection = null;
+        PCollection<KV<String, LocationFeatureRecord>> locationFeatureCollection = null;
         if (options.getIncludeSampling()) {
-            australiaSpatialCollection =
-                    p.apply("Read Sampling", australiaSpatialTransform.read(samplingPathFn))
-                         .apply("Map Sampling to KV", australiaSpatialTransform.toKv());
+            locationFeatureCollection =
+                    p.apply("Read Sampling", locationFeatureTransform.read(samplingPathFn))
+                         .apply("Map Sampling to KV", locationFeatureTransform.toKv());
         }
 
         ALASolrDocumentTransform solrDocumentTransform = ALASolrDocumentTransform.create(
@@ -162,7 +162,7 @@ public class ALAInterpretedToSolrIndexPipeline {
                 imageTransform.getTag(),
                 audubonTransform.getTag(),
                 measurementOrFactTransform.getTag(),
-                options.getIncludeSampling() ? australiaSpatialTransform.getTag() : null,
+                options.getIncludeSampling() ? locationFeatureTransform.getTag() : null,
                 alaAttributionTransform.getTag(),
                 alaUuidTransform.getTag(),
                 metadataView,
@@ -190,7 +190,7 @@ public class ALAInterpretedToSolrIndexPipeline {
                 .and(alaAttributionTransform.getTag(), alaAttributionCollection);
 
         if (options.getIncludeSampling()){
-            kpct = kpct.and(australiaSpatialTransform.getTag(), australiaSpatialCollection);
+            kpct = kpct.and(locationFeatureTransform.getTag(), locationFeatureCollection);
         }
 
         if (options.getIncludeGbifTaxonomy()){

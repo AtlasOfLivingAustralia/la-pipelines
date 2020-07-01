@@ -29,9 +29,8 @@ $PIPELINES_JAR \
 --inputPath=$FS_PATH/$DATA_DIR \
 --targetPath=$FS_PATH/$DATA_DIR \
 --metaFileName=interpretation-metrics.yml \
---properties=/efs-mount-point/pipelines.properties \
+--properties=$PIPELINES_CONF \
 --useExtendedRecordId=true \
---skipRegisrtyCalls=true \
 --coreSiteConfig=$HDFS_CONF \
 --hdfsSiteConfig=$HDFS_CONF
 

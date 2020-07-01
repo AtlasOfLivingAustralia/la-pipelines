@@ -1,7 +1,7 @@
 package au.org.ala.pipelines.beam;
 
-import au.org.ala.kvs.ALAKvConfig;
-import au.org.ala.kvs.ALAKvConfigFactory;
+import au.org.ala.kvs.ALAPipelinesConfig;
+import au.org.ala.kvs.ALAPipelinesConfigFactory;
 import au.org.ala.kvs.cache.ALAAttributionKVStoreFactory;
 import au.org.ala.kvs.client.ALACollectoryMetadata;
 import au.org.ala.pipelines.common.ALARecordTypes;
@@ -28,11 +28,13 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.UnknownTerm;
 import org.gbif.kvs.KeyValueStore;
+import org.gbif.pipelines.ingest.java.utils.PipelinesConfigFactory;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.parsers.config.model.PipelinesConfig;
 import org.gbif.pipelines.parsers.utils.ModelUtils;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 
@@ -80,21 +82,21 @@ public class ALAUUIDMintingPipeline {
     public static void run(InterpretationPipelineOptions options) throws Exception {
 
         Pipeline p = Pipeline.create(options);
-        Properties properties = FsUtils.readPropertiesFile(options.getHdfsSiteConfig(), options.getProperties());
+
+        ALAPipelinesConfig config = ALAPipelinesConfigFactory.getInstance(options.getHdfsSiteConfig(), options.getProperties()).get();
 
         //build the directory path for existing identifiers
         String alaRecordDirectoryPath = options.getTargetPath() + "/" + options.getDatasetId().trim() + "/1/identifiers/" + ALARecordTypes.ALA_UUID.name().toLowerCase();
         log.info("Output path {}", alaRecordDirectoryPath);
 
         //create client configuration
-        ALAKvConfig kvConfig = ALAKvConfigFactory.create(properties);
         ClientConfiguration clientConfiguration = ClientConfiguration.builder()
-                .withBaseApiUrl(kvConfig.getCollectoryBasePath()) //GBIF base API url
-                .withTimeOut(kvConfig.getTimeout()) //Geocode service connection time-out
+                .withBaseApiUrl(config.getCollectory().getWsUrl()) //GBIF base API url
+                .withTimeOut(config.getCollectory().getTimeoutSec()) //Geocode service connection time-out
                 .build();
 
         //create key value store for data resource metadata
-        KeyValueStore<String, ALACollectoryMetadata> dataResourceKvStore = ALAAttributionKVStoreFactory.alaAttributionKVStore(clientConfiguration, kvConfig);
+        KeyValueStore<String, ALACollectoryMetadata> dataResourceKvStore = ALAAttributionKVStoreFactory.create(config);
 
         //lookup collectory metadata for this data resource
         ALACollectoryMetadata collectoryMetadata = dataResourceKvStore.get(options.getDatasetId());

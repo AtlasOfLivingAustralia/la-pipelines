@@ -6,9 +6,16 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 
+import au.org.ala.kvs.ALAPipelinesConfig;
+import au.org.ala.kvs.ALAPipelinesConfigFactory;
+import au.org.ala.kvs.cache.ALAAttributionKVStoreFactory;
+import au.org.ala.kvs.cache.ALACollectionKVStoreFactory;
+import au.org.ala.kvs.cache.ALANameMatchKVStoreFactory;
+import au.org.ala.kvs.cache.GeocodeKvStoreFactory;
 import au.org.ala.pipelines.transforms.ALADefaultValuesTransform;
 import au.org.ala.utils.ALAFsUtils;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.pipelines.ingest.java.utils.PipelinesConfigFactory;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
@@ -16,6 +23,7 @@ import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.parsers.config.model.PipelinesConfig;
 import org.gbif.pipelines.transforms.metadata.DefaultValuesTransform;
 import org.gbif.pipelines.transforms.common.UniqueIdTransform;
 import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
@@ -94,7 +102,6 @@ public class ALAVerbatimToInterpretedPipeline {
     boolean tripletValid = options.isTripletValid();
     boolean occurrenceIdValid = options.isOccurrenceIdValid();
     boolean useExtendedRecordId = options.isUseExtendedRecordId();
-    boolean skipRegistryCalls = options.isSkipRegisrtyCalls();
     String endPointType = options.getEndPointType();
 
     Set<String> types = options.getInterpretationTypes();
@@ -108,7 +115,8 @@ public class ALAVerbatimToInterpretedPipeline {
 
     FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, types);
 
-    Properties properties = FsUtils.readPropertiesFile(options.getHdfsSiteConfig(), options.getProperties());
+    Properties properties = ALAFsUtils.readPropertiesFile(options.getHdfsSiteConfig(), options.getProperties());
+    ALAPipelinesConfig config = ALAPipelinesConfigFactory.getInstance(options.getHdfsSiteConfig(), options.getProperties()).get();
 
     MDC.put("datasetId", datasetId);
     MDC.put("attempt", attempt.toString());
@@ -123,8 +131,8 @@ public class ALAVerbatimToInterpretedPipeline {
     Pipeline p = Pipeline.create(options);
 
     // Core
-    MetadataTransform metadataTransform = MetadataTransform.create(properties, endPointType, attempt, skipRegistryCalls);
-    BasicTransform basicTransform =  BasicTransform.create(properties, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId);
+    MetadataTransform metadataTransform = MetadataTransform.builder().endpointType(endPointType).attempt(attempt).create();
+    BasicTransform basicTransform =  BasicTransform.builder().isTripletValid(tripletValid).isOccurrenceIdValid(occurrenceIdValid).useExtendedRecordId(useExtendedRecordId).create();
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.create();
 
@@ -134,10 +142,29 @@ public class ALAVerbatimToInterpretedPipeline {
     AudubonTransform audubonTransform = AudubonTransform.create();
     ImageTransform imageTransform = ImageTransform.create();
 
-    // ALA specific transforms
-    ALAAttributionTransform alaAttributionTransform = ALAAttributionTransform.create(properties);
-    ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.create(properties);
-    LocationTransform locationTransform = LocationTransform.create(properties);
+    // ALA specific - Attribution
+    ALAAttributionTransform alaAttributionTransform = ALAAttributionTransform.builder()
+            .dataResourceKvStoreSupplier(ALAAttributionKVStoreFactory.getInstanceSupplier(config))
+            .collectionKvStoreSupplier(ALACollectionKVStoreFactory.getInstanceSupplier(config))
+            .create();
+
+    // ALA specific - Taxonomy
+    ALATaxonomyTransform alaTaxonomyTransform =
+            ALATaxonomyTransform.builder()
+              .kvStoreSupplier(ALANameMatchKVStoreFactory.getInstanceSupplier(config))
+              .create();
+
+    // ALA specific - Location
+    LocationTransform locationTransform =
+            LocationTransform.builder()
+                    .geocodeKvStoreSupplier(GeocodeKvStoreFactory.getInstanceSupplier(config))
+                    .create();
+
+    // ALA specific - Default values
+    ALADefaultValuesTransform alaDefaultValuesTransform = ALADefaultValuesTransform.builder()
+            .datasetId(datasetId)
+            .dataResourceKvStoreSupplier(ALAAttributionKVStoreFactory.getInstanceSupplier(config))
+            .create();
 
     log.info("Creating beam pipeline");
     // Create and write metadata
@@ -153,13 +180,15 @@ public class ALAVerbatimToInterpretedPipeline {
             .apply("Check verbatim transform condition", metadataTransform.checkMetadata(types))
             .apply("Convert into view", View.asSingleton());
 
+    locationTransform.setMetadataView(metadataView);
+
     // Interpret and write all record types
     PCollection<ExtendedRecord> uniqueRecords = metadataTransform.metadataOnly(types) ?
         verbatimTransform.emptyCollection(p) :
         p.apply("Read ExtendedRecords", verbatimTransform.read(options.getInputPath()))
             .apply("Read occurrences from extension", OccurrenceExtensionTransform.create())
             .apply("Filter duplicates", UniqueIdTransform.create())
-            .apply("Set default values", ALADefaultValuesTransform.create(properties, datasetId));
+            .apply("Set default values", alaDefaultValuesTransform);
 
     uniqueRecords
         .apply("Check verbatim transform condition", verbatimTransform.check(types))
@@ -207,7 +236,7 @@ public class ALAVerbatimToInterpretedPipeline {
 
     uniqueRecords
         .apply("Check location transform condition", locationTransform.check(types))
-        .apply("Interpret location", locationTransform.interpret(metadataView))
+        .apply("Interpret location", locationTransform.interpret())
         .apply("Write location to avro", locationTransform.write(pathFn));
 
     log.info("Running the pipeline");

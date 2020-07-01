@@ -6,6 +6,7 @@ import au.org.ala.kvs.client.ALACollectionLookup;
 import au.org.ala.kvs.client.ALACollectionMatch;
 import au.org.ala.kvs.client.ALACollectoryMetadata;
 import au.org.ala.kvs.client.ConnectionParameters;
+import au.org.ala.util.TestUtils;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.junit.Test;
@@ -22,9 +23,7 @@ public class AttributionKVStoreTest {
     @Test
     public void testAttributionLookup() throws Exception {
 
-        ClientConfiguration cc = ClientConfiguration.builder().withBaseApiUrl("https://collections.ala.org.au").build();
-        ALAKvConfig alaKvConfig = ALAKvConfigFactory.create(new Properties());
-        KeyValueStore<String, ALACollectoryMetadata> kvs = ALAAttributionKVStoreFactory.alaAttributionKVStore(cc, alaKvConfig);
+        KeyValueStore<String, ALACollectoryMetadata> kvs = ALAAttributionKVStoreFactory.create(TestUtils.getConfig());
         ALACollectoryMetadata m = kvs.get("dr893");
         ConnectionParameters connParams = m.getConnectionParameters();
 
@@ -46,8 +45,7 @@ public class AttributionKVStoreTest {
     public void testAttributionConnectionIssues() throws Exception {
 
         ClientConfiguration cc = ClientConfiguration.builder().withBaseApiUrl("https://collections.ala.org.auXXXX").build();
-        ALAKvConfig alaKvConfig = ALAKvConfigFactory.create(new Properties());
-        KeyValueStore<String, ALACollectoryMetadata> kvs = ALAAttributionKVStoreFactory.alaAttributionKVStore(cc, alaKvConfig);
+        KeyValueStore<String, ALACollectoryMetadata> kvs = ALAAttributionKVStoreFactory.create(TestUtils.getConfig());
         try {
             ALACollectoryMetadata m = kvs.get("dr893XXXXXX");
             fail("Exception not thrown");
@@ -61,8 +59,7 @@ public class AttributionKVStoreTest {
     public void testAttributionLookupFail() throws Exception {
 
         ClientConfiguration cc = ClientConfiguration.builder().withBaseApiUrl("https://collections.ala.org.au").build();
-        ALAKvConfig alaKvConfig = ALAKvConfigFactory.create(new Properties());
-        KeyValueStore<String, ALACollectoryMetadata> kvs = ALAAttributionKVStoreFactory.alaAttributionKVStore(cc, alaKvConfig);
+        KeyValueStore<String, ALACollectoryMetadata> kvs = ALAAttributionKVStoreFactory.create(TestUtils.getConfig());
         try {
             ALACollectoryMetadata m = kvs.get("dr893XXXXXXX");
             fail("Exception not thrown");
@@ -75,8 +72,7 @@ public class AttributionKVStoreTest {
     public void testCollectionLookup() throws Exception {
 
         ClientConfiguration cc = ClientConfiguration.builder().withBaseApiUrl("https://collections.ala.org.au").build();
-        ALAKvConfig alaKvConfig = ALAKvConfigFactory.create(new Properties());
-        KeyValueStore<ALACollectionLookup, ALACollectionMatch> kvs = ALACollectionKVStoreFactory.alaCollectionKVStore(cc, alaKvConfig);
+        KeyValueStore<ALACollectionLookup, ALACollectionMatch> kvs = ALACollectionKVStoreFactory.create(TestUtils.getConfig());
         ALACollectionLookup lookup = ALACollectionLookup.builder().institutionCode("CSIRO").collectionCode("ANIC").build();
         ALACollectionMatch m = kvs.get(lookup);
         assert m.getCollectionUid() != null;
@@ -86,9 +82,7 @@ public class AttributionKVStoreTest {
     @Test
     public void testCollectionLookupFail() throws Exception {
 
-        ClientConfiguration cc = ClientConfiguration.builder().withBaseApiUrl("https://collections.ala.org.au").build();
-        ALAKvConfig alaKvConfig = ALAKvConfigFactory.create(new Properties());
-        KeyValueStore<ALACollectionLookup, ALACollectionMatch> kvs = ALACollectionKVStoreFactory.alaCollectionKVStore(cc, alaKvConfig);
+        KeyValueStore<ALACollectionLookup, ALACollectionMatch> kvs = ALACollectionKVStoreFactory.create(TestUtils.getConfig());
         ALACollectionLookup lookup = ALACollectionLookup.builder().institutionCode("CSIROCXXX").collectionCode("ANIC").build();
         ALACollectionMatch m = kvs.get(lookup);
         assert m.getCollectionUid() == null;
