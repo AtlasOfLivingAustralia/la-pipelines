@@ -25,7 +25,7 @@ public class GeocodeKvStoreFactory {
   @SneakyThrows
   private GeocodeKvStoreFactory(ALAPipelinesConfig config) {
     BufferedImage image = BufferedImageFactory.getInstance(config.getGbifConfig().getImageCachePath());
-    KeyValueStore<LatLng, GeocodeResponse> kvStore = GeocodeCache2kKeyValueStore.create();
+    KeyValueStore<LatLng, GeocodeResponse> kvStore = GeocodeCache2kKeyValueStore.create(config.getGeocodeConfig());
     geocodeKvStore = GeocodeKvStore.create(kvStore, image);
   }
 

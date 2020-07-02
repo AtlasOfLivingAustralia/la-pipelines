@@ -14,30 +14,25 @@ import java.util.Set;
 public enum ALAOccurrenceIssue implements InterpretationRemark {
 
   //Location related
-  LOCATION_NOT_SUPPLIED(InterpretationRemarkSeverity.WARNING,
-      TermsGroup.COORDINATES_TERMS_NO_DATUM),
-  COORDINATES_CENTRE_OF_STATEPROVINCE(InterpretationRemarkSeverity.WARNING,
-      TermsGroup.COORDINATES_TERMS_NO_DATUM),
+  LOCATION_NOT_SUPPLIED(InterpretationRemarkSeverity.WARNING, TermsGroup.COORDINATES_TERMS_NO_DATUM),
+  COORDINATES_CENTRE_OF_STATEPROVINCE(InterpretationRemarkSeverity.WARNING, TermsGroup.COORDINATES_TERMS_NO_DATUM),
   MISSING_COORDINATEPRECISION(InterpretationRemarkSeverity.WARNING, TermsGroup.COORDINATES_TERMS),
   UNCERTAINTY_IN_PRECISION(InterpretationRemarkSeverity.WARNING, TermsGroup.COORDINATES_TERMS),
   UNCERTAINTY_NOT_SPECIFIED(InterpretationRemarkSeverity.WARNING, TermsGroup.COORDINATES_TERMS),
-  STATE_COORDINATE_MISMATCH(InterpretationRemarkSeverity.WARNING,
-      TermsGroup.COORDINATES_COUNTRY_TERMS),
+  STATE_COORDINATE_MISMATCH(InterpretationRemarkSeverity.WARNING, TermsGroup.COORDINATES_COUNTRY_TERMS),
   UNKNOWN_COUNTRY_NAME(InterpretationRemarkSeverity.WARNING, TermsGroup.COORDINATES_COUNTRY_TERMS),
-  COORDINATES_CENTRE_OF_COUNTRY(InterpretationRemarkSeverity.WARNING,
-      TermsGroup.COORDINATES_COUNTRY_TERMS),
+  COORDINATES_CENTRE_OF_COUNTRY(InterpretationRemarkSeverity.WARNING, TermsGroup.COORDINATES_COUNTRY_TERMS),
 
-  MISSING_GEODETICDATUM(InterpretationRemarkSeverity.WARNING, TermsGroup.GEODETIC),
-  MISSING_GEOREFERENCE_DATE(InterpretationRemarkSeverity.WARNING, TermsGroup.GEODETIC),
-  MISSING_GEOREFERENCEDBY(InterpretationRemarkSeverity.WARNING, TermsGroup.GEODETIC),
-  MISSING_GEOREFERENCEPROTOCOL(InterpretationRemarkSeverity.WARNING, TermsGroup.GEODETIC),
-  MISSING_GEOREFERENCESOURCES(InterpretationRemarkSeverity.WARNING, TermsGroup.GEODETIC),
-  MISSING_GEOREFERENCEVERIFICATIONSTATUS(InterpretationRemarkSeverity.WARNING, TermsGroup.GEODETIC),
+  MISSING_GEODETICDATUM(InterpretationRemarkSeverity.WARNING, TermsGroup.GEOREFERENCE_TERMS),
+  MISSING_GEOREFERENCE_DATE(InterpretationRemarkSeverity.WARNING, TermsGroup.GEOREFERENCE_TERMS),
+  MISSING_GEOREFERENCEDBY(InterpretationRemarkSeverity.WARNING, TermsGroup.GEOREFERENCE_TERMS),
+  MISSING_GEOREFERENCEPROTOCOL(InterpretationRemarkSeverity.WARNING, TermsGroup.GEOREFERENCE_TERMS),
+  MISSING_GEOREFERENCESOURCES(InterpretationRemarkSeverity.WARNING, TermsGroup.GEOREFERENCE_TERMS),
+  MISSING_GEOREFERENCEVERIFICATIONSTATUS(InterpretationRemarkSeverity.WARNING, TermsGroup.GEOREFERENCE_TERMS),
 
   //Temporal related
   MISSING_COLLECTION_DATE(InterpretationRemarkSeverity.WARNING, TermsGroup.RECORDED_DATE_TERMS),
-  GEOREFERENCE_POST_OCCURRENCE(InterpretationRemarkSeverity.WARNING,
-      TermsGroup.RECORDED_DATE_TERMS),
+  GEOREFERENCE_POST_OCCURRENCE(InterpretationRemarkSeverity.WARNING, TermsGroup.RECORDED_DATE_TERMS),
   ID_PRE_OCCURRENCE(InterpretationRemarkSeverity.WARNING, TermsGroup.RECORDED_DATE_TERMS),
   GEOREFERENCED_DATE_UNLIKELY(InterpretationRemarkSeverity.WARNING, TermsGroup.RECORDED_DATE_TERMS),
 
@@ -49,14 +44,13 @@ public enum ALAOccurrenceIssue implements InterpretationRemark {
   private final InterpretationRemarkSeverity severity;
   private final boolean isDeprecated;
 
-  private ALAOccurrenceIssue(InterpretationRemarkSeverity severity) {
+  ALAOccurrenceIssue(InterpretationRemarkSeverity severity) {
     this.severity = severity;
     this.relatedTerms = Collections.emptySet();
-    this.isDeprecated = AnnotationUtils
-        .isFieldDeprecated(org.gbif.api.vocabulary.OccurrenceIssue.class, this.name());
+    this.isDeprecated = AnnotationUtils.isFieldDeprecated(org.gbif.api.vocabulary.OccurrenceIssue.class, this.name());
   }
 
-  private ALAOccurrenceIssue(InterpretationRemarkSeverity severity, Term[] relatedTerms) {
+  ALAOccurrenceIssue(InterpretationRemarkSeverity severity, Term[] relatedTerms) {
     this.severity = severity;
     this.relatedTerms = ImmutableSet.copyOf(relatedTerms);
     this.isDeprecated = AnnotationUtils
@@ -91,7 +85,7 @@ public enum ALAOccurrenceIssue implements InterpretationRemark {
     static final Term[] COORDINATES_COUNTRY_TERMS;
     static final Term[] RECORDED_DATE_TERMS;
     static final Term[] TAXONOMY_TERMS;
-    static final Term[] GEODETIC;
+    static final Term[] GEOREFERENCE_TERMS;
 
     private TermsGroup() {
     }
@@ -102,7 +96,7 @@ public enum ALAOccurrenceIssue implements InterpretationRemark {
       COORDINATES_TERMS = new Term[]{DwcTerm.decimalLatitude, DwcTerm.decimalLongitude,
           DwcTerm.verbatimLatitude, DwcTerm.verbatimLongitude, DwcTerm.verbatimCoordinates,
           DwcTerm.geodeticDatum};
-      GEODETIC = new Term[]{DwcTerm.georeferencedBy, DwcTerm.georeferencedDate,
+      GEOREFERENCE_TERMS = new Term[]{DwcTerm.georeferencedBy, DwcTerm.georeferencedDate,
           DwcTerm.georeferencedBy, DwcTerm.georeferenceRemarks, DwcTerm.georeferenceProtocol,
           DwcTerm.georeferenceSources, DwcTerm.georeferenceVerificationStatus,
           DwcTerm.geodeticDatum};

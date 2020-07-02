@@ -5,61 +5,24 @@ import com.google.common.base.Strings;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 public class StateProvince {
 
-  private static StateProvince sp;
-  private static String filePath = "/data/pipelines-data/resources/stateProvinces.txt";
-  private List<String> states = new ArrayList<String>();
+  private static String file = "/stateProvinces.txt";
 
-
-  private StateProvince() {
-
+  public static boolean matched(String countryName) {
+    Vocab countryVocab = Vocab.loadVocabFromFile(file);
+    return countryVocab.matched(countryName);
   }
 
-  public static StateProvince getInstance(String filePath) {
-    if (sp == null) {
-      try {
-        Stemmer stemmer = new Stemmer();
-        sp = new StateProvince();
-        Files.lines(new File(filePath).getAbsoluteFile().toPath())
-            .map(s -> s.trim())
-            .forEach(l -> {
-              String[] ss = l.split("\t");
-              for (String s : ss) {
-                sp.states.add(stemmer.stem(s));
-              }
-
-            });
-        log.info("State / province " + sp.states.size() + " state(s) have been loaded.");
-      } catch (Exception e) {
-        log.error(e.getMessage());
-      }
-    }
-    return sp;
+  public static Optional<String> matchTerm(String countryName) {
+    Vocab countryVocab = Vocab.loadVocabFromFile(file);
+    return countryVocab.matchTerm(countryName);
   }
-
-  public static boolean matchTerm(String state) {
-    if (!Strings.isNullOrEmpty(state)) {
-      sp = StateProvince.getInstance(filePath);
-
-      String stemmed = new Stemmer().stem(state.toLowerCase());
-
-      return sp.states.contains(stemmed);
-    } else {
-      return false;
-    }
-
-
-  }
-
-  public static void main(String[] args) {
-    System.out.print("Matched:" + StateProvince.matchTerm("ACT"));
-  }
-
-
 }

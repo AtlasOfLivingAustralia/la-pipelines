@@ -1,9 +1,7 @@
 package au.org.ala.kvs.client;
 
-import au.org.ala.kvs.ALAKvConfig;
-import au.org.ala.kvs.GeocodeShpIntersectConfig;
+import au.org.ala.kvs.GeocodeShpConfig;
 import au.org.ala.layers.intersect.SimpleShapeFile;
-import java.nio.file.Files;
 import joptsimple.internal.Strings;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.rest.client.geocode.GeocodeService;
@@ -24,55 +22,66 @@ import java.io.File;
 @Slf4j
 public class GeocodeShpIntersectService implements GeocodeService {
 
-  private SimpleShapeFile countries = null;
-  private SimpleShapeFile eez = null;
-  private SimpleShapeFile states = null;
   private static GeocodeShpIntersectService instance;
+  private final GeocodeShpConfig config;
+  private final SimpleShapeFile countries;
+  private final SimpleShapeFile eez;
+  private final SimpleShapeFile states;
 
+  public static final String STATE_PROVINCE_LOCATION_TYPE = "StateProvince";
+  public static final String POLITICAL_LOCATION_TYPE = "Political";
+  public static final String EEZ_LOCATION_TYPE = "EEZ";
 
-
-  private GeocodeShpIntersectService(GeocodeShpIntersectConfig config) {
+  private GeocodeShpIntersectService(GeocodeShpConfig config) {
     synchronized (this) {
-      checkResouceFiles(config);
-      countries = new SimpleShapeFile(config.getCountry_shp_file(), config.getCountry_name_field());
-      eez = new SimpleShapeFile(config.getEez_shp_file(), config.getEez_country_name_field());
-      states = new SimpleShapeFile(config.getState_shp_file(), config.getState_name_field());
+      checkResourceFiles(config);
+      this.config = config;
+      this.countries = new SimpleShapeFile(config.getCountry().getPath(), config.getCountry().getField());
+      this.eez = new SimpleShapeFile(config.getEez().getPath(), config.getEez().getField());
+      this.states = new SimpleShapeFile(config.getStateProvince().getPath(), config.getStateProvince().getField());
     }
   }
 
-  //initialise references to SHP files....
-  private void checkResouceFiles(GeocodeShpIntersectConfig config){
+  /**
+   * Validate resource file paths are avialable.
+   *
+   * @param config
+   */
+  private void checkResourceFiles(GeocodeShpConfig config){
     String error = "";
-    if(! new File(config.getCountry_shp_file()+".dbf").exists()) {
-      error = String.format("FATAL: SHP file of Country: %s does not exist! Check property file defined in --properties argument!",config.getCountry_shp_file() + ".dbf");
-    }
-    if(! new File(config.getEez_shp_file()+".dbf").exists()){
-      error = String.format("FATAL: SHP file of EEZ: %s does not exist! Check property file defined in --properties argument!",config.getEez_shp_file() + ".dbf");
-    }
-    if(! new File(config.getState_shp_file()+".dbf").exists()){
-      error = String.format("FATAL: SHP file of State: %s does not exist! Check property file defined in --properties argument!",config.getState_shp_file() + ".dbf");
+    if (config == null){
+      error = String.format("FATAL: No SHP file configuration found. Please add to YAML.");
+    } else {
+      if (config.getCountry() == null || !new File(config.getCountry().getPath() + ".dbf").exists()) {
+        error = String.format("FATAL: SHP file of Country: %s does not exist! Check property file defined in --properties argument!", config.getCountry().getPath() + ".dbf");
+      }
+      if (config.getEez() == null || !new File(config.getEez().getPath() + ".dbf").exists()) {
+        error = String.format("FATAL: SHP file of EEZ: %s does not exist! Check property file defined in --properties argument!", config.getEez().getPath() + ".dbf");
+      }
+      if (config.getStateProvince() == null || !new File(config.getStateProvince().getPath() + ".dbf").exists()) {
+        error = String.format("FATAL: SHP file of State: %s does not exist! Check property file defined in --properties argument!", config.getStateProvince().getPath() + ".dbf");
+      }
     }
 
     if(!Strings.isNullOrEmpty(error)){
       error = Strings.LINE_SEPARATOR + Strings.repeat('*',128) + Strings.LINE_SEPARATOR + error +Strings.LINE_SEPARATOR ;
-      error += Strings.LINE_SEPARATOR + "The following properties are compulsory for location interpretation:";
+      error += Strings.LINE_SEPARATOR + "The following properties are mandatory in the pipelines.yaml for location interpretation:";
       error += Strings.LINE_SEPARATOR + "Those properties need to be defined in a property file given by -- properties argument.";
       error += Strings.LINE_SEPARATOR;
-      error += Strings.LINE_SEPARATOR +"\t" + String.format("%-32s%-48s%-32s","country_shp_file","SHP file for country searching.", "Example: /data/pipelines-shp/political (DO NOT INCLUDE extension)");
-      error += Strings.LINE_SEPARATOR +"\t" + String.format("%-32s%-48s","country_name_field","SHP field of country name");
-      error += Strings.LINE_SEPARATOR +"\t" + String.format("%-32s%-48s%-32s","eez_shp_file","SHP file for country searching.", "Example: /data/pipelines-shp/eez (DO NOT INCLUDE extension)");
-      error += Strings.LINE_SEPARATOR +"\t" + String.format("%-32s%-48s","eez_country_name_field","SHP field of country name");
-      error += Strings.LINE_SEPARATOR +"\t" + String.format("%-32s%-48s%-32s","state_shp_file","SHP file for state searching.", "Example: /data/pipelines-shp/cw_state_pol (DO NOT INCLUDE extension)");
-      error += Strings.LINE_SEPARATOR +"\t" + String.format("%-32s%-48s","state_name_field","SHP field of state name");
+      error += Strings.LINE_SEPARATOR +"\t" + String.format("%-32s%-48s%-32s","geocodeConfig.country.path","SHP file for country searching.", "Example: /data/pipelines-shp/political (DO NOT INCLUDE extension)");
+      error += Strings.LINE_SEPARATOR +"\t" + String.format("%-32s%-48s","geocodeConfig.country.nameField","SHP field of country name");
+      error += Strings.LINE_SEPARATOR +"\t" + String.format("%-32s%-48s%-32s","geocodeConfig.eez.path","SHP file for country searching.", "Example: /data/pipelines-shp/eez (DO NOT INCLUDE extension)");
+      error += Strings.LINE_SEPARATOR +"\t" + String.format("%-32s%-48s","geocodeConfig.eez.nameField","SHP field of country name");
+      error += Strings.LINE_SEPARATOR +"\t" + String.format("%-32s%-48s%-32s","geocodeConfig.stateProvince.path","SHP file for state searching.", "Example: /data/pipelines-shp/cw_state_poly (DO NOT INCLUDE extension)");
+      error += Strings.LINE_SEPARATOR +"\t" + String.format("%-32s%-48s","geocodeConfig.stateProvince.nameField","SHP field of state name");
       error +=  Strings.LINE_SEPARATOR + Strings.repeat('*',128);
       log.error( error);
       throw new RuntimeException(error);
     }
-
   }
 
-  public static GeocodeShpIntersectService getInstance(GeocodeShpIntersectConfig config) {
-    if(instance == null){
+  public static GeocodeShpIntersectService getInstance(GeocodeShpConfig config) {
+    if (instance == null){
       instance = new GeocodeShpIntersectService(config);
     }
     return instance;
@@ -84,8 +93,8 @@ public class GeocodeShpIntersectService implements GeocodeService {
     String state = states.intersect(longitude, latitude);
     if (state != null) {
       Location l = new Location();
-      l.setType("State");
-      l.setSource("http://www.naturalearthdata.com");
+      l.setType(STATE_PROVINCE_LOCATION_TYPE);
+      l.setSource(config.getStateProvince().getSource());
       l.setCountryName(state);
       l.setIsoCountryCode2Digit(state);
       locations.add(l);
@@ -93,8 +102,8 @@ public class GeocodeShpIntersectService implements GeocodeService {
     String value = countries.intersect(longitude, latitude);
     if (value != null) {
       Location l = new Location();
-      l.setType("Political");
-      l.setSource("http://www.naturalearthdata.com");
+      l.setType(POLITICAL_LOCATION_TYPE);
+      l.setSource(config.getCountry().getSource());
       l.setCountryName(value);
       l.setIsoCountryCode2Digit(value);
       locations.add(l);
@@ -102,8 +111,8 @@ public class GeocodeShpIntersectService implements GeocodeService {
       String eezValue = eez.intersect(longitude, latitude);
       if (eezValue != null) {
         Location l = new Location();
-        l.setType("EEZ");
-        l.setSource("http://vliz.be/vmdcdata/marbound/");
+        l.setType(EEZ_LOCATION_TYPE);
+        l.setSource(config.getEez().getSource());
         l.setCountryName(eezValue);
         l.setIsoCountryCode2Digit(eezValue);
         locations.add(l);

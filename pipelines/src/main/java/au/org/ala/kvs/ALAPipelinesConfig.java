@@ -7,6 +7,9 @@ import org.gbif.pipelines.parsers.config.model.*;
 
 import java.io.Serializable;
 
+/**
+ * Living Atlas configuration extensions
+ */
 @Data
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -19,4 +22,7 @@ public class ALAPipelinesConfig implements Serializable {
     private WsConfig alaNameMatch;
     private WsConfig lists;
 
+    GeocodeShpConfig geocodeConfig;
+
+    String vocabFilePath;
 }

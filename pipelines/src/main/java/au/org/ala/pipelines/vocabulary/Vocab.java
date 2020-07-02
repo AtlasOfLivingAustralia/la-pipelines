@@ -4,70 +4,84 @@ import au.org.ala.pipelines.util.Stemmer;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.AbstractMap.SimpleImmutableEntry;
-import java.util.Map.Entry;
 import lombok.extern.slf4j.Slf4j;
-import org.gbif.kvs.geocode.LatLng;
 
-import java.io.File;
-import java.nio.file.Files;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 public class Vocab {
 
-  private static Vocab vocab;
-  private Map<String, String[]> terms = new HashMap<>();
+  private Vocab(){}
+
+  private Set<String> canonicals = new HashSet<String>();
+
+  //variant -> canonical
+  private HashMap<String, String> variants = new HashMap<String, String>();
+
+  //stemmed variant -> canonical
+  private HashMap<String, String> stemmedVariants = new HashMap<String, String>();
 
   public static Vocab loadVocabFromFile(String filePath) {
-    return loadVocabFromFile(StateCentrePoints.class.getResourceAsStream(filePath));
+    return loadVocabFromStream(Vocab.class.getResourceAsStream(filePath));
   }
 
-  public static Vocab loadVocabFromFile(InputStream is) {
-    if (vocab == null) {
-      try {
-        vocab = new Vocab();
-        Stemmer stemmer = new Stemmer();
+  public static Vocab loadVocabFromStream(InputStream is) {
 
-        new BufferedReader(new InputStreamReader(is)).lines()
-            .map(s -> s.trim())
-            .forEach(l -> {
-              String[] ss = l.split("\t");
-              String key = stemmer.stem(ss[0].toLowerCase());
+      Vocab vocab = new Vocab();
+      Stemmer stemmer = new Stemmer();
 
-              vocab.terms.put(key, Arrays.copyOfRange(ss, 1, ss.length - 1));
+      new BufferedReader(new InputStreamReader(is)).lines()
+          .map(s -> s.trim())
+          .forEach(l -> {
+            String[] ss = l.split("\t");
 
-            });
-        log.info(vocab.terms.size() + " vocabs/records have been loaded.");
+            String canonical = ss[0];
+            vocab.canonicals.add(canonical);
 
-      } catch (Exception e) {
-        log.error(e.getMessage());
+            for (int i = 0; i< ss.length; i++){
+              vocab.variants.put(ss[i].toLowerCase(), canonical);
+              vocab.stemmedVariants.put(stemmer.stem(ss[i].toLowerCase()), canonical);
+            }
+      });
+
+      if(log.isDebugEnabled()) {
+        log.debug(vocab.canonicals.size() + " vocabs/records have been loaded.");
       }
-    }
-    return vocab;
+      return vocab;
   }
 
-
-  public Entry<String, String[]> matchTerm(String string2match) {
+  /**
+   * Match a vocab term.
+   *
+   * @param searchTerm
+   * @return
+   */
+  public Optional<String> matchTerm(String searchTerm) {
     Stemmer stemmer = new Stemmer();
-    String stringToUse = stemmer.stem(string2match.toLowerCase());
-    String[] result = terms.get(stringToUse);
-    if (result != null) {
-      return new SimpleImmutableEntry<String,String[]>(string2match, result);
-    } else {
-      return null;
+
+    String searchTermLowerCase = searchTerm.toLowerCase();
+    String stemmedSearchTerm = stemmer.stem(searchTerm.toLowerCase());
+
+    String[] result = null;
+
+    //match by key
+    if (canonicals.contains(searchTerm)){
+      return Optional.of(searchTerm);
     }
+
+    //match by key
+    if (variants.containsKey(searchTermLowerCase)){
+      return Optional.of(variants.get(searchTerm.toLowerCase()));
+    }
+
+    if (stemmedVariants.containsKey(stemmedSearchTerm)){
+      return Optional.of(stemmedVariants.get(stemmedSearchTerm));
+    }
+
+    return Optional.empty();
   }
 
   public boolean matched(String string2Match) {
-    if (matchTerm(string2Match) == null) {
-      return false;
-    } else {
-      return true;
-    }
+    return matchTerm(string2Match).isPresent();
   }
-
-
 }

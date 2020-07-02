@@ -4,6 +4,7 @@ import au.org.ala.pipelines.parser.CoordinatesParser;
 import au.org.ala.pipelines.vocabulary.*;
 import com.google.common.base.Strings;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.common.parsers.CountryParser;
 import org.gbif.common.parsers.core.ParseResult;
@@ -16,7 +17,6 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
-import org.gbif.pipelines.parsers.parsers.location.GeocodeKvStore;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.geocode.Location;
 import com.google.common.collect.Range;
@@ -41,16 +41,6 @@ import org.gbif.common.parsers.core.OccurrenceParseResult;
 @Slf4j
 public class ALALocationInterpreter {
 
-  //Copied from LocationInterpreter
-  // COORDINATE_UNCERTAINTY_METERS bounds are exclusive bounds
-  private static final double COORDINATE_UNCERTAINTY_METERS_LOWER_BOUND = 0d;
-  // 5000 km seems safe
-  private static final double COORDINATE_UNCERTAINTY_METERS_UPPER_BOUND = 5_000_000d;
-  private static final double COORDINATE_PRECISION_LOWER_BOUND = 0d;
-  // 45 close to 5000 km
-  private static final double COORDINATE_PRECISION_UPPER_BOUND = 45d;
-
-
   /**
    * Extended from GBIF interpretCountryAndCoordinates <p> Add centre of country check
    *
@@ -60,20 +50,24 @@ public class ALALocationInterpreter {
       KeyValueStore<LatLng, GeocodeResponse> service, MetadataRecord mdr) {
     return (er, lr) -> {
       if (service != null) {
+
         ParsedField<LatLng> parsedLatLon = CoordinatesParser.parseCoords(er);
 
         if (parsedLatLon.isSuccessful()) {
-          org.gbif.kvs.geocode.LatLng latlng = parsedLatLon.getResult();
+          LatLng latlng = parsedLatLon.getResult();
           lr.setDecimalLatitude(latlng.getLatitude());
           lr.setDecimalLongitude(latlng.getLongitude());
           lr.setHasCoordinate(true);
 
           GeocodeResponse gr = service.get(latlng);
+
           if (gr != null) {
+
             Collection<Location> locations = gr.getLocations();
             Optional<Location> countryLocation = locations.stream()
                 .filter(location -> location.getType().equalsIgnoreCase("Political") || location
                     .getType().equalsIgnoreCase("EEZ")).findFirst();
+
             if (countryLocation.isPresent()) {
               //SHP file supplied by ALA only contains country iso code.
               String countryIsoCode = countryLocation.get().getIsoCountryCode2Digit();
@@ -95,10 +89,12 @@ public class ALALocationInterpreter {
                 }
               } else {
                 addIssue(lr, ALAOccurrenceIssue.UNKNOWN_COUNTRY_NAME.name());
-                log.debug("Country ISO code {} not found!", countryIsoCode);
+                if (log.isDebugEnabled()) {
+                  log.debug("Country ISO code {} not found!", countryIsoCode);
+                }
               }
             } else {
-              log.debug("Country at {}, {}  is not found in SHP file", latlng.getLatitude(),
+              log.debug("Country at {}, {} is not found in SHP file", latlng.getLatitude(),
                   latlng.getLongitude());
             }
           }
@@ -112,24 +108,27 @@ public class ALALocationInterpreter {
     };
   }
 
-
   /**
-   * @param service Provided by ALA coutry/state SHP file
+   * @param service Provided by ALA country/state SHP file
    */
   public static BiConsumer<ExtendedRecord, LocationRecord> interpretStateProvince(
-      KeyValueStore<LatLng, GeocodeResponse> service) {
+KeyValueStore<LatLng, GeocodeResponse> service) {
     return (er, lr) -> {
+
       ParsedField<LatLng> parsedLatLon = CoordinatesParser.parseCoords(er);
 
       if (parsedLatLon.isSuccessful()) {
-        org.gbif.kvs.geocode.LatLng latlng = parsedLatLon.getResult();
+
+        LatLng latlng = parsedLatLon.getResult();
 
         GeocodeResponse gr = service.get(latlng);
         if (gr != null) {
+
           Collection<Location> locations = gr.getLocations();
 
           Optional<Location> state = locations.stream()
               .filter(location -> location.getType().equalsIgnoreCase("State")).findFirst();
+
           if (state.isPresent()) {
             lr.setStateProvince(state.get().getCountryName());
             //Check centre of State
@@ -138,24 +137,36 @@ public class ALALocationInterpreter {
                     latlng.getLongitude())) {
               addIssue(lr, ALAOccurrenceIssue.COORDINATES_CENTRE_OF_STATEPROVINCE.name());
             } else {
-              log.debug("{},{} is not the centre of {}!", latlng.getLatitude(),
-                  +latlng.getLongitude(), lr.getStateProvince());
+              if (log.isDebugEnabled()) {
+                log.debug("{},{} is not the centre of {}!", latlng.getLatitude(),
+                        +latlng.getLongitude(), lr.getStateProvince());
+              }
             }
 
-            if (!StateProvince.matchTerm(lr.getStateProvince())) {
-              addIssue(lr, ALAOccurrenceIssue.STATE_COORDINATE_MISMATCH.name());
+            //does the supplied stateProvince value match the value with the coordinates
+            String rawStateProvince  = er.getCoreTerms().get(DwcTerm.stateProvince.qualifiedName());
+            if (StringUtils.trimToNull(rawStateProvince) != null ){
+              Optional<String> matchedStateProvince = StateProvince.matchTerm(rawStateProvince);
+              if (matchedStateProvince.isPresent() && !matchedStateProvince.get().equalsIgnoreCase(lr.getStateProvince())){
+                addIssue(lr, ALAOccurrenceIssue.STATE_COORDINATE_MISMATCH.name());
+              }
             }
+
           } else {
-            log.debug("Current state SHP file does not contain a state at {}, {}",
-                latlng.getLatitude(), latlng.getLongitude());
+            if (log.isDebugEnabled()) {
+              log.debug("Current stateProvince SHP file does not contain a state at {}, {}",
+                      latlng.getLatitude(), latlng.getLongitude());
+            }
           }
         } else {
-          log.debug("No location is found at : {},{}", parsedLatLon.getResult().getLatitude(),
-              parsedLatLon.getResult().getLongitude());
+          if (log.isDebugEnabled()) {
+            log.debug("No recognised stateProvince  is found at : {},{}", parsedLatLon.getResult().getLatitude(),
+                    parsedLatLon.getResult().getLongitude());
+          }
         }
       }
 
-      //Assign state from source if no state is fetched from coorinates
+      //Assign state from source if no state is fetched from coordinates
       if (Strings.isNullOrEmpty(lr.getStateProvince())) {
         LocationInterpreter.interpretStateProvince(er, lr);
       }
@@ -173,9 +184,9 @@ public class ALALocationInterpreter {
   public static void interpretGeoreferencedDate(ExtendedRecord er, LocationRecord lr) {
     if (hasValue(er, DwcTerm.georeferencedDate)) {
       LocalDate upperBound = LocalDate.now().plusDays(1);
-      Range<LocalDate> validRecordedDateRange = Range
-          .closed(ALATemporalInterpreter.MIN_LOCAL_DATE, upperBound);
-      //GBIF TemporalInterpreter only accept OccurentIssue
+      Range<LocalDate> validRecordedDateRange = Range.closed(ALATemporalInterpreter.MIN_LOCAL_DATE, upperBound);
+
+      //GBIF TemporalInterpreter only accept OccurrenceIssue
       //Convert GBIF IDENTIFIED_DATE_UNLIKELY to ALA GEOREFERENCED_DATE_UNLIKELY
       OccurrenceParseResult<TemporalAccessor> parsed =
           TemporalInterpreter.interpretLocalDate(extractValue(er, DwcTerm.georeferencedDate),
@@ -209,7 +220,7 @@ public class ALALocationInterpreter {
     MISSING_GEOREFERENCEVERIFICATIONSTATUS
 */
 
-  public static void interpretGeodetic(ExtendedRecord er, LocationRecord lr) {
+  public static void interpretGeoreferenceTerms(ExtendedRecord er, LocationRecord lr) {
 
     //check for missing georeferencedBy
     if (Strings.isNullOrEmpty(extractNullAwareValue(er, DwcTerm.georeferencedBy))) {
@@ -229,17 +240,15 @@ public class ALALocationInterpreter {
         .isNullOrEmpty(extractNullAwareValue(er, DwcTerm.georeferenceVerificationStatus))) {
       addIssue(lr, ALAOccurrenceIssue.MISSING_GEOREFERENCEVERIFICATIONSTATUS.name());
     }
-
   }
-
 
   /**
    * TODO Need further discussion <p> Check coordinate uncertainty and precision <p> Prerequisite :
    * interpretCoordinateUncertaintyInMeters and interpretCoordinatePrecision MUST be run.
    */
   public static void interpretCoordinateUncertainty(LocationRecord lr) {
-    // If uncertainty NOT exists and Precision exits
 
+    // If coordinateUncertaintyInMeters NOT exists and coordinatePrecision exists
     if (lr.getCoordinateUncertaintyInMeters() == null) {
       addIssue(lr, ALAOccurrenceIssue.UNCERTAINTY_NOT_SPECIFIED.name());
       if (lr.getCoordinatePrecision() != null) {
@@ -249,12 +258,7 @@ public class ALALocationInterpreter {
 
     if (lr.getCoordinatePrecision() == null) {
       addIssue(lr, ALAOccurrenceIssue.MISSING_COORDINATEPRECISION.name());
-    } else {
-      //check coordinates range
-      //Unimplemented
     }
-
   }
-
 }
 
