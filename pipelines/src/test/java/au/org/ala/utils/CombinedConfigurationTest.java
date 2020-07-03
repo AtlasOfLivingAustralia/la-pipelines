@@ -1,8 +1,7 @@
 package au.org.ala.utils;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import org.hamcrest.Matchers;
 
 import java.io.FileNotFoundException;
 import java.util.LinkedHashMap;
@@ -19,10 +18,10 @@ public class CombinedConfigurationTest {
   }
 
   @Test
-  public void getUnknowValueReturnsEmptyList() throws FileNotFoundException {
-    assertThat(((LinkedHashMap<String, Object>) testConf.subSet("general2")).size(), equalTo(0));
+  public void getUnknownValueReturnsEmptyList() throws FileNotFoundException {
+    assertThat(testConf.subSet("general2").size(), equalTo(0));
   }
-  
+
   @Test
   public void weCanJoinSeveralConfigsAndConvertToArgs() {
     String[] args = testConf.toArgs("general", "interpret.default", "interpret.spark-embedded");
@@ -44,7 +43,8 @@ public class CombinedConfigurationTest {
 
   @Test
   public void weCanJoinSeveralConfigs() {
-    LinkedHashMap<String, Object> embedConf = testConf.subSet("general", "interpret.default", "interpret.spark-embedded");
+    LinkedHashMap<String, Object> embedConf =
+        testConf.subSet("general", "interpret.default", "interpret.spark-embedded");
     assertThat(embedConf.get("interpretationTypes"), equalTo("ALL"));
     assertThat(embedConf.get("runner"), equalTo("SparkRunner"));
     assertThat(embedConf.get("attempt"), equalTo(1));
@@ -63,7 +63,7 @@ public class CombinedConfigurationTest {
 
   @Test
   public void dotVars() {
-    assertThat(testConf.get("index.spark-embedded").getClass() , equalTo(LinkedHashMap.class));
+    assertThat(testConf.get("index.spark-embedded").getClass(), equalTo(LinkedHashMap.class));
     assertThat(testConf.get("index.spark-embedded.includeSampling"), equalTo(true));
     assertThat(testConf.get("index.spark-embedded.solrCollection"), equalTo("biocache"));
   }

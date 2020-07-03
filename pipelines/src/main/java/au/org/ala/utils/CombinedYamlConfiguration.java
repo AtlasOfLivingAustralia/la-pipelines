@@ -15,16 +15,17 @@ public class CombinedYamlConfiguration {
 
   private final LinkedHashMap<String, Object> combined;
 
-  public CombinedYamlConfiguration(String...configs) throws FileNotFoundException {
+  public CombinedYamlConfiguration(String... configs) throws FileNotFoundException {
     combined = new LinkedHashMap<String, Object>();
     for (String config : configs) {
       InputStream input = new FileInputStream(new File(config));
       Yaml yaml = new Yaml();
-      LinkedHashMap<String, Object> loaded = (LinkedHashMap<String, Object>) yaml.load(input);
+      LinkedHashMap<String, Object> loaded = yaml.load(input);
       combined.putAll(loaded);
     }
   }
-  public LinkedHashMap<String, Object> subSet(String...keys) {
+
+  public LinkedHashMap<String, Object> subSet(String... keys) {
     LinkedHashMap<String, Object> partial = new LinkedHashMap<String, Object>();
     if (keys.length == 0) {
       return combined;
@@ -48,8 +49,7 @@ public class CombinedYamlConfiguration {
     String[] keySplitted = key.split("\\.");
     LinkedHashMap<String, Object> current = combined;
     for (String keyS : keySplitted) {
-      if (current.size() > 0)
-        current = toList(keyS, current.get(keyS));
+      if (current.size() > 0) current = toList(keyS, current.get(keyS));
     }
     return current;
   }
@@ -67,15 +67,15 @@ public class CombinedYamlConfiguration {
 
   public String[] toArgs(String... keys) {
     List<String> argList = new ArrayList<String>();
-      for (Map.Entry<String, Object> conf : subSet(keys).entrySet()) {
-        argList.add(
-            new StringBuffer()
-                .append("--")
-                .append(conf.getKey())
-                .append("=")
-                .append(conf.getValue())
-                .toString());
-      }
+    for (Map.Entry<String, Object> conf : subSet(keys).entrySet()) {
+      argList.add(
+          new StringBuffer()
+              .append("--")
+              .append(conf.getKey())
+              .append("=")
+              .append(conf.getValue())
+              .toString());
+    }
     return argList.toArray(new String[0]);
   }
 
@@ -85,7 +85,7 @@ public class CombinedYamlConfiguration {
       // we try to traverse the tree looking for that var
       LinkedHashMap<String, Object> traversed = traverse(key);
       // If is an object, return the value, if not, the list of values
-      return traversed.size() == 1? traversed.values().toArray()[0]: traversed;
+      return traversed.size() == 1 ? traversed.values().toArray()[0] : traversed;
     }
     return value;
   }
