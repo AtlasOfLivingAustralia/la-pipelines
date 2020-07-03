@@ -110,3 +110,4 @@ pipelines/target
 models/target
 models/src/main/java-generated
 solr/conf/config.zip
+/migration/target/

@@ -1,13 +1,10 @@
 package au.org.ala.pipelines.transforms;
 
-import au.org.ala.kvs.ALAKvConfig;
-import au.org.ala.kvs.ALAKvConfigFactory;
 import au.org.ala.kvs.cache.ALAAttributionKVStoreFactory;
 import au.org.ala.kvs.cache.ALACollectionKVStoreFactory;
-import au.org.ala.kvs.client.ALACollectionLookup;
-import au.org.ala.kvs.client.ALACollectionMatch;
-import au.org.ala.kvs.client.ALACollectoryMetadata;
+import au.org.ala.kvs.client.*;
 import au.org.ala.pipelines.interpreters.ALAAttributionInterpreter;
+import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.transforms.MapElements;
@@ -19,9 +16,12 @@ import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.transforms.SerializableConsumer;
+import org.gbif.pipelines.transforms.SerializableSupplier;
 import org.gbif.pipelines.transforms.Transform;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 
+import java.io.IOException;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 
@@ -41,24 +41,24 @@ import static au.org.ala.pipelines.common.ALARecordTypes.ALA_ATTRIBUTION;
 @Slf4j
 public class ALAAttributionTransform extends Transform<ExtendedRecord, ALAAttributionRecord> {
 
-    private final ALAKvConfig kvConfig;
-
     private KeyValueStore<String, ALACollectoryMetadata> dataResourceKvStore;
+    private SerializableSupplier<KeyValueStore<String, ALACollectoryMetadata>> dataResourceKvStoreSupplier;
 
     private KeyValueStore<ALACollectionLookup, ALACollectionMatch> collectionKvStore;
+    private SerializableSupplier<KeyValueStore<ALACollectionLookup, ALACollectionMatch>> collectionKvStoreSupplier;
 
     private PCollectionView<MetadataRecord> metadataView;
 
+    @Builder(buildMethodName = "create")
     private ALAAttributionTransform(KeyValueStore<String, ALACollectoryMetadata> dataResourceKvStore,
-                                    ALAKvConfig kvConfig) {
+                                    SerializableSupplier<KeyValueStore<String, ALACollectoryMetadata>> dataResourceKvStoreSupplier,
+                                    KeyValueStore<ALACollectionLookup, ALACollectionMatch> collectionKvStore,
+                                    SerializableSupplier<KeyValueStore<ALACollectionLookup, ALACollectionMatch>> collectionKvStoreSupplier) {
         super(ALAAttributionRecord.class, ALA_ATTRIBUTION, ALAAttributionTransform.class.getName(), "alaAttributionRecordsCount");
         this.dataResourceKvStore = dataResourceKvStore;
-        this.kvConfig = kvConfig;
-    }
-
-    public static ALAAttributionTransform create(Properties properties) {
-        ALAKvConfig config = ALAKvConfigFactory.create(properties);
-        return new ALAAttributionTransform(null, config);
+        this.collectionKvStore = collectionKvStore;
+        this.dataResourceKvStoreSupplier = dataResourceKvStoreSupplier;
+        this.collectionKvStoreSupplier = collectionKvStoreSupplier;
     }
 
     public ALAAttributionTransform counterFn(SerializableConsumer<String> counterFn) {
@@ -71,28 +71,44 @@ public class ALAAttributionTransform extends Transform<ExtendedRecord, ALAAttrib
         return this;
     }
 
-    public static ALAAttributionTransform create() {
-        return new ALAAttributionTransform(null, null);
-    }
-
     /** Maps {@link ALATaxonRecord} to key value, where key is {@link TaxonRecord#getId} */
     public MapElements<ALAAttributionRecord, KV<String, ALAAttributionRecord>> toKv() {
         return MapElements.into(new TypeDescriptor<KV<String, ALAAttributionRecord>>() {})
                 .via((ALAAttributionRecord tr) -> KV.of(tr.getId(), tr));
     }
 
-    @SneakyThrows
+    /** Beam @Setup initializes resources */
     @Setup
     public void setup() {
-        if (kvConfig != null) {
-            ClientConfiguration clientConfiguration = ClientConfiguration.builder()
-                    .withBaseApiUrl(kvConfig.getCollectoryBasePath()) //GBIF base API url
-                    .withTimeOut(kvConfig.getTimeout()) //Geocode service connection time-out
-                    .build();
-
-            this.dataResourceKvStore = ALAAttributionKVStoreFactory.alaAttributionKVStore(clientConfiguration, kvConfig);
-            this.collectionKvStore = ALACollectionKVStoreFactory.alaCollectionKVStore(clientConfiguration, kvConfig);
+        if (dataResourceKvStore == null && dataResourceKvStoreSupplier != null) {
+            log.info("Initialize NameUsageMatchKvStore");
+            dataResourceKvStore = dataResourceKvStoreSupplier.get();
         }
+        if (collectionKvStore == null && collectionKvStoreSupplier != null) {
+            log.info("Initialize NameUsageMatchKvStore");
+            collectionKvStore = collectionKvStoreSupplier.get();
+        }
+    }
+
+    /** Beam @Teardown closes initialized resources */
+    @Teardown
+    public void tearDown() {
+//        if (Objects.nonNull(dataResourceKvStore)) {
+//            try {
+//                log.info("Close dataResourceKvStore");
+//                dataResourceKvStore.close();
+//            } catch (IOException ex) {
+//                log.error("Error closing KV Store", ex);
+//            }
+//        }
+//        if (Objects.nonNull(collectionKvStore)) {
+//            try {
+//                log.info("Close collectionKvStore");
+//                collectionKvStore.close();
+//            } catch (IOException ex) {
+//                log.error("Error closing KV Store", ex);
+//            }
+//        }
     }
 
     public ParDo.SingleOutput<ExtendedRecord, ALAAttributionRecord> interpret(PCollectionView<MetadataRecord> metadataView) {

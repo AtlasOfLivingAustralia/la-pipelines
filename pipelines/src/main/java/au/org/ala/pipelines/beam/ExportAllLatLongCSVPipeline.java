@@ -15,13 +15,9 @@ import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.commons.io.FileUtils;
-import org.gbif.pipelines.ingest.options.BasePipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
-import org.gbif.pipelines.ingest.utils.FsUtils;
-import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.transforms.core.LocationTransform;
-import org.slf4j.MDC;
 
 import java.io.File;
 import java.util.function.UnaryOperator;
@@ -53,7 +49,7 @@ public class ExportAllLatLongCSVPipeline {
         log.info("Adding step 2: Creating transformations");
 
         // Core
-        LocationTransform locationTransform = LocationTransform.create();
+        LocationTransform locationTransform = LocationTransform.builder().create();
 
         log.info("Adding step 3: Creating beam pipeline");
         PCollection<KV<String, LocationRecord>> locationCollection =

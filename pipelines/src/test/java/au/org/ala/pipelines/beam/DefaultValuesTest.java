@@ -44,9 +44,8 @@ public class DefaultValuesTest {
                 "--metaFileName=uuid-metrics.yml",
                 "--targetPath=/tmp/la-pipelines-test/default-values",
                 "--inputPath=/tmp/la-pipelines-test/default-values/dr893/1/verbatim.avro",
-                "--properties=src/test/resources/pipelines.properties",
-                "--useExtendedRecordId=true",
-                "--skipRegisrtyCalls=true"
+                "--properties=src/test/resources/pipelines.yaml",
+                "--useExtendedRecordId=true"
         });
         Function<ExtendedRecord, Boolean> notPopulated = (Function<ExtendedRecord, Boolean> & Serializable) er ->
                 er.getCoreTerms().get(DwcTerm.basisOfRecord.namespace() + DwcTerm.basisOfRecord.name()) == null
@@ -62,9 +61,8 @@ public class DefaultValuesTest {
                 "--metaFileName=interpretation-metrics.yml",
                 "--targetPath=/tmp/la-pipelines-test/default-values",
                 "--inputPath=/tmp/la-pipelines-test/default-values/dr893/1/verbatim.avro",
-                "--properties=src/test/resources/pipelines.properties",
-                "--useExtendedRecordId=true",
-                "--skipRegisrtyCalls=true"
+                "--properties=src/test/resources/pipelines.yaml",
+                "--useExtendedRecordId=true"
         });
         ALAVerbatimToInterpretedPipeline.run(interpretationOptions);
 
@@ -75,7 +73,7 @@ public class DefaultValuesTest {
                 "--runner=SparkRunner",
                 "--targetPath=/tmp/la-pipelines-test/default-values",
                 "--inputPath=/tmp/la-pipelines-test/default-values/dr893/1/interpreted/verbatim/interpret-*",
-                "--properties=src/test/resources/pipelines.properties"
+                "--properties=src/test/resources/pipelines.yaml"
         });
 
         //check default values are populated

@@ -1,6 +1,7 @@
 package au.org.ala.pipelines.beam;
 
 import au.org.ala.pipelines.transforms.ALACSVDocumentTransform;
+import au.org.ala.utils.ALAFsUtils;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,16 +15,15 @@ import org.apache.beam.sdk.transforms.join.CoGroupByKey;
 import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.commons.io.FileUtils;
-import org.gbif.pipelines.ingest.options.BasePipelineOptions;
+import org.apache.hadoop.fs.FileSystem;
+import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.ingest.utils.FileSystemFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.transforms.core.LocationTransform;
-import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.slf4j.MDC;
 
 import java.io.File;
@@ -41,11 +41,11 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSI
 public class ALAInterpretedToLatLongCSVPipeline {
 
     public static void main(String[] args) throws Exception {
-        BasePipelineOptions options = PipelinesOptionsFactory.create(BasePipelineOptions.class, args);
+        InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
         run(options);
     }
 
-    public static void run(BasePipelineOptions options) throws Exception {
+    public static void run(InterpretationPipelineOptions options) throws Exception {
 
         MDC.put("datasetId", options.getDatasetId());
         MDC.put("attempt", options.getAttempt().toString());
@@ -58,7 +58,7 @@ public class ALAInterpretedToLatLongCSVPipeline {
 
         // Use pre-processed coordinates from location transform outputs
         log.info("Adding step 2: Initialise location transform");
-        LocationTransform locationTransform = LocationTransform.create();
+        LocationTransform locationTransform = LocationTransform.builder().create();
 
         log.info("Adding step 3: Creating beam pipeline");
         PCollection<KV<String, LocationRecord>> locationCollection =
@@ -77,8 +77,10 @@ public class ALAInterpretedToLatLongCSVPipeline {
 
         String outputPath = FsUtils.buildDatasetAttemptPath(options, "latlng", true);
 
-        log.info("Output path = " + outputPath);
-        FileUtils.forceMkdir(new File(outputPath));
+        //delete previous runs
+        FsUtils.deleteIfExist(options.getHdfsSiteConfig(),  outputPath);
+        FileSystem fs = FileSystemFactory.getInstance(options.getHdfsSiteConfig()).getFs("/");
+        ALAFsUtils.createDirectory(fs, outputPath);
 
         csvCollection
                 .apply(Distinct.<String>create())

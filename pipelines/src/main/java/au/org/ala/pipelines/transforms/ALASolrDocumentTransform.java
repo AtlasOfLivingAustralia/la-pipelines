@@ -18,7 +18,6 @@ import org.gbif.pipelines.core.converters.MultimediaConverter;
 import org.gbif.pipelines.core.utils.TemporalUtils;
 import org.gbif.pipelines.io.avro.*;
 import org.jetbrains.annotations.NotNull;
-
 import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.text.ParseException;
@@ -59,7 +58,7 @@ public class ALASolrDocumentTransform implements Serializable {
     @NonNull
     private TupleTag<MeasurementOrFactRecord> mfrTag;
 
-    private TupleTag<AustraliaSpatialRecord> asrTag;
+    private TupleTag<LocationFeatureRecord> asrTag;
 
     private TupleTag<ALAAttributionRecord> aarTag;
     @NonNull
@@ -81,7 +80,7 @@ public class ALASolrDocumentTransform implements Serializable {
             TupleTag<ImageRecord> irTag,
             TupleTag<AudubonRecord> arTag,
             TupleTag<MeasurementOrFactRecord> mfrTag,
-            TupleTag<AustraliaSpatialRecord> asrTag,
+            TupleTag<LocationFeatureRecord> asrTag,
             TupleTag<ALAAttributionRecord> aarTag,
             TupleTag<ALAUUIDRecord> urTag,
             PCollectionView<MetadataRecord> metadataView,
@@ -121,7 +120,10 @@ public class ALASolrDocumentTransform implements Serializable {
      * @return
      */
     @NotNull
-    public static SolrInputDocument createSolrDocument(MetadataRecord mdr, BasicRecord br, TemporalRecord tr, LocationRecord lr, TaxonRecord txr, ALATaxonRecord atxr, ExtendedRecord er, ALAAttributionRecord aar, AustraliaSpatialRecord asr, ALAUUIDRecord ur) {
+    public static SolrInputDocument createSolrDocument(MetadataRecord mdr, BasicRecord br, TemporalRecord tr,
+                                                       LocationRecord lr, TaxonRecord txr, ALATaxonRecord atxr,
+                                                       ExtendedRecord er, ALAAttributionRecord aar,
+                                                       LocationFeatureRecord asr, ALAUUIDRecord ur) {
 
         Set<String> skipKeys = new HashSet<String>();
         skipKeys.add("id");
@@ -327,9 +329,9 @@ public class ALASolrDocumentTransform implements Serializable {
                 ALATaxonRecord atxr = v.getOnly(atxrTag, ALATaxonRecord.newBuilder().setId(k).build());
                 ALAAttributionRecord aar = v.getOnly(aarTag, ALAAttributionRecord.newBuilder().setId(k).build());
 
-                AustraliaSpatialRecord asr = null;
+                LocationFeatureRecord asr = null;
                 if (asrTag != null){
-                    asr = v.getOnly(asrTag, AustraliaSpatialRecord.newBuilder().setId(k).build());
+                    asr = v.getOnly(asrTag, LocationFeatureRecord.newBuilder().setId(k).build());
                 }
 
                 MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);

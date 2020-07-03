@@ -114,9 +114,8 @@ public class UUIDPipelineTest {
                 "--metaFileName=interpretation-metrics.yml",
                 "--targetPath=/tmp/la-pipelines-test/uuid-management",
                 "--inputPath=/tmp/la-pipelines-test/uuid-management/"+ datasetID+"/1/verbatim.avro",
-                "--properties=src/test/resources/pipelines.properties",
-                "--useExtendedRecordId=true",
-                "--skipRegisrtyCalls=true"
+                "--properties=src/test/resources/pipelines.yaml",
+                "--useExtendedRecordId=true"
         });
         ALAVerbatimToInterpretedPipeline.run(interpretationOptions);
 
@@ -127,9 +126,8 @@ public class UUIDPipelineTest {
                 "--metaFileName=uuid-metrics.yml",
                 "--targetPath=/tmp/la-pipelines-test/uuid-management",
                 "--inputPath=/tmp/la-pipelines-test/uuid-management/" + datasetID + "/1/verbatim.avro",
-                "--properties=src/test/resources/pipelines.properties",
-                "--useExtendedRecordId=true",
-                "--skipRegisrtyCalls=true"
+                "--properties=src/test/resources/pipelines.yaml",
+                "--useExtendedRecordId=true"
         });
         ALAUUIDMintingPipeline.run(uuidOptions);
     }

@@ -18,15 +18,18 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.fs.FileSystem;
 import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
-import org.gbif.pipelines.io.avro.AustraliaSpatialRecord;
+import org.gbif.pipelines.ingest.utils.FsUtils;
+import org.gbif.pipelines.io.avro.LocationFeatureRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.transforms.specific.AustraliaSpatialTransform;
+import org.gbif.pipelines.transforms.specific.LocationFeatureTransform;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -56,8 +59,10 @@ public class ALASamplingToAvroPipeline {
         String outputPath = ALAFsUtils.buildPathSamplingOutputUsingTargetPath(options);
         log.info("Outputting results to " + outputPath);
 
+        FileSystem fs = FsUtils.getFileSystem(options.getHdfsSiteConfig(),  "/");
+
         // Read column headers
-        final String[] columnHeaders = getColumnHeaders(samplingPath);
+        final String[] columnHeaders = getColumnHeaders(fs, samplingPath);
 
         // Read from download sampling CSV files
         PCollection<String> lines = p.apply(TextIO.read().from(samplingPath + "/*.csv"));
@@ -112,7 +117,6 @@ public class ALASamplingToAvroPipeline {
         final TupleTag<String> latLngIDTag = new TupleTag<>();
         final TupleTag<Map<String, String>> alaSamplingTag = new TupleTag<>();
 
-
         // Join collections by LatLng
         PCollection<KV<String, CoGbkResult>> results =
                 KeyedPCollectionTuple.of(latLngIDTag, latLngID)
@@ -121,10 +125,10 @@ public class ALASamplingToAvroPipeline {
 
 
         // Create AustraliaSpatialRecord
-        PCollection<AustraliaSpatialRecord> australiaSpatialRecordPCollection =
+        PCollection<LocationFeatureRecord> locationFeatureRecordPCollection =
                 results.apply(
                         ParDo.of(
-                                new DoFn<KV<String, CoGbkResult>, AustraliaSpatialRecord>() {
+                                new DoFn<KV<String, CoGbkResult>, LocationFeatureRecord>() {
                                     @ProcessElement
                                     public void processElement(ProcessContext c) {
                                         KV<String, CoGbkResult> e = c.element();
@@ -133,15 +137,15 @@ public class ALASamplingToAvroPipeline {
 
                                         while (idIter.hasNext()){
                                             String id = idIter.next();
-                                            AustraliaSpatialRecord aur = AustraliaSpatialRecord.newBuilder().setItems(sampling).setId(id).build();
+                                            LocationFeatureRecord aur = LocationFeatureRecord.newBuilder().setItems(sampling).setId(id).build();
                                             c.output(aur);
                                         }
                                     }
                                 }));
 
         // Write out AustraliaSpatialRecord to disk
-        AustraliaSpatialTransform australiaSpatialTransform = AustraliaSpatialTransform.create();
-        australiaSpatialRecordPCollection.apply("Write sampling to avro", australiaSpatialTransform.write(outputPath));
+        LocationFeatureTransform locationFeatureTransform = LocationFeatureTransform.builder().create();
+        locationFeatureRecordPCollection.apply("Write sampling to avro", locationFeatureTransform.write(outputPath));
 
         log.info("Running the pipeline");
         PipelineResult result = p.run();
@@ -152,33 +156,29 @@ public class ALASamplingToAvroPipeline {
 
 
     @NotNull
-    private static String[] getColumnHeaders(String samplingPath) {
+    private static String[] getColumnHeaders(FileSystem fs, String samplingPath)  {
 
-        //obtain column header
-        File samplingDir = new File(samplingPath);
+        try {
+            //obtain column header
+            if (ALAFsUtils.exists(fs, samplingPath)) {
 
-        if (samplingDir.exists() && samplingDir.isDirectory()){
-            File[] samplingFiles = samplingDir.listFiles(new FilenameFilter() {
-                @Override
-                public boolean accept(File dir, String name) {
-                    return name.endsWith(".csv");
-                }
-            });
+                Collection<String> samplingFiles = ALAFsUtils.listPaths(fs, samplingPath);
 
-            if (samplingFiles.length > 0){
+                if (!samplingFiles.isEmpty()) {
 
-                try {
-                    String columnHeaderString = new BufferedReader(new FileReader(samplingFiles[0])).readLine();
+                    //read the first line of the first sampling file
+                    String samplingFilePath = samplingFiles.iterator().next();
+                    String columnHeaderString = new BufferedReader(new InputStreamReader(ALAFsUtils.openInputStream(fs, samplingFilePath))).readLine();
                     return columnHeaderString.split(",");
-                } catch (Exception e){
-                    throw new RuntimeException(e.getMessage());
-                }
 
+                } else {
+                    throw new RuntimeException("Sampling directory found, but is empty. Has sampling from spatial-service been ran ? Missing dir: " + samplingPath);
+                }
             } else {
-                throw new RuntimeException("Sampling directory found, but is empty. Has sampling from spatial-service been ran ? Missing dir: " + samplingPath);
+                throw new RuntimeException("Sampling directory cant be found. Has sampling from spatial-service been ran ? Missing dir: " + samplingPath);
             }
-        } else {
-            throw new RuntimeException("Sampling directory cant be found. Has sampling from spatial-service been ran ? Missing dir: " + samplingPath);
+        } catch (IOException e){
+            throw new RuntimeException("Problem reading sampling from: " + samplingPath + " - " + e.getMessage(), e);
         }
     }
 

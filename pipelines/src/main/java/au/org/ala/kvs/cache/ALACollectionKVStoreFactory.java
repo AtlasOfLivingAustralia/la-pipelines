@@ -1,12 +1,14 @@
 package au.org.ala.kvs.cache;
 
-import au.org.ala.kvs.ALAKvConfig;
+import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.client.*;
 import au.org.ala.kvs.client.retrofit.ALACollectoryServiceClient;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.cache.KeyValueCache;
 import org.gbif.kvs.hbase.Command;
+import org.gbif.pipelines.transforms.SerializableSupplier;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 
 import java.io.IOException;
@@ -14,13 +16,38 @@ import java.io.IOException;
 @Slf4j
 public class ALACollectionKVStoreFactory {
 
+    private final KeyValueStore<ALACollectionLookup, ALACollectionMatch> kvStore;
+    private static volatile ALACollectionKVStoreFactory instance;
+    private static final Object MUTEX = new Object();
+
+    @SneakyThrows
+    private ALACollectionKVStoreFactory(ALAPipelinesConfig config) {
+        this.kvStore = create(config);
+    }
+
+    public static KeyValueStore<ALACollectionLookup, ALACollectionMatch> getInstance(
+            ALAPipelinesConfig config) {
+        if (instance == null) {
+            synchronized (MUTEX) {
+                if (instance == null) {
+                    instance = new ALACollectionKVStoreFactory(config);
+                }
+            }
+        }
+        return instance.kvStore;
+    }
+
     /**
      *
-     * @param clientConfiguration
      * @return
      * @throws IOException
      */
-    public static KeyValueStore<ALACollectionLookup, ALACollectionMatch> alaCollectionKVStore(ClientConfiguration clientConfiguration, ALAKvConfig kvConfig) throws IOException {
+    public static KeyValueStore<ALACollectionLookup, ALACollectionMatch> create(ALAPipelinesConfig config) {
+
+        ClientConfiguration clientConfiguration = ClientConfiguration.builder()
+                .withBaseApiUrl(config.getCollectory().getWsUrl()) //GBIF base API url
+                .withTimeOut(config.getCollectory().getTimeoutSec()) //Geocode service connection time-out
+                .build();
 
         ALACollectoryServiceClient wsClient = new ALACollectoryServiceClient(clientConfiguration);
         Command closeHandler = () -> {
@@ -31,13 +58,13 @@ public class ALACollectionKVStoreFactory {
                 }
         };
 
-        return cache2kBackedKVStore(wsClient, closeHandler, kvConfig);
+        return cache2kBackedKVStore(wsClient, closeHandler, config);
     }
 
     /**
      * Builds a KV Store backed by the rest client.
      */
-    private static KeyValueStore<ALACollectionLookup, ALACollectionMatch> cache2kBackedKVStore(ALACollectoryService service, Command closeHandler, ALAKvConfig config) {
+    private static KeyValueStore<ALACollectionLookup, ALACollectionMatch> cache2kBackedKVStore(ALACollectoryService service, Command closeHandler, ALAPipelinesConfig config) {
 
         KeyValueStore kvs = new KeyValueStore<ALACollectionLookup, ALACollectionMatch>() {
             @Override
@@ -61,7 +88,12 @@ public class ALACollectionKVStoreFactory {
                 closeHandler.execute();
             }
         };
-        return KeyValueCache.cache(kvs, config.getCollectionCacheMaxSize(), ALACollectionLookup.class, ALACollectionMatch.class);
+        return KeyValueCache.cache(kvs, config.getCollectory().getCacheSizeMb(), ALACollectionLookup.class, ALACollectionMatch.class);
+    }
+
+    public static SerializableSupplier<KeyValueStore<ALACollectionLookup, ALACollectionMatch>> getInstanceSupplier(
+            ALAPipelinesConfig config) {
+        return () -> ALACollectionKVStoreFactory.getInstance(config);
     }
 
     /**

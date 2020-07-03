@@ -12,8 +12,6 @@
  */
 package au.org.ala.pipelines.transforms;
 
-import au.org.ala.kvs.ALAKvConfig;
-import au.org.ala.kvs.ALAKvConfigFactory;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
@@ -29,9 +27,6 @@ public class ALAUUIDTransform extends Transform<ExtendedRecord, ALAUUIDRecord> {
     private ALAUUIDTransform(){
         super(ALAUUIDRecord.class, ALA_UUID, ALAUUIDTransform.class.getName(), "alaUuidCount");
     }
-    private ALAUUIDTransform(ALAKvConfig config){
-        super(ALAUUIDRecord.class, ALA_UUID, ALAUUIDTransform.class.getName(), "alaUuidCount");
-    }
 
     /** Maps {@link ALATaxonRecord} to key value, where key is {@link TaxonRecord#getId} */
     public MapElements<ALAUUIDRecord, KV<String, ALAUUIDRecord>> toKv() {
@@ -41,11 +36,6 @@ public class ALAUUIDTransform extends Transform<ExtendedRecord, ALAUUIDRecord> {
 
     public static ALAUUIDTransform create() {
         return new ALAUUIDTransform();
-    }
-
-    public static ALAUUIDTransform create(Properties properties) {
-        ALAKvConfig config = ALAKvConfigFactory.create(properties);
-        return new ALAUUIDTransform(config);
     }
 
     @Override
