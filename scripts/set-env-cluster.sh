@@ -2,7 +2,7 @@
 
 export PIPELINES_JAR="/efs-mount-point/pipelines-hdfs.jar"
 
-export PIPELINES_CONF="$FS_PATH/pipelines.properties"
+export PIPELINES_CONF="$FS_PATH/pipelines.yaml"
 
 export HDFS_CONF="/efs-mount-point/hdfs-site.xml"
 
