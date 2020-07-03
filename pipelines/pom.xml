@@ -582,6 +582,11 @@
       <artifactId>jsr305</artifactId>
       <version>${findbugs-jsr305.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.yaml</groupId>
+      <artifactId>snakeyaml</artifactId>
+      <version>1.25</version>
+    </dependency>
 
     <!-- XML -->
     <dependency>
