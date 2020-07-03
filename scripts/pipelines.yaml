@@ -1,0 +1,6 @@
+alaNameMatch:
+  wsUrl: http://localhost:9179
+  timeoutSec: 70
+collectory:
+  wsUrl: https://collections.ala.org.au
+  timeoutSec: 70

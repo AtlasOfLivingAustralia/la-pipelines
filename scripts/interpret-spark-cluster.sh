@@ -30,11 +30,11 @@ $PIPELINES_JAR \
 --targetPath=$FS_PATH/$DATA_DIR \
 --inputPath=$FS_PATH/$DATA_DIR/$1/1/verbatim.avro \
 --metaFileName=interpretation-metrics.yml \
---properties=$FS_PATH/pipelines.properties \
+--properties=$PIPELINES_CONF \
 --coreSiteConfig=$HDFS_CONF \
 --hdfsSiteConfig=$HDFS_CONF \
---useExtendedRecordId=true \
---skipRegisrtyCalls=true
+--useExtendedRecordId=true
+
 echo $(date)
 duration=$SECONDS
 echo "INTERPRET $1 took $(($duration / 60)) minutes and $(($duration % 60)) seconds."

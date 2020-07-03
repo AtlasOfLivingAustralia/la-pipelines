@@ -17,7 +17,7 @@ SECONDS=0
 --num-executors 24 \
 --executor-cores 8 \
 --executor-memory 7G \
---driver-memory 1G \
+--driver-memory 4G \
 --class au.org.ala.pipelines.beam.ALAInterpretedToSolrIndexPipeline  \
 --master $SPARK_MASTER \
 --driver-java-options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
@@ -31,7 +31,7 @@ $PIPELINES_JAR \
 --coreSiteConfig=$HDFS_CONF \
 --hdfsSiteConfig=$HDFS_CONF \
 --metaFileName=indexing-metrics.yml \
---properties=$FS_PATH/pipelines.properties \
+--properties=$PIPELINES_CONF \
 --includeSampling=true \
 --zkHost=$SOLR_ZK_HOST \
 --solrCollection=$SOLR_COLLECTION

@@ -31,7 +31,7 @@ $PIPELINES_JAR \
 --coreSiteConfig=$HDFS_CONF \
 --hdfsSiteConfig=$HDFS_CONF \
 --metaFileName=uuid-metrics.yml \
---properties=$FS_PATH/pipelines.properties \
+--properties=$PIPELINES_CONF \
 --useExtendedRecordId=true \
 --skipRegisrtyCalls=true
 

@@ -1,12 +1,9 @@
 package au.org.ala.pipelines.transforms;
 
-import au.org.ala.kvs.ALAKvConfig;
-import au.org.ala.kvs.ALAKvConfigFactory;
-import au.org.ala.kvs.cache.ALANameMatchKVStoreFactory;
 import au.org.ala.kvs.client.ALANameUsageMatch;
 import au.org.ala.kvs.client.ALASpeciesMatchRequest;
 import au.org.ala.pipelines.interpreters.ALATaxonomyInterpreter;
-import lombok.SneakyThrows;
+import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
@@ -18,11 +15,12 @@ import org.gbif.pipelines.io.avro.ALATaxonRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.transforms.SerializableConsumer;
+import org.gbif.pipelines.transforms.SerializableSupplier;
 import org.gbif.pipelines.transforms.Transform;
-import org.gbif.rest.client.configuration.ClientConfiguration;
 
+import java.io.IOException;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.Properties;
 
 import static au.org.ala.pipelines.common.ALARecordTypes.ALA_TAXONOMY;
 
@@ -41,29 +39,16 @@ import static au.org.ala.pipelines.common.ALARecordTypes.ALA_TAXONOMY;
 @Slf4j
 public class ALATaxonomyTransform extends Transform<ExtendedRecord, ALATaxonRecord> {
 
-  private final ALAKvConfig kvConfig;
   private KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch> kvStore;
+  private SerializableSupplier<KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch>> kvStoreSupplier;
 
-  private ALATaxonomyTransform(KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch> kvStore, ALAKvConfig kvConfig) {
+  @Builder(buildMethodName = "create")
+  private ALATaxonomyTransform(
+          SerializableSupplier<KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch>> kvStoreSupplier,
+          KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch> kvStore) {
     super(ALATaxonRecord.class, ALA_TAXONOMY, ALATaxonomyTransform.class.getName(), "alaTaxonRecordsCount");
     this.kvStore = kvStore;
-    this.kvConfig = kvConfig;
-  }
-
-  public static ALATaxonomyTransform create() {
-    return new ALATaxonomyTransform(null, null);
-  }
-
-  public static ALATaxonomyTransform create(ALAKvConfig kvConfig) {
-    return new ALATaxonomyTransform(null, kvConfig);
-  }
-
-  public static ALATaxonomyTransform create(KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch> kvStore) {
-    return new ALATaxonomyTransform(kvStore, null);
-  }
-
-  public static ALATaxonomyTransform create(Properties properties) {
-    return new ALATaxonomyTransform(null, ALAKvConfigFactory.create(properties));
+    this.kvStoreSupplier = kvStoreSupplier;
   }
 
   /** Maps {@link ALATaxonRecord} to key value, where key is {@link TaxonRecord#getId} */
@@ -82,22 +67,27 @@ public class ALATaxonomyTransform extends Transform<ExtendedRecord, ALATaxonReco
     return this;
   }
 
-  @SneakyThrows
+  /** Beam @Setup initializes resources */
   @Setup
   public void setup() {
-
-    if (kvConfig != null) {
-      ClientConfiguration clientConfiguration = ClientConfiguration.builder()
-              .withBaseApiUrl(kvConfig.getTaxonomyBasePath()) //GBIF base API url
-              .withTimeOut(kvConfig.getTimeout()) //Geocode service connection time-out
-              .build();
-
-      kvStore = ALANameMatchKVStoreFactory.alaNameMatchKVStore(clientConfiguration, kvConfig);
+    if (kvStore == null && kvStoreSupplier != null) {
+      log.info("Initialize NameUsageMatchKvStore");
+      kvStore = kvStoreSupplier.get();
     }
   }
 
+  /** Beam @Teardown closes initialized resources */
   @Teardown
-  public void tearDown() {}
+  public void tearDown() {
+//    if (Objects.nonNull(kvStore)) {
+//      try {
+//        log.info("Close NameUsageMatchKvStore");
+//        //kvStore.close();
+//      } catch (IOException ex) {
+//        log.error("Error closing KV Store", ex);
+//      }
+//    }
+  }
 
   @Override
   public Optional<ALATaxonRecord> convert(ExtendedRecord source) {

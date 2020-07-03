@@ -1,57 +1,98 @@
 package au.org.ala.pipelines.transforms;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.Optional;
-import java.util.Properties;
 
-import au.org.ala.kvs.ALAKvConfig;
-import au.org.ala.kvs.ALAKvConfigFactory;
+import lombok.extern.slf4j.Slf4j;
+import org.gbif.kvs.KeyValueStore;
+import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.LocationInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.parsers.config.factory.KvConfigFactory;
-import org.gbif.pipelines.parsers.config.model.KvConfig;
+import org.gbif.pipelines.transforms.SerializableSupplier;
+import org.gbif.pipelines.transforms.Transform;
+import org.gbif.rest.client.geocode.GeocodeResponse;
 
-import au.org.ala.kvs.cache.GeocodeServiceFactory;
+import org.apache.beam.sdk.transforms.MapElements;
+import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
+import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.values.PCollectionView;
+import org.apache.beam.sdk.values.TypeDescriptor;
 
-public class LocationTransform extends org.gbif.pipelines.transforms.core.LocationTransform {
+import lombok.Builder;
+import lombok.Setter;
 
-  KvConfig kvConfig;
-  ALAKvConfig alaKvConfig;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.LOCATION_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.LOCATION;
 
-  private LocationTransform(KvConfig kvConfig, ALAKvConfig alaKvConfig) {
-    super(kvConfig);
-    this.kvConfig  = kvConfig;
-    this.alaKvConfig  = alaKvConfig;
+@Slf4j
+public class LocationTransform extends Transform<ExtendedRecord, LocationRecord> {
+
+  private SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeKvStoreSupplier;
+  private KeyValueStore<LatLng, GeocodeResponse> geocodeKvStore;
+
+  @Setter
+  private PCollectionView<MetadataRecord> metadataView;
+
+  @Builder(buildMethodName = "create")
+  private LocationTransform(
+          SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeKvStoreSupplier,
+          KeyValueStore<LatLng, GeocodeResponse> geocodeKvStore,
+          PCollectionView<MetadataRecord> metadataView) {
+    super(LocationRecord.class, LOCATION, org.gbif.pipelines.transforms.core.LocationTransform.class.getName(), LOCATION_RECORDS_COUNT);
+    this.geocodeKvStoreSupplier = geocodeKvStoreSupplier;
+    this.geocodeKvStore = geocodeKvStore;
+    this.metadataView = metadataView;
   }
 
-  public static LocationTransform create(Properties properties) {
-    ALAKvConfig alaKvConfig = ALAKvConfigFactory.create(properties);
-    KvConfig kv = KvConfigFactory.create(properties, KvConfigFactory.GEOCODE_PREFIX);
-    KvConfig kvConfig = KvConfig.create(alaKvConfig.getGeocodeBasePath(), kv.getTimeout(), kv.getCacheSizeMb(), kv.getTableName(), kv.getZookeeperUrl(), kv.getNumOfKeyBuckets(), true,  kv.getImagePath());
-    return new LocationTransform(kvConfig, alaKvConfig);
+  /** Maps {@link LocationRecord} to key value, where key is {@link LocationRecord#getId} */
+  public MapElements<LocationRecord, KV<String, LocationRecord>> toKv() {
+    return MapElements.into(new TypeDescriptor<KV<String, LocationRecord>>() {})
+            .via((LocationRecord lr) -> KV.of(lr.getId(), lr));
   }
 
-  /**
-   * Initializes resources using singleton factory can be useful in case of non-Beam pipeline
-   */
   @Override
-  public LocationTransform init() {
-    setGeocodeKvStore(GeocodeServiceFactory.create(kvConfig));
-    return this;
+  public SingleOutput<ExtendedRecord, LocationRecord> interpret() {
+    return ParDo.of(this).withSideInputs(metadataView);
   }
 
+  /** Beam @Setup initializes resources */
   @Setup
-  @Override
   public void setup() {
-    if (kvConfig != null) {
-      this.setGeocodeKvStore(GeocodeServiceFactory.create(kvConfig));
+    if (geocodeKvStore == null && geocodeKvStoreSupplier != null) {
+      log.info("Initialize geocodeKvStore");
+      geocodeKvStore = geocodeKvStoreSupplier.get();
+    }
+  }
+
+  /** Beam @Teardown closes initialized resources */
+  @Teardown
+  public void tearDown() {
+    try {
+      if(geocodeKvStore != null) {
+        log.info("Close geocodeKvStore");
+        geocodeKvStore.close();
+      }
+    } catch (IOException ex) {
+      log.warn("Can't close geocodeKvStore - {}", ex.getMessage());
     }
   }
 
   @Override
+  public Optional<LocationRecord> convert(ExtendedRecord source) {
+    throw new IllegalArgumentException("Method is not implemented!");
+  }
+
+  @Override
+  @ProcessElement
+  public void processElement(ProcessContext c) {
+    processElement(c.element(), c.sideInput(metadataView)).ifPresent(c::output);
+  }
+
   public Optional<LocationRecord> processElement(ExtendedRecord source, MetadataRecord mdr) {
 
     LocationRecord lr = LocationRecord.newBuilder()
@@ -62,7 +103,7 @@ public class LocationTransform extends org.gbif.pipelines.transforms.core.Locati
     Optional<LocationRecord> result = Interpretation.from(source)
             .to(lr)
             .when(er -> !er.getCoreTerms().isEmpty())
-            .via(LocationInterpreter.interpretCountryAndCoordinates(getGeocodeKvStore(), mdr))
+            .via(LocationInterpreter.interpretCountryAndCoordinates(geocodeKvStore, mdr))
             .via(LocationInterpreter::interpretContinent)
             .via(LocationInterpreter::interpretWaterBody)
             .via(LocationInterpreter::interpretStateProvince)
@@ -76,6 +117,7 @@ public class LocationTransform extends org.gbif.pipelines.transforms.core.Locati
             .via(LocationInterpreter::interpretMaximumDistanceAboveSurfaceInMeters)
             .via(LocationInterpreter::interpretCoordinatePrecision)
             .via(LocationInterpreter::interpretCoordinateUncertaintyInMeters)
+            .via(LocationInterpreter::interpretLocality)
             .get();
 
     result.ifPresent(r -> this.incCounter());

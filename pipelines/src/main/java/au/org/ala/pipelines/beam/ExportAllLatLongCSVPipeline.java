@@ -49,7 +49,7 @@ public class ExportAllLatLongCSVPipeline {
         log.info("Adding step 2: Creating transformations");
 
         // Core
-        LocationTransform locationTransform = LocationTransform.create();
+        LocationTransform locationTransform = LocationTransform.builder().create();
 
         log.info("Adding step 3: Creating beam pipeline");
         PCollection<KV<String, LocationRecord>> locationCollection =

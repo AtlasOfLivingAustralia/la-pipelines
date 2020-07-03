@@ -1,13 +1,13 @@
 # Living Atlas Pipelines extensions [![Build Status](https://travis-ci.org/AtlasOfLivingAustralia/la-pipelines.svg?branch=master)](http://travis-ci.org/AtlasOfLivingAustralia/la-pipelines) [![Coverage Status](https://coveralls.io/repos/github/AtlasOfLivingAustralia/la-pipelines/badge.svg?branch=master)](https://coveralls.io/github/AtlasOfLivingAustralia/la-pipelines?branch=master)
 
-This project is **proof of concept quality code** aimed at identifying work required
- to use of pipelines as a replacement to [biocache-store](https://github.com/AtlasOfLivingAustralia/biocache-store)
+The aim of this project is to add functionality required by the Living Atlases to gbif/pipelines to  
+facilitate the replacement to [biocache-store](https://github.com/AtlasOfLivingAustralia/biocache-store)
  for data ingress. 
 
 ## Architecture
 
 For details on the GBIF implementation, see the [pipelines github repository](https://github.com/gbif/pipelines).
-This project is focussed on extension to that architecture to support use by the living atlases.
+This project is focussed on extensions to that architecture to support use by the Living Atlases.
 
 ![Pipelines](https://docs.google.com/drawings/d/e/2PACX-1vQhQSg5VFo2xRZfDhmvhKuNLUpyTOlW-t-m1fesJ2RElWorVPAEbnsZg_StJKh22mEcS4D28j_nPoTV/pub?w=960&h=720 "Pipelines") 
 
@@ -30,83 +30,68 @@ In addition pipelines for following will need to be developed:
 * Environmental outlier detection
 * Expert distribution outliers
 
-## Prototyped so far:
-
-1. Pipeline extension to add the ALA taxonomy to the interpreted data
-2. Extension with Sampling information (Environmental & Contextual)
-3. Generation of search SOLR index compatible with biocache-service
-
 ## To be done:
 
 1. Sensible use of GBIF's key/value store framework (backend storage to be identified)
 2. Dealing with sensitive data
-3. Integration with Collectory - ALA's current production metadata registry
 4. Integration with Lists tool
-5. Extensions with separate taxonomies e.g. NZOR
 6. Handling of images with ALA's image-service as storage
 
 ## Dependent projects
 
 The pipelines work will necessitate some minor additional API additions and change to the following components:
 
-#### biocache-service
+### biocache-service
 [experimental/pipelines branch](https://github.com/AtlasOfLivingAustralia/biocache-service/tree/experimental/pipelines) 
 The aim for this proof of concept is to make very minimal changes to biocache-service, maintain the existing API and have no impact on existing services and applications.
 
-#### ala-namematching-service
+### ala-namematching-service
 A simple **drop wizard wrapper around the [ala-name-matching](https://github.com/AtlasOfLivingAustralia/ala-name-matching) library** has been prototyped to support integration with pipelines.
  
-#### spatial-service
-[intersect-cache branch](https://github.com/AtlasOfLivingAustralia/spatial-service/tree/intersect-cache) An additional webservice to allow a point
-lookup for all layers. This needs to be supplement with additional work to populate a key value store cache using the spatial-service batch API.
-
-
 ## Getting started
 
 In the absence of ansible scripts, here are some instructions for setting up a local development environment for pipelines.
-These steps will load a dataset in SOLR.
+These steps will load a dataset into a SOLR index.
 
-Requirements of softwares:
+### Software requirements:
+
 * Java 8 - this is mandatory (see [GBIF pipelines documentation](https://github.com/gbif/pipelines#about-the-project))
-* Maven needs work on OpenSDK 1.8 
-'nano ~/.mavenrc' add 'export JAVA_HOME= [JDK1.8 PATH]'
+* Maven needs to run with OpenSDK 1.8 
+'nano ~/.mavenrc' add 'export JAVA_HOME=[JDK1.8 PATH]'
 * Docker Desktop
 * lombok plugin for intelliJ needs to be installed for slf4 annotation  
 
 ### Prerequisite services
-1. Run ala-namematching-service on port 9179
-   There are two ways of running ala-nameservice
-   1. Use the docker-compose file in the root of this project like so:
-      `docker-compose -f ala-nameservice.yml up -d`
-   2. Or we can checkout ala-namematching-service via `git clone https://github.com/AtlasOfLivingAustralia/ala-namematching-service`
-      run `mvn package` to build `ala-namematching-service-1.0-SNAPSHOT.jar`. Jar name may change based on version  
-      Copy jar file from ./target to ./docker
-      `cd ./docker`
-      `docker-compose up`
-      Check docker-compose.yml to get more hints how ala-namematching-service is built
-    
-    You can test it by checking this url: http://localhost:9179/api/search?q=Acacia
-    
+
+1. Run ala-namematching-service on port 9179 using the dock-compose file like so:
+`docker-compose -f ala-nameservice.yml up -d`
+You can test it by checking this url: http://localhost:9179/api/search?q=Acacia
+1. Run solr on port 8983 using the dock-compose file like so:   
+`docker-compose -f solr8.yml up -d`
+and then setup the collection using the following script:
+`./update-solr-config.sh`
+You can test it by checking this url: http://localhost:8983
       
-### Run la-pipeline   
+### Setting up la-pipelines
+  
 1. Download shape files from [here](https://pipelines-shp.s3-ap-southeast-2.amazonaws.com/pipelines-shapefiles.zip) and expand into `/data/pipelines-shp` directory
-1. Download a darwin core archive (e.g. https://archives.ala.org.au/archives/gbif/dr893/dr893.zip) and expand it into `/data/biocache-load` e.g. `/data/biocache-load/dr893`
+1. Download a test darwin core archive (e.g. https://archives.ala.org.au/archives/gbif/dr893/dr893.zip) and expand it into `/data/biocache-load` e.g. `/data/biocache-load/dr893`
 1. Create the following directory `/data/pipelines-data`
 1. Build with maven `mvn clean install`
+
+### Running la-pipelines
+
+1. `cd scripts`
 1. To convert DwCA to AVRO, run `./dwca-avro.sh dr893`
 1. To interpret, run `./interpret-spark-embedded.sh dr893`
 1. To mint UUIDs, run `./uuid-spark-embedded.sh dr893`
-1. To sample run
-    1. `./export-latlng.sh dr893`
+1. To sample run:
+    1. `./export-latlng-embedded.sh dr893`
     1. `./sample.sh dr893`
     1. `./sample-avro-embedded.sh dr893`
 1. To setup SOLR:
-    1. Install docker
-    1. Follow the instructions in [solr8/docker/README.md](solr/docker/solr8/README.md)
-    1. Run `docker-compose -f solr8.yml up -d`
-    1. Run `./update-solr-config.sh`
-1. To index, run `./index.sh dr893`
-
+    1. Run `cd solr/scripts` and  then run ' `./update-solr-config.sh`
+1. To index, run `./index-spark-embedded.sh dr893`
 
 ## Integration Tests
 
@@ -115,11 +100,13 @@ To start the required containers, run the following:
 
 ```
 docker-compose -f ala-nameservice.yml up -d
+docker-compose -f solr8.yml up -d
 ```
 
 To shutdown, run the following:
 ```
-docker-compose -f ala-nameservice.yml up kill
+docker-compose -f ala-nameservice.yml kill
+docker-compose -f solr8.yml kill
 ```
 
 ## Code style and tools
@@ -127,7 +114,6 @@ docker-compose -f ala-nameservice.yml up kill
 For code style and tool see the [recommendations](https://github.com/gbif/pipelines#codestyle-and-tools-recommendations) on the GBIF pipelines project. In particular, note the project uses Project Lombok, please install Lombok plugin for Intellij IDEA.
 
 `avro-tools` is recommended to aid to development for quick views of AVRO outputs. This can be install on Macs with `brew`
-
 `
 brew install avro-tools
 `

@@ -1,10 +1,9 @@
 package au.org.ala.pipelines.interpreters;
 
-import au.org.ala.kvs.ALAKvConfig;
-import au.org.ala.kvs.ALAKvConfigFactory;
 import au.org.ala.kvs.cache.ALACollectionKVStoreFactory;
 import au.org.ala.kvs.client.ALACollectionLookup;
 import au.org.ala.kvs.client.ALACollectionMatch;
+import au.org.ala.util.TestUtils;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.io.avro.ALAAttributionRecord;
@@ -22,11 +21,7 @@ public class ALAAttributionInterpreterTest {
     @Test
     public void testCollectionLookup() throws Exception {
 
-        ClientConfiguration cc = ClientConfiguration.builder().withBaseApiUrl("https://collections.ala.org.au").build();
-        ALAKvConfig alaKvConfig = ALAKvConfigFactory.create(new Properties());
-
-        KeyValueStore<ALACollectionLookup, ALACollectionMatch> kvs = ALACollectionKVStoreFactory.alaCollectionKVStore(cc, alaKvConfig);
-
+        KeyValueStore<ALACollectionLookup, ALACollectionMatch> kvs = ALACollectionKVStoreFactory.create(TestUtils.getConfig());
         BiConsumer<ExtendedRecord, ALAAttributionRecord> fcn = ALAAttributionInterpreter.interpretCodes(kvs);
 
         Map<String, String> map = new HashMap<String, String>();
@@ -43,11 +38,7 @@ public class ALAAttributionInterpreterTest {
     @Test
     public void testCollectionLookupBadValues() throws Exception {
 
-        ClientConfiguration cc = ClientConfiguration.builder().withBaseApiUrl("https://collections.ala.org.au").build();
-        ALAKvConfig alaKvConfig = ALAKvConfigFactory.create(new Properties());
-
-        KeyValueStore<ALACollectionLookup, ALACollectionMatch> kvs = ALACollectionKVStoreFactory.alaCollectionKVStore(cc, alaKvConfig);
-
+        KeyValueStore<ALACollectionLookup, ALACollectionMatch> kvs = ALACollectionKVStoreFactory.create(TestUtils.getConfig());
         BiConsumer<ExtendedRecord, ALAAttributionRecord> fcn = ALAAttributionInterpreter.interpretCodes(kvs);
 
         Map<String, String> map = new HashMap<String, String>();
