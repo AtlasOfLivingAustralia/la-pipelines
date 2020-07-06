@@ -1,18 +1,22 @@
-general:
+services:
   gbif.api.url: https://___DONT_USE______xapi.gbif.org
-
   ala_taxonomy.api.url: http://localhost:9179
   ala_spatial.api.url: http://localhost:8080
   ala_collectory.api.url: https://collections.ala.org.au
   ala_lists.api.url: http://lists.ala.org.au
   geocode.api.url: http://127.0.0.1:4444/geocode/%
 
+general:
   targetPath: /data/pipelines-data
   attempt: 1
+  hdfsSiteConfig: ""
+  coreSiteConfig: ""
 
 dwca-avro:
   runner: SparkRunner
   metaFileName: dwca-metrics.yml
+  inputPath: /data/biocache-load/{datasetId}
+
 #--inputPath: $dwca_dir
 
 #java -Xmx2g -XX:+UseG1GC  -Dspark.master=local[*]
@@ -20,14 +24,14 @@ dwca-avro:
 interpret: # (java)
   default:
     interpretationTypes: ALL
-    inputPath: /data/pipelines-data/{0}/1/verbatim.avro
+    inputPath: /data/pipelines-data/{datasetId}/1/verbatim.avro
     metaFileName: interpretation-metrics.yml
     useExtendedRecordId: true
     skipRegisrtyCalls: true
     #  properties: pipelines.properties
   spark-cluster:
-    name: interpret {0}
-    appName: Interpretation for {0}
+    name: interpret {datasetId}
+    appName: Interpretation for {datasetId}
     runner: SparkRunner
     #--properties=/efs-mount-point/pipelines.properties
     # num-executors: 24
@@ -45,7 +49,7 @@ export-latlng:
   default:
     inputPath: /data/pipelines-data
   java:
-    appName: Lat Long export for {0}
+    appName: Lat Long export for {datasetId}
   all:
     appName: Lat Long export for datasets
     runner: SparkRunner
@@ -61,7 +65,7 @@ sample:
     # TODO
 # java -Xmx8g -Xmx8g -XX:+UseG1GC
   embedded:
-    appName: SamplingToAvro indexing for {0}
+    appName: SamplingToAvro indexing for {datasetId}
     runner: SparkRunner
     inputPath: /data/pipelines-data
     metaFileName: indexing-metrics.yml
@@ -81,7 +85,7 @@ migrate-uuids:
 # java -Xmx8g -Xmx8g -XX:+UseG1GC
 uuid:
   embedded:
-    appName: UUID minting for {0}
+    appName: UUID minting for {datasetId}
     runner: SparkRunner
     inputPath: /data/pipelines-data
     metaFileName: uuid-metrics.yml
@@ -101,7 +105,7 @@ index:
     # TODO
   # java -Xmx8g -Xmx8g -XX:+UseG1GC
   spark-embedded:
-    appName: SOLR indexing for {0}
+    appName: SOLR indexing for {datasetId}
     runner: SparkRunner
 #    properties: pipelines.properties
     zkHost: localhost:9983

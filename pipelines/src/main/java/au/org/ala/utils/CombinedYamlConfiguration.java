@@ -13,11 +13,27 @@ import java.util.Map;
 
 public class CombinedYamlConfiguration {
 
-  private final LinkedHashMap<String, Object> combined;
+  private final LinkedHashMap<String, Object> combined = new LinkedHashMap<String, Object>();
+  private final LinkedHashMap<String, String> mainArgs = new LinkedHashMap<String, String>();
+  private final String[][] mainArgsAsList;
 
-  public CombinedYamlConfiguration(String... configs) throws FileNotFoundException {
-    combined = new LinkedHashMap<String, Object>();
-    for (String config : configs) {
+  public CombinedYamlConfiguration(String[] mainArgs)
+      throws FileNotFoundException {
+    for (String arg : mainArgs) {
+      // For each arg of type --varName=value we remove the -- and split by = in varName and value
+      String[] argPair = arg.replaceFirst("--", "").split("=", 2);
+      // And we combine the result
+      this.mainArgs.put(argPair[0], argPair[1]);
+    }
+    String[] yamlConfigPaths = this.mainArgs.get("config").split(",");
+    this.mainArgs.remove("config"); // we remove config, because is not an pipeline configuration
+    mainArgsAsList =
+      new String[][] {
+        this.mainArgs.keySet().toArray(new String[0]),
+        this.mainArgs.values().toArray(new String[0])
+      };
+
+    for (String config : yamlConfigPaths) {
       InputStream input = new FileInputStream(new File(config));
       Yaml yaml = new Yaml();
       LinkedHashMap<String, Object> loaded = yaml.load(input);
@@ -42,6 +58,7 @@ public class CombinedYamlConfiguration {
         }
       }
     }
+    partial.putAll(mainArgs);
     return partial;
   }
 
@@ -66,17 +83,34 @@ public class CombinedYamlConfiguration {
   }
 
   public String[] toArgs(String... keys) {
+    return toArgs(mainArgsAsList, keys);
+  }
+
+  public String[] toArgs(String[][] params, String... keys) {
     List<String> argList = new ArrayList<String>();
     for (Map.Entry<String, Object> conf : subSet(keys).entrySet()) {
+      Object value = format(conf.getValue(), params);
       argList.add(
           new StringBuffer()
               .append("--")
               .append(conf.getKey())
               .append("=")
-              .append(conf.getValue())
+              .append(value)
               .toString());
     }
     return argList.toArray(new String[0]);
+  }
+
+  private Object format(Object value, String[][] params) {
+    if (value instanceof String) {
+      String formatted = (String) value;
+      for (int i = 0; i < params[0].length; i++) {
+        formatted = formatted.replace("{" + params[0][i] + "}", params[1][i]);
+      }
+      return formatted;
+    } else {
+      return value;
+    }
   }
 
   public Object get(String key) {

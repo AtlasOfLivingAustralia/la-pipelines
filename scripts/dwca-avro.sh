@@ -20,10 +20,4 @@ fi
 java -Dspark.local.dir=$SPARK_TMP \
 -cp $PIPELINES_JAR au.org.ala.pipelines.beam.DwcaToVerbatimPipeline \
   --datasetId=$1 \
-  --attempt=1 \
-  --runner=SparkRunner \
-  --metaFileName=dwca-metrics.yml \
-  --targetPath=$FS_PATH/$DATA_DIR \
-  --hdfsSiteConfig=$HDFS_CONF \
-  --coreSiteConfig=$HDFS_CONF \
-  --inputPath=$dwca_dir
+  --config=../pipelines/src/main/resources/la-pipelines.yaml

@@ -1,5 +1,6 @@
 package au.org.ala.pipelines.beam;
 
+import au.org.ala.utils.CombinedYamlConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
@@ -13,6 +14,7 @@ import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.slf4j.MDC;
 
+import java.io.FileNotFoundException;
 import java.nio.file.Paths;
 
 /**
@@ -22,9 +24,11 @@ import java.nio.file.Paths;
 @Slf4j
 public class DwcaToVerbatimPipeline {
 
-    public static void main(String[] args) {
-        InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
-        run(options);
+    public static void main(String[] args) throws FileNotFoundException {
+       String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "dwca-avro");
+       InterpretationPipelineOptions options =
+           PipelinesOptionsFactory.createInterpretation(combinedArgs);
+       run(options);
     }
 
     public static void run(InterpretationPipelineOptions options) {
