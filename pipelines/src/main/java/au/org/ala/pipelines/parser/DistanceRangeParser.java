@@ -34,7 +34,7 @@ public class DistanceRangeParser {
     String normalised =  value.replaceAll("\\[", "").replaceAll(",","").replaceAll("]","").toLowerCase().trim();
 
     if(normalised.matches(singleNumber+"|"+decimalNumber)){
-        return Double.valueOf(normalised);
+      return Double.valueOf(normalised);
     }
 
     //Sequence of pattern match does matter
@@ -91,7 +91,4 @@ public class DistanceRangeParser {
         throw new UnknownFormatConversionException(uom + " is not recognised UOM");
     }
   }
-
-
-
 }

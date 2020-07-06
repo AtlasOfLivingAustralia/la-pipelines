@@ -6,8 +6,8 @@ import lombok.Data;
 @AllArgsConstructor
 @Data
 public class LocationInfoConfig {
-    private String countryNamesFile;
-    private String countryCentrePointsFile;
-    private String stateProvinceCentrePointsFile;
-    private String stateProvinceNamesFile;
+  private String countryNamesFile;
+  private String countryCentrePointsFile;
+  private String stateProvinceCentrePointsFile;
+  private String stateProvinceNamesFile;
 }

@@ -1,5 +1,7 @@
 package au.org.ala.pipelines.interpreters;
 
+import au.org.ala.kvs.ALAPipelinesConfig;
+import au.org.ala.kvs.LocationInfoConfig;
 import au.org.ala.pipelines.vocabulary.ALAOccurrenceIssue;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.OccurrenceIssue;
@@ -15,6 +17,7 @@ import org.gbif.rest.client.geocode.Location;
 
 import org.gbif.pipelines.parsers.parsers.location.GeocodeKvStore;
 import org.gbif.rest.client.geocode.GeocodeResponse;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.Serializable;
@@ -26,6 +29,16 @@ import static org.junit.Assert.*;
 public class AlaLocationInterpreterTest {
 
   private static final String ID = "777";
+  private ALAPipelinesConfig alaConfig;
+
+  @Before
+  public void set(){
+    alaConfig = new ALAPipelinesConfig();
+    alaConfig.setLocationInfoConfig(new LocationInfoConfig("/data/pipelines-data/resources/countries.txt",
+    "/data/pipelines-data/resources/countryCentrePoints.txt",
+    "/data/pipelines-data/resources/stateProvinceCentrePoints.txt",
+    "/data/pipelines-data/resources/stateProvinces.txt"));
+  }
 
   @Test
   public void gbifAlaTest() {
@@ -149,14 +162,15 @@ public class AlaLocationInterpreterTest {
     coreMap.put(DwcTerm.verbatimLongitude.qualifiedName(), "146.921099d");
 
     ALALocationInterpreter.interpretStateProvince(kvStore).accept(er, lr);
+    ALALocationInterpreter.verifyLocationInfo(alaConfig).accept(er,lr);
 
     assertEquals(lr.getStateProvince(), "New South Wales");
 
     assertArrayEquals(lr.getIssues().getIssueList().toArray(),
         new String[]{
-                ALAOccurrenceIssue.COORDINATES_CENTRE_OF_STATEPROVINCE.name(),
                 OccurrenceIssue.GEODETIC_DATUM_ASSUMED_WGS84.name(),
-                ALAOccurrenceIssue.MISSING_GEODETICDATUM.name()
+                ALAOccurrenceIssue.MISSING_GEODETICDATUM.name(),
+                ALAOccurrenceIssue.COORDINATES_CENTRE_OF_STATEPROVINCE.name()
         });
   }
 
@@ -179,6 +193,7 @@ public class AlaLocationInterpreterTest {
     coreMap.put(DwcTerm.geodeticDatum.qualifiedName(), "WGS84");
 
     ALALocationInterpreter.interpretStateProvince(kvStore).accept(er, lr);
+    ALALocationInterpreter.verifyLocationInfo(alaConfig).accept(er,lr);
 
     assertEquals(lr.getStateProvince(), "New South Wales");
 
@@ -205,14 +220,15 @@ public class AlaLocationInterpreterTest {
     coreMap.put(DwcTerm.geodeticDatum.qualifiedName(), "TEST");
 
     ALALocationInterpreter.interpretStateProvince(kvStore).accept(er, lr);
+    ALALocationInterpreter.verifyLocationInfo(alaConfig).accept(er,lr);
 
     assertEquals(lr.getStateProvince(), "New South Wales");
 
     assertArrayEquals(lr.getIssues().getIssueList().toArray(),
         new String[]{
-                ALAOccurrenceIssue.COORDINATES_CENTRE_OF_STATEPROVINCE.name(),
                 OccurrenceIssue.GEODETIC_DATUM_ASSUMED_WGS84.name(),
-                OccurrenceIssue.GEODETIC_DATUM_INVALID.name()
+                OccurrenceIssue.GEODETIC_DATUM_INVALID.name(),
+                ALAOccurrenceIssue.COORDINATES_CENTRE_OF_STATEPROVINCE.name(),
         });
   }
 
@@ -223,24 +239,25 @@ public class AlaLocationInterpreterTest {
     state.setType("State");
 
     KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
-    kvStore.put(new LatLng(-31.25d, 146.921099d),
+    kvStore.put(new LatLng(-37.47, 144.7851531),
         new GeocodeResponse(Collections.singletonList(state)));
 
     LocationRecord lr = LocationRecord.newBuilder().setId(ID).build();
     Map<String, String> coreMap = new HashMap<>();
 
     ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
-    coreMap.put(DwcTerm.verbatimLatitude.qualifiedName(), "146.921099d");
-    coreMap.put(DwcTerm.verbatimLongitude.qualifiedName(), "-31.25d");
+    coreMap.put(DwcTerm.verbatimLatitude.qualifiedName(), "144.7851531d");
+    coreMap.put(DwcTerm.verbatimLongitude.qualifiedName(), "-37.47");
     coreMap.put(DwcTerm.geodeticDatum.qualifiedName(), "WGS84");
     coreMap.put(DwcTerm.stateProvince.qualifiedName(), "New South Wales");
 
     ALALocationInterpreter.interpretStateProvince(kvStore).accept(er, lr);
+    ALALocationInterpreter.verifyLocationInfo(alaConfig).accept(er,lr);
 
-    assertEquals(lr.getStateProvince(), "Victoria");
+    assertEquals(lr.getStateProvince(), "New South Wales");
 
     assertArrayEquals(lr.getIssues().getIssueList().toArray(),
-        new String[]{ALAOccurrenceIssue.STATE_COORDINATE_MISMATCH.name(),
+        new String[]{OccurrenceIssue.COORDINATE_ROUNDED.name(),
             OccurrenceIssue.PRESUMED_SWAPPED_COORDINATE.name()});
   }
 
@@ -295,7 +312,7 @@ public class AlaLocationInterpreterTest {
 
     KeyValueTestStoreStub store = new KeyValueTestStoreStub();
     store.put(new LatLng(15.958333d, -85.908333d), toGeocodeResponse(Country.HONDURAS));
-    store.put(new LatLng(-2.752778d, -58.653057d), toGeocodeResponse("San Luise"));
+    store.put(new LatLng(-2.752778d, -58.653057d), createStateAndCountry("San Luise"));
     MetadataRecord mdr = MetadataRecord.newBuilder().setId(ID).build();
 
     Map<String, String> coreMap = new HashMap<>();
@@ -366,16 +383,16 @@ public class AlaLocationInterpreterTest {
   /**
    * Only test for returning state and country
    */
-  private static GeocodeResponse toGeocodeResponse(String state) {
-    Location location = new Location();
-    location.setCountryName(state);
-    location.setType("State");
+  private static GeocodeResponse createStateAndCountry(String statename) {
+    Location state = new Location();
+    state.setCountryName(statename);
+    state.setType("State");
 
-    Location location1 = new Location();
-    location1.setIsoCountryCode2Digit("BR");
-    location1.setType("Political");
+    Location country = new Location();
+    country.setIsoCountryCode2Digit("BR");
+    country.setType("Political");
 
-    Collection<Location> locations = Arrays.asList(location, location1);
+    Collection<Location> locations = Arrays.asList(state, country);
 
     return new GeocodeResponse(locations);
   }

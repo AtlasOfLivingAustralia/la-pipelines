@@ -121,7 +121,7 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
             .via(LocationInterpreter::interpretMinimumDistanceAboveSurfaceInMeters)
             .via(LocationInterpreter::interpretMaximumDistanceAboveSurfaceInMeters)
             .via(LocationInterpreter::interpretCoordinatePrecision)
-            .via(LocationInterpreter::interpretCoordinateUncertaintyInMeters)
+            .via(ALALocationInterpreter::interpretCoordinateUncertaintyInMeters)
             .via(ALALocationInterpreter::interpretGeoreferencedDate)
             .via(ALALocationInterpreter::interpretGeoreferenceTerms)
             .via(ALALocationInterpreter.verifyLocationInfo(alaConfig))
