@@ -1,5 +1,6 @@
 package au.org.ala.pipelines.transforms;
 
+import au.org.ala.kvs.ALAPipelinesConfig;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Optional;
@@ -33,6 +34,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 @Slf4j
 public class LocationTransform extends Transform<ExtendedRecord, LocationRecord> {
 
+  private ALAPipelinesConfig alaConfig;
   private SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeKvStoreSupplier;
   private KeyValueStore<LatLng, GeocodeResponse> geocodeKvStore;
 
@@ -41,10 +43,12 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
 
   @Builder(buildMethodName = "create")
   private LocationTransform(
+          ALAPipelinesConfig alaConfig,
           SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeKvStoreSupplier,
           KeyValueStore<LatLng, GeocodeResponse> geocodeKvStore,
           PCollectionView<MetadataRecord> metadataView) {
     super(LocationRecord.class, LOCATION, org.gbif.pipelines.transforms.core.LocationTransform.class.getName(), LOCATION_RECORDS_COUNT);
+    this.alaConfig = alaConfig;
     this.geocodeKvStoreSupplier = geocodeKvStoreSupplier;
     this.geocodeKvStore = geocodeKvStore;
     this.metadataView = metadataView;
@@ -117,9 +121,10 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
             .via(LocationInterpreter::interpretMinimumDistanceAboveSurfaceInMeters)
             .via(LocationInterpreter::interpretMaximumDistanceAboveSurfaceInMeters)
             .via(LocationInterpreter::interpretCoordinatePrecision)
-            .via(LocationInterpreter::interpretCoordinateUncertaintyInMeters)
+            .via(ALALocationInterpreter::interpretCoordinateUncertaintyInMeters)
+            .via(ALALocationInterpreter::interpretGeoreferencedDate)
             .via(ALALocationInterpreter::interpretGeoreferenceTerms)
-            .via(ALALocationInterpreter::interpretCoordinateUncertainty)
+            .via(ALALocationInterpreter.verifyLocationInfo(alaConfig))
             .get();
 
     result.ifPresent(r -> this.incCounter());

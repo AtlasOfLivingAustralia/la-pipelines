@@ -90,15 +90,6 @@ public class GeocodeShpIntersectService implements GeocodeService {
   @Override
   public Collection<Location> reverse(Double latitude, Double longitude) {
     List<Location> locations = new ArrayList<Location>();
-    String state = states.intersect(longitude, latitude);
-    if (state != null) {
-      Location l = new Location();
-      l.setType(STATE_PROVINCE_LOCATION_TYPE);
-      l.setSource(config.getStateProvince().getSource());
-      l.setCountryName(state);
-      l.setIsoCountryCode2Digit(state);
-      locations.add(l);
-    }
     String value = countries.intersect(longitude, latitude);
     if (value != null) {
       Location l = new Location();
@@ -117,6 +108,14 @@ public class GeocodeShpIntersectService implements GeocodeService {
         l.setIsoCountryCode2Digit(eezValue);
         locations.add(l);
       }
+    }
+    String state = states.intersect(longitude, latitude);
+    if (state != null) {
+      Location l = new Location();
+      l.setType(STATE_PROVINCE_LOCATION_TYPE);
+      l.setSource(config.getStateProvince().getSource());
+      l.setCountryName(state);
+      locations.add(l);
     }
     return locations;
   }

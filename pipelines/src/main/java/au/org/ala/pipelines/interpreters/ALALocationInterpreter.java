@@ -1,10 +1,14 @@
 package au.org.ala.pipelines.interpreters;
 
+import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.pipelines.parser.CoordinatesParser;
+import au.org.ala.pipelines.parser.DistanceRangeParser;
 import au.org.ala.pipelines.vocabulary.*;
 import com.google.common.base.Strings;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.common.parsers.CountryParser;
 import org.gbif.common.parsers.core.ParseResult;
@@ -16,7 +20,9 @@ import org.gbif.pipelines.core.interpreters.core.TemporalInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.parsers.parsers.SimpleTypeParser;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
+import org.gbif.pipelines.parsers.parsers.location.GeocodeKvStore;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.geocode.Location;
 import com.google.common.collect.Range;
@@ -50,9 +56,7 @@ public class ALALocationInterpreter {
       KeyValueStore<LatLng, GeocodeResponse> service, MetadataRecord mdr) {
     return (er, lr) -> {
       if (service != null) {
-
         ParsedField<LatLng> parsedLatLon = CoordinatesParser.parseCoords(er);
-
         if (parsedLatLon.isSuccessful()) {
           LatLng latlng = parsedLatLon.getResult();
           lr.setDecimalLatitude(latlng.getLatitude());
@@ -60,14 +64,11 @@ public class ALALocationInterpreter {
           lr.setHasCoordinate(true);
 
           GeocodeResponse gr = service.get(latlng);
-
           if (gr != null) {
-
             Collection<Location> locations = gr.getLocations();
             Optional<Location> countryLocation = locations.stream()
                 .filter(location -> location.getType().equalsIgnoreCase("Political") || location
                     .getType().equalsIgnoreCase("EEZ")).findFirst();
-
             if (countryLocation.isPresent()) {
               //SHP file supplied by ALA only contains country iso code.
               String countryIsoCode = countryLocation.get().getIsoCountryCode2Digit();
@@ -77,16 +78,6 @@ public class ALALocationInterpreter {
                   .parse(countryIsoCode);
               if (parsedCountry.isSuccessful()) {
                 lr.setCountry(parsedCountry.getPayload().name());
-
-                if (CountryCentrePoints.getInstance()
-                    .coordinatesMatchCentre(lr.getCountry(), lr.getDecimalLatitude(),
-                        lr.getDecimalLongitude())) {
-                  addIssue(lr, ALAOccurrenceIssue.COORDINATES_CENTRE_OF_COUNTRY.name());
-                }
-
-                if (!CountryMatch.matched(lr.getCountry())) {
-                  addIssue(lr, ALAOccurrenceIssue.UNKNOWN_COUNTRY_NAME.name());
-                }
               } else {
                 addIssue(lr, ALAOccurrenceIssue.UNKNOWN_COUNTRY_NAME.name());
                 if (log.isDebugEnabled()) {
@@ -104,7 +95,6 @@ public class ALALocationInterpreter {
       } else {
         log.error("Geoservice for Country is not initialized!");
       }
-
     };
   }
 
@@ -114,43 +104,21 @@ public class ALALocationInterpreter {
   public static BiConsumer<ExtendedRecord, LocationRecord> interpretStateProvince(
 KeyValueStore<LatLng, GeocodeResponse> service) {
     return (er, lr) -> {
-
       ParsedField<LatLng> parsedLatLon = CoordinatesParser.parseCoords(er);
-
       if (parsedLatLon.isSuccessful()) {
-
-        LatLng latlng = parsedLatLon.getResult();
-
+        org.gbif.kvs.geocode.LatLng latlng = parsedLatLon.getResult();
+        lr.setDecimalLatitude(latlng.getLatitude());
+        lr.setDecimalLongitude(latlng.getLongitude());
+        lr.setHasCoordinate(true);
         GeocodeResponse gr = service.get(latlng);
         if (gr != null) {
-
           Collection<Location> locations = gr.getLocations();
-
           Optional<Location> state = locations.stream()
               .filter(location -> location.getType().equalsIgnoreCase("State")).findFirst();
 
           if (state.isPresent()) {
             lr.setStateProvince(state.get().getCountryName());
             //Check centre of State
-            if (StateCentrePoints.getInstance()
-                .coordinatesMatchCentre(lr.getStateProvince(), latlng.getLatitude(),
-                    latlng.getLongitude())) {
-              addIssue(lr, ALAOccurrenceIssue.COORDINATES_CENTRE_OF_STATEPROVINCE.name());
-            } else {
-              if (log.isDebugEnabled()) {
-                log.debug("{},{} is not the centre of {}!", latlng.getLatitude(),
-                        +latlng.getLongitude(), lr.getStateProvince());
-              }
-            }
-
-            //does the supplied stateProvince value match the value with the coordinates
-            String rawStateProvince  = er.getCoreTerms().get(DwcTerm.stateProvince.qualifiedName());
-            if (StringUtils.trimToNull(rawStateProvince) != null ){
-              Optional<String> matchedStateProvince = StateProvince.matchTerm(rawStateProvince);
-              if (matchedStateProvince.isPresent() && !matchedStateProvince.get().equalsIgnoreCase(lr.getStateProvince())){
-                addIssue(lr, ALAOccurrenceIssue.STATE_COORDINATE_MISMATCH.name());
-              }
-            }
 
           } else {
             if (log.isDebugEnabled()) {
@@ -165,7 +133,6 @@ KeyValueStore<LatLng, GeocodeResponse> service) {
           }
         }
       }
-
       //Assign state from source if no state is fetched from coordinates
       if (Strings.isNullOrEmpty(lr.getStateProvince())) {
         LocationInterpreter.interpretStateProvince(er, lr);
@@ -176,6 +143,71 @@ KeyValueStore<LatLng, GeocodeResponse> service) {
     };
   }
 
+  public static BiConsumer<ExtendedRecord, LocationRecord> verifyLocationInfo(
+     ALAPipelinesConfig alaConfig) {
+    return (er, lr) -> {
+      if (lr.getDecimalLongitude() !=null && lr.getDecimalLatitude() !=null){
+        if (!Strings.isNullOrEmpty(lr.getCountry())){
+          try{
+            if (CountryCentrePoints.getInstance(alaConfig.getLocationInfoConfig().getCountryCentrePointsFile())
+                .coordinatesMatchCentre(lr.getCountry(), lr.getDecimalLatitude(),
+                    lr.getDecimalLongitude())) {
+              addIssue(lr, ALAOccurrenceIssue.COORDINATES_CENTRE_OF_COUNTRY.name());
+            }
+
+            if (!CountryMatch.getInstance(alaConfig.getLocationInfoConfig().getCountryNamesFile()).matched(lr.getCountry())) {
+              addIssue(lr, ALAOccurrenceIssue.UNKNOWN_COUNTRY_NAME.name());
+            }
+          }catch(FileNotFoundException fnfe){
+            String error = "FATAL：" + fnfe.getMessage();
+
+            error = joptsimple.internal.Strings.LINE_SEPARATOR + joptsimple.internal.Strings
+                .repeat('*',128) + joptsimple.internal.Strings.LINE_SEPARATOR + error + joptsimple.internal.Strings.LINE_SEPARATOR ;
+            error += joptsimple.internal.Strings.LINE_SEPARATOR + "The following properties are mandatory in the pipelines.yaml for location interpretation:";
+            error += joptsimple.internal.Strings.LINE_SEPARATOR + "Those properties need to be defined in a property file given by -- properties argument.";
+            error += joptsimple.internal.Strings.LINE_SEPARATOR;
+            error += joptsimple.internal.Strings.LINE_SEPARATOR +"\t" + String.format("%-32s%-48s","locationInfoConfig.countryNamesFile","Country name matching file.");
+            error += joptsimple.internal.Strings.LINE_SEPARATOR +"\t" + String.format("%-32s%-48s","locationInfoConfig.countryCentrePointsFile","Contry centres file");
+            error +=  joptsimple.internal.Strings.LINE_SEPARATOR + joptsimple.internal.Strings
+                .repeat('*',128);
+            log.error( error);
+            throw new RuntimeException(error);
+          }
+        }
+
+        if(!Strings.isNullOrEmpty(lr.getStateProvince())){
+          try {
+            if (StateCentrePoints.getInstance(alaConfig.getLocationInfoConfig().getStateProvinceCentrePointsFile())
+                .coordinatesMatchCentre(lr.getStateProvince(), lr.getDecimalLatitude(),
+                    lr.getDecimalLongitude())) {
+              addIssue(lr, ALAOccurrenceIssue.COORDINATES_CENTRE_OF_STATEPROVINCE.name());
+            } else {
+              log.debug("{},{} is not the centre of {}!", lr.getDecimalLatitude(),
+                  lr.getDecimalLongitude(), lr.getStateProvince());
+            }
+
+            if (!StateProvince.getInstance(alaConfig.getLocationInfoConfig().getStateProvinceNamesFile()).matched(lr.getStateProvince())) {
+              addIssue(lr, ALAOccurrenceIssue.STATE_COORDINATE_MISMATCH.name());
+            }
+          }catch(IOException fnfe){
+            String error = "FATAL：" + fnfe.getMessage();
+            error = joptsimple.internal.Strings.LINE_SEPARATOR + joptsimple.internal.Strings
+                .repeat('*',128) + joptsimple.internal.Strings.LINE_SEPARATOR + error + joptsimple.internal.Strings.LINE_SEPARATOR ;
+            error += joptsimple.internal.Strings.LINE_SEPARATOR + "The following properties are mandatory in the pipelines.yaml for location interpretation:";
+            error += joptsimple.internal.Strings.LINE_SEPARATOR + "Those properties need to be defined in a property file given by -- properties argument.";
+            error += joptsimple.internal.Strings.LINE_SEPARATOR;
+            error += joptsimple.internal.Strings.LINE_SEPARATOR +"\t" + String.format("%-32s%-48s","locationInfoConfig.stateProvinceNamesFile","Country name matching file.");
+            error += joptsimple.internal.Strings.LINE_SEPARATOR +"\t" + String.format("%-32s%-48s","locationInfoConfig.stateProvinceCentrePointsFile","Contry centres file");
+            error +=  joptsimple.internal.Strings.LINE_SEPARATOR + joptsimple.internal.Strings
+                .repeat('*',128);
+            log.error( error);
+            throw new RuntimeException(error);
+          }
+        }
+      }
+    };
+  };
+
 
   /**
    * @param er
@@ -184,9 +216,9 @@ KeyValueStore<LatLng, GeocodeResponse> service) {
   public static void interpretGeoreferencedDate(ExtendedRecord er, LocationRecord lr) {
     if (hasValue(er, DwcTerm.georeferencedDate)) {
       LocalDate upperBound = LocalDate.now().plusDays(1);
-      Range<LocalDate> validRecordedDateRange = Range.closed(ALATemporalInterpreter.MIN_LOCAL_DATE, upperBound);
-
-      //GBIF TemporalInterpreter only accept OccurrenceIssue
+      Range<LocalDate> validRecordedDateRange = Range
+          .closed(ALATemporalInterpreter.MIN_LOCAL_DATE, upperBound);
+      //GBIF TemporalInterpreter only accept OccurentIssue
       //Convert GBIF IDENTIFIED_DATE_UNLIKELY to ALA GEOREFERENCED_DATE_UNLIKELY
       OccurrenceParseResult<TemporalAccessor> parsed =
           TemporalInterpreter.interpretLocalDate(extractValue(er, DwcTerm.georeferencedDate),
@@ -208,8 +240,6 @@ KeyValueStore<LatLng, GeocodeResponse> service) {
 
 
 /*
-   TODO Dave needs to review this function
-
     Only Checking if Geodetic related fields are missing
     It does not interpret and assign value to LocationRecord
     GEODETIC_DATUM_ASSUMED_WGS84
@@ -242,23 +272,63 @@ KeyValueStore<LatLng, GeocodeResponse> service) {
     }
   }
 
-  /**
-   * TODO Need further discussion <p> Check coordinate uncertainty and precision <p> Prerequisite :
-   * interpretCoordinateUncertaintyInMeters and interpretCoordinatePrecision MUST be run.
-   */
-  public static void interpretCoordinateUncertainty(LocationRecord lr) {
-
-    // If coordinateUncertaintyInMeters NOT exists and coordinatePrecision exists
-    if (lr.getCoordinateUncertaintyInMeters() == null) {
-      addIssue(lr, ALAOccurrenceIssue.UNCERTAINTY_NOT_SPECIFIED.name());
-      if (lr.getCoordinatePrecision() != null) {
-        addIssue(lr, ALAOccurrenceIssue.UNCERTAINTY_IN_PRECISION.name());
+  public static void interpretCoordinateUncertaintyInMeters(ExtendedRecord er, LocationRecord lr) {
+    String uncertaintyValue = extractNullAwareValue(er, DwcTerm.coordinateUncertaintyInMeters);
+    String precisionValue = extractNullAwareValue(er, DwcTerm.coordinatePrecision);
+    //If uncertainty NOT exists
+    if (Strings.isNullOrEmpty(uncertaintyValue)) {
+      addIssue(lr, OccurrenceIssue.COORDINATE_UNCERTAINTY_METERS_INVALID.name());
+      // And if precision exists, > 1
+      // We need to check if uncertainty is misplaced to precision
+      if (!Strings.isNullOrEmpty(precisionValue)) {
+        try {
+          //convert possible uom to meters
+          double possiblePrecision = DistanceRangeParser.parse(precisionValue);
+          if (possiblePrecision > 1){
+            lr.setCoordinateUncertaintyInMeters(possiblePrecision);
+            addIssue(lr, ALAOccurrenceIssue.UNCERTAINTY_IN_PRECISION.name());
+          }
+        }catch(Exception e){
+          //Ignore precision/uncertainty process
+        }
+      }
+    }else {
+      //Uncertainty available
+      try {
+        lr.setCoordinateUncertaintyInMeters(DistanceRangeParser.parse(uncertaintyValue));
+      } catch (Exception e) {
+        addIssue(lr, OccurrenceIssue.COORDINATE_UNCERTAINTY_METERS_INVALID.name());
       }
     }
-
-    if (lr.getCoordinatePrecision() == null) {
-      addIssue(lr, ALAOccurrenceIssue.MISSING_COORDINATEPRECISION.name());
-    }
   }
+
+
+  /**
+   * Todo Trailing 0
+   * @param er
+   * @param lr
+   * @return
+   */
+  private static boolean checkPrecision(ExtendedRecord er, LocationRecord lr){
+    int precisionDecimal = lengthOfDecimal(lr.getCoordinatePrecision());
+    int latDecimal = lengthOfDecimal(lr.getDecimalLatitude());
+    int lngDecimal = lengthOfDecimal(lr.getDecimalLongitude());
+
+    if (latDecimal!=precisionDecimal || lngDecimal != precisionDecimal)
+      return false;
+    else
+      return true;
+  }
+
+  private static int lengthOfDecimal(double d){
+    String text = Double.toString(Math.abs(d));
+    int integerPlaces = text.indexOf('.');
+    if(integerPlaces == -1)
+      return 0;
+    else
+      return text.length() - integerPlaces - 1;
+  }
+
+
 }
 

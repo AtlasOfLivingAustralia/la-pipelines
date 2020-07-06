@@ -2,6 +2,9 @@ package au.org.ala.pipelines.vocabulary;
 
 import au.org.ala.pipelines.util.Stemmer;
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import lombok.extern.slf4j.Slf4j;
@@ -21,8 +24,9 @@ public class Vocab {
   //stemmed variant -> canonical
   private HashMap<String, String> stemmedVariants = new HashMap<String, String>();
 
-  public static Vocab loadVocabFromFile(String filePath) {
-    return loadVocabFromStream(Vocab.class.getResourceAsStream(filePath));
+  public static Vocab loadVocabFromFile(String filePath) throws FileNotFoundException {
+      File file = new File(filePath);
+      return loadVocabFromStream(new FileInputStream(file));
   }
 
   public static Vocab loadVocabFromStream(InputStream is) {
