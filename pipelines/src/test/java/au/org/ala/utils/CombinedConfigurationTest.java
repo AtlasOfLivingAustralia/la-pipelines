@@ -22,15 +22,23 @@ public class CombinedConfigurationTest {
               "--someArg=1",
               "--runner=other",
               "--datasetId=dr893",
-              "--config=src/main/resources/la-pipelines.yaml,src/main/resources/la-pipelines.yaml"
+              "--config=src/test/resources/pipelines.yaml,src/test/resources/pipelines-local.yaml"
             });
+  }
+
+  public static Throwable exceptionOf(Callable<?> callable) {
+    try {
+      callable.call();
+      return null;
+    } catch (Throwable t) {
+      return t;
+    }
   }
 
   @Test
   public void getUnknownValueReturnsEmptyList() throws FileNotFoundException {
     assertThat(
-        new CombinedYamlConfiguration(
-                new String[] {"--config=src/main/resources/la-pipelines.yaml"})
+        new CombinedYamlConfiguration(new String[] {"--config=src/test/resources/pipelines.yaml"})
             .subSet("general2")
             .size(),
         equalTo(0));
@@ -45,6 +53,7 @@ public class CombinedConfigurationTest {
     assertThat(argsInMap.get("interpretationTypes"), equalTo("ALL"));
     assertThat(argsInMap.get("runner"), equalTo("other")); // as main args has preference
     assertThat(argsInMap.get("attempt"), equalTo("1"));
+    assertThat(argsInMap.get("targetPath"), equalTo("/some-other-moint-point/pipelines-data"));
     assertThat(argsInMap.get("missingVar"), equalTo(null));
     assertThat(argsInMap.get("missing.dot.var"), equalTo(null));
   }
@@ -85,9 +94,11 @@ public class CombinedConfigurationTest {
 
   @Test
   public void rootVars() {
-    assertThat(testConf.subSet("test-delete").getClass(), equalTo(LinkedHashMap.class));
-    assertThat(testConf.subSet().get("test-delete"), equalTo(1));
-    assertThat(testConf.get("test-delete"), equalTo(1));
+    assertThat(testConf.subSet("root-test").getClass(), equalTo(LinkedHashMap.class));
+    assertThat(testConf.subSet().get("root-test"), equalTo(1));
+    assertThat(testConf.get("root-test"), equalTo(1));
+    // from local.yaml:
+    assertThat(testConf.get("root-test2"), equalTo(2));
   }
 
   @Test
@@ -102,22 +113,13 @@ public class CombinedConfigurationTest {
     assertThat(testConf.get("general.hdfsSiteConfig"), equalTo(""));
   }
 
-  public static Throwable exceptionOf(Callable<?> callable) {
-    try {
-      callable.call();
-      return null;
-    } catch (Throwable t) {
-      return t;
-    }
-  }
-
   @Test
   public void expectExceptionWhenMissingConf() throws FileNotFoundException {
     assertThat(
         exceptionOf(
             () ->
                 new CombinedYamlConfiguration(
-                    new String[] {"--config=src/main/resources/missing-la-pipelines.yaml"})),
+                    new String[] {"--config=src/test/resources/missing-la-pipelines.yaml"})),
         instanceOf(FileNotFoundException.class));
   }
 
@@ -126,5 +128,15 @@ public class CombinedConfigurationTest {
     assertThat(
         exceptionOf(() -> new CombinedYamlConfiguration(new String[] {})),
         instanceOf(RuntimeException.class));
+  }
+
+  @Test
+  public void emptyConfigsShouldLoadEmptyArgs() throws FileNotFoundException {
+    assertThat(
+        new CombinedYamlConfiguration(
+                new String[] {"--config=src/test/resources/pipelines-empty.yaml"})
+            .toArgs()
+            .length,
+        equalTo(0));
   }
 }

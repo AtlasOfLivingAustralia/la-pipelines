@@ -9,5 +9,4 @@ fi
 
 java -cp $PIPELINES_JAR au.org.ala.pipelines.beam.ALAInterpretedToLatLongCSVPipeline \
  --datasetId=$1 \
- --config=../pipelines/src/main/resources/la-pipelines.yaml
-
+ --config=../configs/la-pipelines.yaml,../configs/la-pipelines-local.yaml

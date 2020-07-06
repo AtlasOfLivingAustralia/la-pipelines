@@ -104,5 +104,3 @@ index:
     zkHost: localhost:9983
     solrCollection: biocache
     includeSampling: true
-
-test-delete: 1

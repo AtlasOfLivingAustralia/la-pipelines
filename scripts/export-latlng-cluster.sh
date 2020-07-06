@@ -18,4 +18,4 @@ fi
 --driver-java-options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
 $PIPELINES_JAR \
 --datasetId=$1 \
---config=../pipelines/src/main/resources/la-pipelines.yaml
+--config=../configs/la-pipelines.yaml,../configs/la-pipelines-local.yaml

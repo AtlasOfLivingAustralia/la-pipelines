@@ -20,4 +20,4 @@ fi
 java -Dspark.local.dir=$SPARK_TMP \
 -cp $PIPELINES_JAR au.org.ala.pipelines.beam.DwcaToVerbatimPipeline \
   --datasetId=$1 \
-  --config=../pipelines/src/main/resources/la-pipelines.yaml
+  --config=../configs/la-pipelines.yaml,../configs/la-pipelines-local.yaml
