@@ -9,6 +9,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+/**
+ * Tests ported from
+ * https://github.com/AtlasOfLivingAustralia/biocache-store/blob/master/src/test/scala/au/org/ala/biocache/DistanceRangeParserTest.scala
+ */
 public class DistanceRangeParserTest {
   @Test
   public void parseRange(){
@@ -38,17 +42,13 @@ public class DistanceRangeParserTest {
 
     value = DistanceRangeParser.parse(" >15km,");
     assertEquals(15000f,value,0);
-
-
   }
-
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();
 
   @Test(expected = UnknownFormatConversionException.class)
   public void invalidUncertainty(){
-    Double value = DistanceRangeParser.parse("test");
+    DistanceRangeParser.parse("test");
   }
-
 }

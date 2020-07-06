@@ -4,8 +4,20 @@ import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * This is a port of
+ * https://github.com/AtlasOfLivingAustralia/biocache-store/blob/master/src/main/scala/au/org/ala/biocache/parser/DistanceRangeParser.scala
+ */
 @Slf4j
 public class DistanceRangeParser {
+
+  static String singleNumber = "(-?[0-9]{1,})";
+  static String decimalNumber = "(-?[0-9]{1,}[.]{1}[0-9]{1,})";
+  static String range = "(-?[0-9.]{1,})([km|m|metres|meters|ft|feet]{0,})-([0-9.]{1,})([km|m|metres|meters|ft|feet]{0,})";
+  static String greaterOrLessThan = "(\\>|\\<)(-?[0-9.]{1,})([km|m|metres|meters|ft|feet]{0,})";
+  static String singleNumberMetres = "(-?[0-9]{1,})(m|metres|meters)";
+  static String singleNumberKilometres = "(-?[0-9]{1,})(km|kilometres|kilometers)";
+  static String singleNumberFeet = "(-?[0-9]{1,})(ft|feet|f)";
 
   /**
    * Handle these formats:
@@ -17,19 +29,6 @@ public class DistanceRangeParser {
    * 100-1000 m
    * @return the value in metres and the original units
    */
-
-  static String singleNumber = "(-?[0-9]{1,})";
-  static String decimalNumber = "(-?[0-9]{1,}[.]{1}[0-9]{1,})";
-  static String range = "(-?[0-9.]{1,})([km|m|metres|meters|ft|feet]{0,})-([0-9.]{1,})([km|m|metres|meters|ft|feet]{0,})";
-  static String greaterOrLessThan = "(\\>|\\<)(-?[0-9.]{1,})([km|m|metres|meters|ft|feet]{0,})";
-  static String metres = "(m|metres|meters)";
-  static String kilometres = "(km|kilometres|kilometers)";
-  static String feet = "(ft|feet|f)";
-  static String singleNumberMetres = "(-?[0-9]{1,})(m|metres|meters)";
-  static String singleNumberKilometres = "(-?[0-9]{1,})(km|kilometres|kilometers)";
-  static String singleNumberFeet = "(-?[0-9]{1,})(ft|feet|f)";
-
-
   public static double parse(String value){
     String normalised =  value.replaceAll("\\[", "").replaceAll(",","").replaceAll("]","").toLowerCase().trim();
 
