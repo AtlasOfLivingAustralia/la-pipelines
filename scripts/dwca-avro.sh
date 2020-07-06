@@ -18,7 +18,7 @@ then
 fi
 
 java -Dspark.local.dir=$SPARK_TMP \
--cp $PIPELINES_JAR au.org.ala.pipelines.beam.DwcaToVerbatimPipeline \
+-cp $PIPELINES_JAR org.gbif.pipelines.ingest.pipelines.DwcaToVerbatimPipeline \
   --datasetId=$1 \
   --attempt=1 \
   --runner=SparkRunner \
