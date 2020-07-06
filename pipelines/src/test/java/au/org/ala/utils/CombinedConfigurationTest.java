@@ -6,6 +6,7 @@ import org.junit.Test;
 
 import java.io.FileNotFoundException;
 import java.util.LinkedHashMap;
+import java.util.concurrent.Callable;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -99,5 +100,31 @@ public class CombinedConfigurationTest {
   @Test
   public void testEmptyVarNotNull() {
     assertThat(testConf.get("general.hdfsSiteConfig"), equalTo(""));
+  }
+
+  public static Throwable exceptionOf(Callable<?> callable) {
+    try {
+      callable.call();
+      return null;
+    } catch (Throwable t) {
+      return t;
+    }
+  }
+
+  @Test
+  public void expectExceptionWhenMissingConf() throws FileNotFoundException {
+    assertThat(
+        exceptionOf(
+            () ->
+                new CombinedYamlConfiguration(
+                    new String[] {"--config=src/main/resources/missing-la-pipelines.yaml"})),
+        instanceOf(FileNotFoundException.class));
+  }
+
+  @Test
+  public void expectExceptionWhenMissingConfigArgument() throws FileNotFoundException {
+    assertThat(
+        exceptionOf(() -> new CombinedYamlConfiguration(new String[] {})),
+        instanceOf(RuntimeException.class));
   }
 }

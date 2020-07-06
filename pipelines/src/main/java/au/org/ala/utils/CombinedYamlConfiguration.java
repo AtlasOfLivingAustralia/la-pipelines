@@ -25,7 +25,11 @@ public class CombinedYamlConfiguration {
       // And we combine the result
       this.mainArgs.put(argPair[0], argPair[1]);
     }
-    String[] yamlConfigPaths = this.mainArgs.get("config").split(",");
+    String config = this.mainArgs.get("config");
+    if (config == null) {
+      throw new RuntimeException("The --config=some.yml argument is missing");
+    }
+    String[] yamlConfigPaths = config.split(",");
     this.mainArgs.remove("config"); // we remove config, because is not an pipeline configuration
     mainArgsAsList =
       new String[][] {
@@ -33,8 +37,8 @@ public class CombinedYamlConfiguration {
         this.mainArgs.values().toArray(new String[0])
       };
 
-    for (String config : yamlConfigPaths) {
-      InputStream input = new FileInputStream(new File(config));
+    for (String path : yamlConfigPaths) {
+      InputStream input = new FileInputStream(new File(path));
       Yaml yaml = new Yaml();
       LinkedHashMap<String, Object> loaded = yaml.load(input);
       combined.putAll(loaded);
