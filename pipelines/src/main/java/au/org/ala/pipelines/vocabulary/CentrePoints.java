@@ -1,6 +1,7 @@
 package au.org.ala.pipelines.vocabulary;
 
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 
 import org.gbif.kvs.geocode.LatLng;
@@ -36,35 +37,25 @@ public class CentrePoints {
 
   }
 
-  public static CentrePoints getInstance(String filePath) {
-    try {
+  public static CentrePoints getInstance(String filePath) throws FileNotFoundException{
       InputStream is = new FileInputStream(new File(filePath));
-      getInstance(is);
-    } catch (Exception e) {
-      log.error(e.getMessage());
-    }
-
-    return cp;
+      return getInstance(is);
   }
 
-  public static CentrePoints getInstance(InputStream is) {
+  public static CentrePoints getInstance(InputStream is) throws FileNotFoundException {
     cp = new CentrePoints();
-    try {
-      new BufferedReader(new InputStreamReader(is)).lines()
-          .map(s -> s.trim())
-          .filter(l -> l.split("\t").length == 7)
-          .forEach(l -> {
-            String[] ss = l.split("\t");
-            String state = ss[0].toLowerCase();
-            LatLng centre = new LatLng(Double.parseDouble(ss[1]), Double.parseDouble(ss[2]));
-            BBox bbox = new BBox(Double.parseDouble(ss[3]), Double.parseDouble(ss[4]),
-                Double.parseDouble(ss[5]), Double.parseDouble(ss[6]));
-            cp.statesCentre.put(state, centre);
-            cp.statesBBox.put(state, bbox);
-          });
-    } catch (Exception e) {
-      log.error(e.getMessage());
-    }
+    new BufferedReader(new InputStreamReader(is)).lines()
+        .map(s -> s.trim())
+        .filter(l -> l.split("\t").length == 7)
+        .forEach(l -> {
+          String[] ss = l.split("\t");
+          String state = ss[0].toLowerCase();
+          LatLng centre = new LatLng(Double.parseDouble(ss[1]), Double.parseDouble(ss[2]));
+          BBox bbox = new BBox(Double.parseDouble(ss[3]), Double.parseDouble(ss[4]),
+              Double.parseDouble(ss[5]), Double.parseDouble(ss[6]));
+          cp.statesCentre.put(state, centre);
+          cp.statesBBox.put(state, bbox);
+        });
 
     return cp;
   }
@@ -124,13 +115,6 @@ public class CentrePoints {
     }
   }
 
-
-  public static void main(String[] args) {
-    CentrePoints cps = CentrePoints
-        .getInstance("pipelines/src/main/resources/stateProvinceCentrePoints.txt");
-    boolean result = cps.coordinatesMatchCentre("New South Wales", -31.25, 146.921099);
-    System.out.print("Matched:" + result);
-  }
 }
 
 class BBox {

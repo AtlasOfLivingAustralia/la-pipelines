@@ -23,6 +23,7 @@ public class ALAPipelinesConfig implements Serializable {
     private WsConfig lists;
 
     GeocodeShpConfig geocodeConfig;
+    LocationInfoConfig locationInfoConfig;
 
     String vocabFilePath;
 }

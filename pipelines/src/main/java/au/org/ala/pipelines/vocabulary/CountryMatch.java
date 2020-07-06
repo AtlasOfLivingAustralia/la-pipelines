@@ -1,18 +1,25 @@
 package au.org.ala.pipelines.vocabulary;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.Optional;
 
 public class CountryMatch {
 
-  private static String countryFile = "/countries.txt";
+  private static Vocab cm;
+
+  public static Vocab getInstance(String countryFile) throws FileNotFoundException{
+    if (cm == null) {
+      cm = Vocab.loadVocabFromFile(countryFile);
+    }
+    return cm;
+  }
 
   public static boolean matched(String countryName) {
-    Vocab countryVocab = Vocab.loadVocabFromFile(countryFile);
-    return countryVocab.matched(countryName);
+    return cm.matched(countryName);
   }
 
   public static Optional<String> match(String countryName) {
-    Vocab countryVocab = Vocab.loadVocabFromFile(countryFile);
-    return countryVocab.matchTerm(countryName);
+    return cm.matchTerm(countryName);
   }
 }

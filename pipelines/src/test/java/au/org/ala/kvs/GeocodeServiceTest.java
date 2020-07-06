@@ -6,8 +6,6 @@ import au.org.ala.util.TestUtils;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.cache.KeyValueCache;
 import org.gbif.kvs.geocode.LatLng;
-import org.gbif.pipelines.ingest.java.utils.PipelinesConfigFactory;
-import org.gbif.pipelines.parsers.config.model.PipelinesConfig;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.geocode.Location;
 import org.junit.Test;

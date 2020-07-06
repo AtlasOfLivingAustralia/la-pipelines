@@ -13,7 +13,6 @@ import au.org.ala.kvs.cache.ALACollectionKVStoreFactory;
 import au.org.ala.kvs.cache.ALANameMatchKVStoreFactory;
 import au.org.ala.kvs.cache.GeocodeKvStoreFactory;
 import au.org.ala.pipelines.transforms.ALADefaultValuesTransform;
-import au.org.ala.utils.ALAFsUtils;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
@@ -154,8 +153,9 @@ public class ALAVerbatimToInterpretedPipeline {
     // ALA specific - Location
     LocationTransform locationTransform =
             LocationTransform.builder()
-                    .geocodeKvStoreSupplier(GeocodeKvStoreFactory.getInstanceSupplier(config))
-                    .create();
+                  .alaConfig(config)
+                  .geocodeKvStoreSupplier(GeocodeKvStoreFactory.getInstanceSupplier(config))
+                  .create();
 
     // ALA specific - Default values
     ALADefaultValuesTransform alaDefaultValuesTransform = ALADefaultValuesTransform.builder()
