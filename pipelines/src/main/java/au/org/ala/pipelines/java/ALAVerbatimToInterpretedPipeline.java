@@ -187,6 +187,7 @@ public class ALAVerbatimToInterpretedPipeline {
         // ALA specific - Location
         LocationTransform locationTransform =
                 LocationTransform.builder()
+                        .alaConfig(config)
                         .geocodeKvStoreSupplier(GeocodeKvStoreFactory.getInstanceSupplier(config))
                         .create();
         locationTransform.setup();
