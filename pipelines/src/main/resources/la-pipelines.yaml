@@ -46,16 +46,9 @@ interpret: # (java)
     runner: SparkRunner
 
 export-latlng:
-  default:
-    inputPath: /data/pipelines-data
-  java:
-    appName: Lat Long export for {datasetId}
-  all:
-    appName: Lat Long export for datasets
-    runner: SparkRunner
-    inputPath: /data/pipelines-data
-  cluster:
-  # TODO
+  inputPath: /data/pipelines-data
+  runner: SparkRunner
+  appName: Lat Long export for {datasetId}
 
 sample:
   default:

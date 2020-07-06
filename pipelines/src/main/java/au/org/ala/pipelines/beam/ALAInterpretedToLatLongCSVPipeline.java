@@ -2,6 +2,7 @@ package au.org.ala.pipelines.beam;
 
 import au.org.ala.pipelines.transforms.ALACSVDocumentTransform;
 import au.org.ala.utils.ALAFsUtils;
+import au.org.ala.utils.CombinedYamlConfiguration;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +42,8 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSI
 public class ALAInterpretedToLatLongCSVPipeline {
 
     public static void main(String[] args) throws Exception {
-        InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
+        String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "export-latlng");
+        InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(combinedArgs);
         run(options);
     }
 
