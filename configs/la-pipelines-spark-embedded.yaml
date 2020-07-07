@@ -3,3 +3,7 @@ interpret:
 
 sample-avro:
   appName: SamplingToAvro indexing for {datasetId}
+
+index:
+  appName: SOLR indexing for {datasetId}
+  runner: SparkRunner

@@ -74,21 +74,15 @@ migrate-uuids:
   # FIXME: MigrateUUIDPipeline should use this also?
 
 index:
-  default:
-    inputPath: /data/pipelines-data
-    metaFileName: indexing-metrics.yml
-  java:
-    #--properties=pipelines.properties \
-    includeSampling: true
-    zkHost: localhost:9983
-    solrCollection: biocache
-  spark-cluster:
-    # TODO
-  # java -Xmx8g -Xmx8g -XX:+UseG1GC
-  spark-embedded:
-    appName: SOLR indexing for {datasetId}
-    runner: SparkRunner
-#    properties: pipelines.properties
-    zkHost: localhost:9983
-    solrCollection: biocache
-    includeSampling: true
+  inputPath: /data/pipelines-data
+  metaFileName: indexing-metrics.yml
+  properties: ../scripts/pipelines.yaml
+  solrCollection: biocache
+  includeSampling: true
+  zkHost: localhost:9983
+  ## For spark-cluster:
+  # appName: SOLR indexing for {datasetId}
+  # runner: SparkRunner
+  ## For spark-embedded:
+  # appName: SOLR indexing for {datasetId}
+  # runner: SparkRunner

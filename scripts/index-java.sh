@@ -13,16 +13,7 @@ SECONDS=0
 
 java -Xmx8g -XX:+UseG1GC -cp $PIPELINES_JAR au.org.ala.pipelines.java.ALAInterpretedToSolrIndexPipeline \
 --datasetId=$1 \
---attempt=1 \
---inputPath=$FS_PATH/$DATA_DIR \
---targetPath=$FS_PATH/$DATA_DIR \
---coreSiteConfig=$HDFS_CONF \
---hdfsSiteConfig=$HDFS_CONF \
---metaFileName=indexing-metrics.yml \
---properties=$PIPELINES_CONF \
---zkHost=$SOLR_ZK_HOST \
---solrCollection=$SOLR_COLLECTION \
---includeSampling=true
+--config=../configs/la-pipelines.yaml,../configs/la-pipelines-local.yaml
 
 echo $(date)
 duration=$SECONDS

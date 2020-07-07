@@ -10,3 +10,7 @@ uuid:
 sample-avro:
   appName: Add Sampling for {datasetId}
   useExtendedRecordId: true
+
+index:
+  appName: SOLR indexing for {datasetId}
+  runner: SparkRunner
