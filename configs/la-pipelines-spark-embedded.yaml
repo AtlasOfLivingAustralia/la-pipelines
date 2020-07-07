@@ -1,2 +1,5 @@
 interpret:
   appName: Interpretation for {datasetId}
+
+sample-avro:
+  appName: SamplingToAvro indexing for {datasetId}

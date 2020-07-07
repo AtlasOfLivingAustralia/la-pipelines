@@ -1,3 +1,7 @@
 interpret:
   name: interpret {datasetId}
   appName: Interpretation for {datasetId}
+
+sample-avro:
+  appName: Add Sampling for {datasetId}
+  useExtendedRecordId: true

@@ -37,20 +37,25 @@ export-latlng:
   appName: Lat Long export for {datasetId}
 
 sample:
-  default:
-  cluster:
-    # TODO
-  avro-cluster:
-    # TODO
-# java -Xmx8g -Xmx8g -XX:+UseG1GC
-  embedded:
-    appName: SamplingToAvro indexing for {datasetId}
-    runner: SparkRunner
-    inputPath: /data/pipelines-data
-    metaFileName: indexing-metrics.yml
-#--properties=pipelines.properties
+  inputPath: /data/pipelines-data
+  appName: Sample for {datasetId}
+  metaFileName: indexing-metrics.yml
+  runner: SparkRunner
+  # TODO improve/move this
+  properties: ../scripts/pipelines.yaml
 
-#java -Xmx8g -Xmx8g -XX:+UseG1GC -
+sample-avro:
+  inputPath: /data/pipelines-data
+  runner: SparkRunner
+  metaFileName: indexing-metrics.yml
+  # TODO improve/move this
+  properties: ../scripts/pipelines.yaml
+  ## For spark-cluster:
+  # appName: Add Sampling for {datasetId}
+  # useExtendedRecordId: true
+  ## For spark-embedded:
+  # appName: SamplingToAvro indexing for {datasetId}
+
 migrate-uuids:
   default:
     runner: SparkRunner

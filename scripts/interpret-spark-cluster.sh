@@ -22,6 +22,7 @@ SECONDS=0
 --master $SPARK_MASTER \
 --driver-java-options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
 $PIPELINES_JAR \
+--datasetId=$1 \
 --config=../configs/la-pipelines.yaml,../configs/la-pipelines-spark-cluster.yaml,../configs/la-pipelines-local.yaml
 
 echo $(date)

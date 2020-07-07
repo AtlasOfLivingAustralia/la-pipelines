@@ -2,6 +2,7 @@ package au.org.ala.pipelines.beam;
 
 import au.com.bytecode.opencsv.CSVReader;
 import au.org.ala.utils.ALAFsUtils;
+import au.org.ala.utils.CombinedYamlConfiguration;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,8 +42,9 @@ import java.util.Map;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ALASamplingToAvroPipeline {
 
-    public static void main(String[] args) {
-        InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
+    public static void main(String[] args) throws FileNotFoundException {
+        String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "sample-avro");
+        InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(combinedArgs);
         run(options);
     }
 
