@@ -2,6 +2,11 @@ interpret:
   name: interpret {datasetId}
   appName: Interpretation for {datasetId}
 
+uuid:
+  interpretationTypes: ALL
+  useExtendedRecordId: true
+  skipRegisrtyCalls: true
+
 sample-avro:
   appName: Add Sampling for {datasetId}
   useExtendedRecordId: true
