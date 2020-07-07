@@ -1,0 +1,3 @@
+interpret:
+  name: interpret {datasetId}
+  appName: Interpretation for {datasetId}
