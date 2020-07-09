@@ -7,11 +7,7 @@ import au.org.ala.pipelines.vocabulary.*;
 import com.google.common.base.Strings;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
-import org.gbif.api.vocabulary.Country;
-import org.gbif.common.parsers.CountryParser;
-import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
@@ -19,10 +15,7 @@ import org.gbif.pipelines.core.interpreters.core.LocationInterpreter;
 import org.gbif.pipelines.core.interpreters.core.TemporalInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.parsers.parsers.SimpleTypeParser;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
-import org.gbif.pipelines.parsers.parsers.location.GeocodeKvStore;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.geocode.Location;
 import com.google.common.collect.Range;
@@ -30,7 +23,6 @@ import com.google.common.collect.Range;
 
 import java.util.Collection;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.BiConsumer;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -44,60 +36,80 @@ import org.gbif.common.parsers.date.TemporalAccessorUtils;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.core.OccurrenceParseResult;
 
+/**
+ * Extensions to GBIF's {@link LocationInterpreter}
+ */
 @Slf4j
 public class ALALocationInterpreter {
 
   /**
-   * @param service Provided by ALA country/state SHP file
+   * Interpret stateProvince values, performing a coordinate lookup and comparing with supplied
+   * stateProvince.
+   *
+   * @param stateProvinceLookupService Provided by ALA country/state SHP file
    */
   public static BiConsumer<ExtendedRecord, LocationRecord> interpretStateProvince(
-KeyValueStore<LatLng, GeocodeResponse> service) {
+          KeyValueStore<LatLng, GeocodeResponse> stateProvinceLookupService) {
     return (er, lr) -> {
+
       ParsedField<LatLng> parsedLatLon = CoordinatesParser.parseCoords(er);
+      addIssue(lr, parsedLatLon.getIssues());
+
       if (parsedLatLon.isSuccessful()) {
 
         LatLng latlng = parsedLatLon.getResult();
         lr.setDecimalLatitude(latlng.getLatitude());
         lr.setDecimalLongitude(latlng.getLongitude());
         lr.setHasCoordinate(true);
-        GeocodeResponse gr = service.get(latlng);
+
+        // do the lookup by coordinates
+        GeocodeResponse gr = stateProvinceLookupService.get(latlng);
 
         if (gr != null) {
           Collection<Location> locations = gr.getLocations();
-          Optional<Location> state = locations.stream()
-              .filter(location -> location.getType().equalsIgnoreCase("State")).findFirst();
+          Optional<Location> stateProvince = locations.stream().findFirst();
 
-          if (state.isPresent()) {
-            lr.setStateProvince(state.get().getCountryName());
-            //Check centre of State
+          if (stateProvince.isPresent()) {
+
+            //use the retrieve value, this takes precidence over the stateProvince DwCTerm
+            //which follows the GBIF implementation of setting DwCTerm country values
+            lr.setStateProvince(stateProvince.get().getName());
+
+            // If the stateProvince that is retrieved using the coordinates differs from the supplied stateProvince
+            // raise an issue
+            String suppliedStateProvince = extractNullAwareValue(er, DwcTerm.stateProvince);
+            if (suppliedStateProvince != null && !suppliedStateProvince.equalsIgnoreCase(lr.getStateProvince())){
+              addIssue(lr, ALAOccurrenceIssue.STATE_COORDINATE_MISMATCH.name());
+            }
 
           } else {
             if (log.isDebugEnabled()) {
-              log.debug("Current stateProvince SHP file does not contain a state at {}, {}",
-                      latlng.getLatitude(), latlng.getLongitude());
+              log.debug("Current stateProvince SHP file does not contain a state at {}", latlng.toString());
             }
           }
         } else {
           if (log.isDebugEnabled()) {
-            log.debug("No recognised stateProvince  is found at : {},{}", parsedLatLon.getResult().getLatitude(),
-                    parsedLatLon.getResult().getLongitude());
+            log.debug("No recognised stateProvince  is found at : {}", parsedLatLon.getResult().toString());
           }
         }
       }
+
       //Assign state from source if no state is fetched from coordinates
       if (Strings.isNullOrEmpty(lr.getStateProvince())) {
         LocationInterpreter.interpretStateProvince(er, lr);
       }
-
-      Set<String> issues = parsedLatLon.getIssues();
-      addIssue(lr, issues);
     };
   }
 
-  public static BiConsumer<ExtendedRecord, LocationRecord> verifyLocationInfo(
-     ALAPipelinesConfig alaConfig) {
+  /**
+   * Verify location info,
+   * @param alaConfig
+   * @return
+   */
+  public static BiConsumer<ExtendedRecord, LocationRecord> verifyLocationInfo(ALAPipelinesConfig alaConfig) {
+
     return (er, lr) -> {
-      if (lr.getDecimalLongitude() !=null && lr.getDecimalLatitude() !=null){
+      if (lr.getDecimalLongitude() != null && lr.getDecimalLatitude() != null){
         if (!Strings.isNullOrEmpty(lr.getCountry())){
           try {
             if (CountryCentrePoints.getInstance(alaConfig.getLocationInfoConfig().getCountryCentrePointsFile())
@@ -114,7 +126,6 @@ KeyValueStore<LatLng, GeocodeResponse> service) {
             error += joptsimple.internal.Strings.LINE_SEPARATOR + "The following properties are mandatory in the pipelines.yaml for location interpretation:";
             error += joptsimple.internal.Strings.LINE_SEPARATOR + "Those properties need to be defined in a property file given by -- properties argument.";
             error += joptsimple.internal.Strings.LINE_SEPARATOR;
-            error += joptsimple.internal.Strings.LINE_SEPARATOR +"\t" + String.format("%-32s%-48s","locationInfoConfig.countryNamesFile","Country name matching file.");
             error += joptsimple.internal.Strings.LINE_SEPARATOR +"\t" + String.format("%-32s%-48s","locationInfoConfig.countryCentrePointsFile","Contry centres file");
             error +=  joptsimple.internal.Strings.LINE_SEPARATOR + joptsimple.internal.Strings
                 .repeat('*',128);
@@ -123,21 +134,20 @@ KeyValueStore<LatLng, GeocodeResponse> service) {
           }
         }
 
-        if(!Strings.isNullOrEmpty(lr.getStateProvince())){
+        if (!Strings.isNullOrEmpty(lr.getStateProvince())){
           try {
             if (StateCentrePoints.getInstance(alaConfig.getLocationInfoConfig().getStateProvinceCentrePointsFile())
                 .coordinatesMatchCentre(lr.getStateProvince(), lr.getDecimalLatitude(),
                     lr.getDecimalLongitude())) {
               addIssue(lr, ALAOccurrenceIssue.COORDINATES_CENTRE_OF_STATEPROVINCE.name());
             } else {
-              log.debug("{},{} is not the centre of {}!", lr.getDecimalLatitude(),
-                  lr.getDecimalLongitude(), lr.getStateProvince());
+              if (log.isTraceEnabled()){
+                log.trace("{},{} is not the centre of {}!", lr.getDecimalLatitude(),
+                    lr.getDecimalLongitude(), lr.getStateProvince());
+                }
             }
 
-            if (!StateProvince.getInstance(alaConfig.getLocationInfoConfig().getStateProvinceNamesFile()).matched(lr.getStateProvince())) {
-              addIssue(lr, ALAOccurrenceIssue.STATE_COORDINATE_MISMATCH.name());
-            }
-          } catch(IOException fnfe){
+          } catch (IOException fnfe){
             String error = "FATAL：" + fnfe.getMessage();
             error = joptsimple.internal.Strings.LINE_SEPARATOR + joptsimple.internal.Strings
                 .repeat('*',128) + joptsimple.internal.Strings.LINE_SEPARATOR + error + joptsimple.internal.Strings.LINE_SEPARATOR ;
@@ -154,7 +164,7 @@ KeyValueStore<LatLng, GeocodeResponse> service) {
         }
       }
     };
-  };
+  }
 
   /**
    * Parsing of georeferenceDate darwin terms.
@@ -222,10 +232,11 @@ KeyValueStore<LatLng, GeocodeResponse> service) {
   public static void interpretCoordinateUncertaintyInMeters(ExtendedRecord er, LocationRecord lr) {
     String uncertaintyValue = extractNullAwareValue(er, DwcTerm.coordinateUncertaintyInMeters);
     String precisionValue = extractNullAwareValue(er, DwcTerm.coordinatePrecision);
-    //If uncertainty NOT exists
+
+    //If uncertainty NOT supplied
     if (Strings.isNullOrEmpty(uncertaintyValue)) {
       addIssue(lr, OccurrenceIssue.COORDINATE_UNCERTAINTY_METERS_INVALID.name());
-      // And if precision exists, > 1
+      // And if precision exists and is greater than 1
       // We need to check if uncertainty is misplaced to precision
       if (!Strings.isNullOrEmpty(precisionValue)) {
         try {
@@ -235,8 +246,11 @@ KeyValueStore<LatLng, GeocodeResponse> service) {
             lr.setCoordinateUncertaintyInMeters(possiblePrecision);
             addIssue(lr, ALAOccurrenceIssue.UNCERTAINTY_IN_PRECISION.name());
           }
-        } catch(Exception e){
+        } catch (Exception e){
           //Ignore precision/uncertainty process
+          if (log.isDebugEnabled()){
+            log.debug("Unable to parse coordinatePrecision value: " + precisionValue);
+          }
         }
       }
     } else {
@@ -244,9 +258,12 @@ KeyValueStore<LatLng, GeocodeResponse> service) {
       try {
         lr.setCoordinateUncertaintyInMeters(DistanceRangeParser.parse(uncertaintyValue));
       } catch (Exception e) {
+        if (log.isDebugEnabled()){
+          log.debug("Unable to parse coordinateUncertaintyInMeters: " + uncertaintyValue);
+        }
         addIssue(lr, OccurrenceIssue.COORDINATE_UNCERTAINTY_METERS_INVALID.name());
       }
     }
   }
-}
 
+}

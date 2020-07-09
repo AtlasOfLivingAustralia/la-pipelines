@@ -8,6 +8,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * Models the response content of the {@link GeocodeService}.
+ *
+ * See https://github.com/gbif/pipelines/issues/322
  */
 public class Location implements Serializable {
 
@@ -69,7 +71,6 @@ public class Location implements Serializable {
     public void setIsoCountryCode2Digit(String isoCountryCode2Digit) {
         this.isoCountryCode2Digit = isoCountryCode2Digit;
     }
-
 
     @Override
     public boolean equals(Object o) {

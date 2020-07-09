@@ -147,7 +147,7 @@ public class AlaLocationInterpreterTest {
   @Test
   public void assertionMissingGeodeticTest() {
     Location state = new Location();
-    state.setCountryName("New South Wales");
+    state.setName("New South Wales");
     state.setType("State");
 
     KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
@@ -175,9 +175,9 @@ public class AlaLocationInterpreterTest {
   }
 
   @Test
-  public void assertionValidGeodeticStateProvinceValidTest() {
+  public void coordinatesCentreOfStateProvinceTest() {
     Location state = new Location();
-    state.setCountryName("New South Wales");
+    state.setName("New South Wales");
     state.setType("State");
 
     KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
@@ -195,7 +195,7 @@ public class AlaLocationInterpreterTest {
     ALALocationInterpreter.interpretStateProvince(kvStore).accept(er, lr);
     ALALocationInterpreter.verifyLocationInfo(alaConfig).accept(er,lr);
 
-    assertEquals(lr.getStateProvince(), "New South Wales");
+    assertEquals("New South Wales", lr.getStateProvince());
 
     assertArrayEquals(lr.getIssues().getIssueList().toArray(),
         new String[]{ALAOccurrenceIssue.COORDINATES_CENTRE_OF_STATEPROVINCE.name()});
@@ -204,7 +204,7 @@ public class AlaLocationInterpreterTest {
   @Test
   public void assertionInvalidGeodeticTest() {
     Location state = new Location();
-    state.setCountryName("New South Wales");
+    state.setName("New South Wales");
     state.setType("State");
 
     KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
@@ -235,37 +235,42 @@ public class AlaLocationInterpreterTest {
   @Test
   public void assertionStateProvinceInvalidAssertionTest() {
     Location state = new Location();
-    state.setCountryName("Victoria");
+    state.setName("Victoria");
     state.setType("State");
 
     KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
-    kvStore.put(new LatLng(-37.47, 144.7851531),
-        new GeocodeResponse(Collections.singletonList(state)));
+    kvStore.put(
+            new LatLng(-37.47d, 144.785153d),
+            new GeocodeResponse(Collections.singletonList(state))
+    );
 
     LocationRecord lr = LocationRecord.newBuilder().setId(ID).build();
     Map<String, String> coreMap = new HashMap<>();
 
     ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
-    coreMap.put(DwcTerm.verbatimLatitude.qualifiedName(), "144.7851531d");
+    //swapped lat/lng
+    //note: GBIF will truncate coordinates to 6 decimal places...
+    coreMap.put(DwcTerm.verbatimLatitude.qualifiedName(), "144.7851531");
     coreMap.put(DwcTerm.verbatimLongitude.qualifiedName(), "-37.47");
+
     coreMap.put(DwcTerm.geodeticDatum.qualifiedName(), "WGS84");
     coreMap.put(DwcTerm.stateProvince.qualifiedName(), "New South Wales");
 
     ALALocationInterpreter.interpretStateProvince(kvStore).accept(er, lr);
-    ALALocationInterpreter.verifyLocationInfo(alaConfig).accept(er,lr);
-
-    assertEquals(lr.getStateProvince(), "New South Wales");
+    assertEquals("Victoria", lr.getStateProvince());
 
     assertArrayEquals(lr.getIssues().getIssueList().toArray(),
-        new String[]{OccurrenceIssue.COORDINATE_ROUNDED.name(),
-            OccurrenceIssue.PRESUMED_SWAPPED_COORDINATE.name()});
+        new String[]{
+                OccurrenceIssue.COORDINATE_ROUNDED.name(),
+                OccurrenceIssue.PRESUMED_SWAPPED_COORDINATE.name(),
+                ALAOccurrenceIssue.STATE_COORDINATE_MISMATCH.name()
+    });
   }
-
 
   @Test
   public void assertionMissingLocationTest() {
     Location state = new Location();
-    state.setCountryName("New South Wales");
+    state.setName("New South Wales");
     state.setType("State");
 
     KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
@@ -286,7 +291,7 @@ public class AlaLocationInterpreterTest {
   @Test
   public void assertionZeroCoordinateTest() {
     Location state = new Location();
-    state.setCountryName("New South Wales");
+    state.setName("New South Wales");
     state.setType("State");
 
     KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
@@ -302,6 +307,8 @@ public class AlaLocationInterpreterTest {
     ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
 
     ALALocationInterpreter.interpretStateProvince(kvStore).accept(er, lr);
+
+    assertNull(lr.getStateProvince());
 
     assertArrayEquals(lr.getIssues().getIssueList().toArray(),
         new String[]{OccurrenceIssue.GEODETIC_DATUM_ASSUMED_WGS84.name(), ALAOccurrenceIssue.MISSING_GEODETICDATUM.name() ,OccurrenceIssue.ZERO_COORDINATE.name()});
