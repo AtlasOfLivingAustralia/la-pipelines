@@ -10,7 +10,7 @@ geocodeConfig:
     field: ISO_A2
   eez:
     path: /data/pipelines-shp/eez
-    field: ISO_A2
+    field: ISO2
   stateProvince:
     path: /data/pipelines-shp/cw_state_poly
     field: FEATURE
