@@ -137,11 +137,13 @@ public class ALAVerbatimToInterpretedPipeline {
         Set<String> types = Collections.singleton(ALL.name());
         String targetPath = options.getTargetPath();
         String endPointType = options.getEndPointType();
-        String hdfsSiteConfig = options.getHdfsSiteConfig();
 
-        ALAPipelinesConfig config = ALAPipelinesConfigFactory.getInstance(options.getHdfsSiteConfig(), options.getProperties()).get();
+        ALAPipelinesConfig config = ALAPipelinesConfigFactory.getInstance(
+                options.getHdfsSiteConfig(),
+                options.getCoreSiteConfig(),
+                options.getProperties()).get();
 
-        FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, types);
+        FsUtils.deleteInterpretIfExist(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), targetPath, datasetId, attempt, types);
 
         MDC.put("datasetId", datasetId);
         MDC.put("attempt", attempt.toString());
@@ -188,7 +190,8 @@ public class ALAVerbatimToInterpretedPipeline {
         LocationTransform locationTransform =
                 LocationTransform.builder()
                         .alaConfig(config)
-                        .geocodeKvStoreSupplier(GeocodeKvStoreFactory.getInstanceSupplier(config))
+                        .countryKvStoreSupplier(GeocodeKvStoreFactory.createCountrySupplier(config))
+                        .stateProvinceKvStoreSupplier(GeocodeKvStoreFactory.createStateProvinceSupplier(config))
                         .create();
         locationTransform.setup();
 
@@ -222,7 +225,7 @@ public class ALAVerbatimToInterpretedPipeline {
 
             // Read DWCA and replace default values
             log.info("Reading Verbatim into erMap");
-            Map<String, ExtendedRecord> erMap = AvroReader.readUniqueRecords(hdfsSiteConfig, ExtendedRecord.class, options.getInputPath());
+            Map<String, ExtendedRecord> erMap = AvroReader.readUniqueRecords(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), ExtendedRecord.class, options.getInputPath());
 
             log.info("Reading DwcA - extension transform");
             Map<String, ExtendedRecord> erExtMap = occExtensionTransform.transform(erMap);

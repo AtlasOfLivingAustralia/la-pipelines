@@ -22,15 +22,15 @@ public class ALAPipelinesConfigFactory {
     }
 
     @SneakyThrows
-    private ALAPipelinesConfigFactory(String hdfsSiteConfig, String propertiesPath) {
-        this.config = ALAFsUtils.readConfigFile(hdfsSiteConfig, propertiesPath);
+    private ALAPipelinesConfigFactory(String hdfsSiteConfig, String coreSiteConfig, String propertiesPath) {
+        this.config = ALAFsUtils.readConfigFile(hdfsSiteConfig, coreSiteConfig, propertiesPath);
     }
 
-    public static ALAPipelinesConfigFactory getInstance(String hdfsSiteConfig, String propertiesPath) {
+    public static ALAPipelinesConfigFactory getInstance(String hdfsSiteConfig,String coreSiteConfig, String propertiesPath) {
         if (instance == null) {
             synchronized (MUTEX) {
                 if (instance == null) {
-                    instance = new ALAPipelinesConfigFactory(hdfsSiteConfig, propertiesPath);
+                    instance = new ALAPipelinesConfigFactory(hdfsSiteConfig, coreSiteConfig, propertiesPath);
                 }
             }
         }

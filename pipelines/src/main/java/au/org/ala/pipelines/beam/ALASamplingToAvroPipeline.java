@@ -59,7 +59,7 @@ public class ALASamplingToAvroPipeline {
         String outputPath = ALAFsUtils.buildPathSamplingOutputUsingTargetPath(options);
         log.info("Outputting results to " + outputPath);
 
-        FileSystem fs = FsUtils.getFileSystem(options.getHdfsSiteConfig(),  "/");
+        FileSystem fs = FsUtils.getFileSystem(options.getHdfsSiteConfig(),  options.getCoreSiteConfig(),"/");
 
         // Read column headers
         final String[] columnHeaders = getColumnHeaders(fs, samplingPath);

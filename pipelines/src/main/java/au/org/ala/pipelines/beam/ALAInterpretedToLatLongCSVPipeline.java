@@ -15,7 +15,6 @@ import org.apache.beam.sdk.transforms.join.CoGroupByKey;
 import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
@@ -25,8 +24,6 @@ import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.slf4j.MDC;
-
-import java.io.File;
 import java.util.function.UnaryOperator;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
@@ -78,7 +75,7 @@ public class ALAInterpretedToLatLongCSVPipeline {
         String outputPath = FsUtils.buildDatasetAttemptPath(options, "latlng", true);
 
         //delete previous runs
-        FsUtils.deleteIfExist(options.getHdfsSiteConfig(),  outputPath);
+        FsUtils.deleteIfExist(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), outputPath);
         FileSystem fs = FileSystemFactory.getInstance(options.getHdfsSiteConfig()).getFs("/");
         ALAFsUtils.createDirectory(fs, outputPath);
 

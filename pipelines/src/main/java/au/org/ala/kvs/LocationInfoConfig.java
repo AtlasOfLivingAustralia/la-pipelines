@@ -8,7 +8,6 @@ import java.io.Serializable;
 @AllArgsConstructor
 @Data
 public class LocationInfoConfig implements Serializable {
-  private String countryNamesFile;
   private String countryCentrePointsFile;
   private String stateProvinceCentrePointsFile;
   private String stateProvinceNamesFile;

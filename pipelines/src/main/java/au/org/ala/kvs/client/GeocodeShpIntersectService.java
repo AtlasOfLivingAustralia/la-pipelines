@@ -4,10 +4,7 @@ import au.org.ala.kvs.GeocodeShpConfig;
 import au.org.ala.layers.intersect.SimpleShapeFile;
 import joptsimple.internal.Strings;
 import lombok.extern.slf4j.Slf4j;
-import org.gbif.rest.client.geocode.GeocodeService;
 import org.gbif.rest.client.geocode.Location;
-
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -20,7 +17,7 @@ import java.io.File;
  * @see SimpleShapeFile
  */
 @Slf4j
-public class GeocodeShpIntersectService implements GeocodeService {
+public class GeocodeShpIntersectService {
 
   private static GeocodeShpIntersectService instance;
   private final GeocodeShpConfig config;
@@ -87,8 +84,7 @@ public class GeocodeShpIntersectService implements GeocodeService {
     return instance;
   }
 
-  @Override
-  public Collection<Location> reverse(Double latitude, Double longitude) {
+  public Collection<Location> lookupCountry(Double latitude, Double longitude) {
     List<Location> locations = new ArrayList<Location>();
     String value = countries.intersect(longitude, latitude);
     if (value != null) {
@@ -96,6 +92,7 @@ public class GeocodeShpIntersectService implements GeocodeService {
       l.setType(POLITICAL_LOCATION_TYPE);
       l.setSource(config.getCountry().getSource());
       l.setCountryName(value);
+      l.setName(value);
       l.setIsoCountryCode2Digit(value);
       locations.add(l);
     } else {
@@ -105,22 +102,24 @@ public class GeocodeShpIntersectService implements GeocodeService {
         l.setType(EEZ_LOCATION_TYPE);
         l.setSource(config.getEez().getSource());
         l.setCountryName(eezValue);
+        l.setName(eezValue);
         l.setIsoCountryCode2Digit(eezValue);
         locations.add(l);
       }
     }
+    return locations;
+  }
+
+  public Collection<Location> lookupStateProvince(Double latitude, Double longitude) {
+    List<Location> locations = new ArrayList<Location>();
     String state = states.intersect(longitude, latitude);
     if (state != null) {
       Location l = new Location();
       l.setType(STATE_PROVINCE_LOCATION_TYPE);
       l.setSource(config.getStateProvince().getSource());
-      l.setCountryName(state);
+      l.setName(state);
       locations.add(l);
     }
     return locations;
-  }
-
-  @Override
-  public void close() throws IOException {
   }
 }

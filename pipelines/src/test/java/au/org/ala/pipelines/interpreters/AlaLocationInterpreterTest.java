@@ -34,7 +34,7 @@ public class AlaLocationInterpreterTest {
   @Before
   public void set(){
     alaConfig = new ALAPipelinesConfig();
-    alaConfig.setLocationInfoConfig(new LocationInfoConfig("/data/pipelines-data/resources/countries.txt",
+    alaConfig.setLocationInfoConfig(new LocationInfoConfig(
     "/data/pipelines-data/resources/countryCentrePoints.txt",
     "/data/pipelines-data/resources/stateProvinceCentrePoints.txt",
     "/data/pipelines-data/resources/stateProvinces.txt"));
@@ -311,8 +311,11 @@ public class AlaLocationInterpreterTest {
   public void assertCountryCoordinateTest() {
 
     KeyValueTestStoreStub store = new KeyValueTestStoreStub();
-    store.put(new LatLng(15.958333d, -85.908333d), toGeocodeResponse(Country.HONDURAS));
-    store.put(new LatLng(-2.752778d, -58.653057d), createStateAndCountry("San Luise"));
+    store.put(new LatLng(15.958333d, -85.908333d), createCountryResponse(Country.HONDURAS));
+    store.put(new LatLng(-2.752778d, -58.653057d), createCountryResponse(Country.BRAZIL));
+//    store.put(new LatLng(-2.752778d, -58.653057d),
+//            createStateAndCountryResponse("San Luise", "Brazil", "BR"));
+
     MetadataRecord mdr = MetadataRecord.newBuilder().setId(ID).build();
 
     Map<String, String> coreMap = new HashMap<>();
@@ -324,78 +327,26 @@ public class AlaLocationInterpreterTest {
 
     Optional<LocationRecord> lrResult = Interpretation.from(source)
         .to(er -> LocationRecord.newBuilder().setId(er.getId()).build())
-        .via(ALALocationInterpreter.interpretCountryAndCoordinates(store, mdr))
+        .via(LocationInterpreter.interpretCountryAndCoordinates(store, mdr))
         .get();
 
     //country matches
     LocationRecord lr = lrResult.get();
-    assertEquals(lr.getIssues().getIssueList().size(), 0);
-    assertEquals(lr.getCountryCode(), "BR");
-    assertEquals(lr.getCountry(), "BRAZIL");
-  }
-
-  @Test
-  public void assertCountryCoordinateInvalidTest() {
-
-    Location invalidlocation = new Location();
-    invalidlocation.setCountryName("invalid-country-name");
-    invalidlocation.setIsoCountryCode2Digit("invalid-country-code");
-
-    invalidlocation.setType("Political");
-    KeyValueTestStoreStub store = new KeyValueTestStoreStub();
-
-    store.put(new LatLng(-2.752778d, -58.653057d),
-        new GeocodeResponse(Arrays.asList(invalidlocation)));
-
-    GeocodeKvStore SERVICE = GeocodeKvStore.create(store);
-    MetadataRecord mdr = MetadataRecord.newBuilder().setId(ID).build();
-
-    Map<String, String> coreMap = new HashMap<>();
-    coreMap.put(DwcTerm.verbatimLatitude.qualifiedName(), "-2.752778d");
-    coreMap.put(DwcTerm.verbatimLongitude.qualifiedName(), "-58.653057d");
-    coreMap.put(DwcTerm.geodeticDatum.qualifiedName(), "EPSG:4326");
-
-    ExtendedRecord source = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
-
-    Optional<LocationRecord> lrResult = Interpretation.from(source)
-        .to(er -> LocationRecord.newBuilder().setId(er.getId()).build())
-        .via(ALALocationInterpreter.interpretCountryAndCoordinates(SERVICE, mdr))
-        .get();
-
-    //country matches
-    LocationRecord lr = lrResult.get();
-    assertEquals(lr.getCountryCode(), "invalid-country-code");
-
-    assertArrayEquals(lr.getIssues().getIssueList().toArray(),
-        new String[]{ALAOccurrenceIssue.UNKNOWN_COUNTRY_NAME.name()});
+    assertEquals(lr.getIssues().getIssueList().size(), 1); //country derived from coordinates
+    assertEquals(Country.BRAZIL.getIso2LetterCode(), lr.getCountryCode());
+    assertEquals(Country.BRAZIL.getTitle(), lr.getCountry());
   }
 
   /**
    * Only works for country
    */
-  private static GeocodeResponse toGeocodeResponse(Country country) {
+  private static GeocodeResponse createCountryResponse(Country country) {
     Location location = new Location();
     location.setIsoCountryCode2Digit(country.getIso2LetterCode());
     location.setType("Political");
     return new GeocodeResponse(Collections.singletonList(location));
   }
 
-  /**
-   * Only test for returning state and country
-   */
-  private static GeocodeResponse createStateAndCountry(String statename) {
-    Location state = new Location();
-    state.setCountryName(statename);
-    state.setType("State");
-
-    Location country = new Location();
-    country.setIsoCountryCode2Digit("BR");
-    country.setType("Political");
-
-    Collection<Location> locations = Arrays.asList(state, country);
-
-    return new GeocodeResponse(locations);
-  }
 
   private class KeyValueTestStoreStub<K, V> implements KeyValueStore<K, V>, Serializable {
 

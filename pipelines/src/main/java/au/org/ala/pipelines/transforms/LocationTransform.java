@@ -35,8 +35,10 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 public class LocationTransform extends Transform<ExtendedRecord, LocationRecord> {
 
   private ALAPipelinesConfig alaConfig;
-  private SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeKvStoreSupplier;
-  private KeyValueStore<LatLng, GeocodeResponse> geocodeKvStore;
+  private SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> countryKvStoreSupplier;
+  private SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> stateProvinceKvStoreSupplier;
+  private KeyValueStore<LatLng, GeocodeResponse> countryKvStore;
+  private KeyValueStore<LatLng, GeocodeResponse> stateProvinceKvStore;
 
   @Setter
   private PCollectionView<MetadataRecord> metadataView;
@@ -44,13 +46,14 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
   @Builder(buildMethodName = "create")
   private LocationTransform(
           ALAPipelinesConfig alaConfig,
-          SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeKvStoreSupplier,
-          KeyValueStore<LatLng, GeocodeResponse> geocodeKvStore,
+          SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> countryKvStoreSupplier,
+          SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> stateProvinceKvStoreSupplier,
           PCollectionView<MetadataRecord> metadataView) {
+
     super(LocationRecord.class, LOCATION, org.gbif.pipelines.transforms.core.LocationTransform.class.getName(), LOCATION_RECORDS_COUNT);
     this.alaConfig = alaConfig;
-    this.geocodeKvStoreSupplier = geocodeKvStoreSupplier;
-    this.geocodeKvStore = geocodeKvStore;
+    this.countryKvStoreSupplier = countryKvStoreSupplier;
+    this.stateProvinceKvStoreSupplier = stateProvinceKvStoreSupplier;
     this.metadataView = metadataView;
   }
 
@@ -68,9 +71,13 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
   /** Beam @Setup initializes resources */
   @Setup
   public void setup() {
-    if (geocodeKvStore == null && geocodeKvStoreSupplier != null) {
+    if (countryKvStore == null && countryKvStoreSupplier != null) {
       log.info("Initialize geocodeKvStore");
-      geocodeKvStore = geocodeKvStoreSupplier.get();
+      countryKvStore = countryKvStoreSupplier.get();
+    }
+    if (stateProvinceKvStore == null && stateProvinceKvStoreSupplier != null) {
+      log.info("Initialize geocodeKvStore");
+      stateProvinceKvStore = stateProvinceKvStoreSupplier.get();
     }
   }
 
@@ -78,9 +85,13 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
   @Teardown
   public void tearDown() {
     try {
-      if(geocodeKvStore != null) {
-        log.info("Close geocodeKvStore");
-        geocodeKvStore.close();
+      if (countryKvStore != null) {
+        log.info("Close countryKvStore");
+        countryKvStore.close();
+      }
+      if (stateProvinceKvStore != null) {
+        log.info("Close stateProvinceKvStore");
+        stateProvinceKvStore.close();
       }
     } catch (IOException ex) {
       log.warn("Can't close geocodeKvStore - {}", ex.getMessage());
@@ -108,8 +119,8 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
     Optional<LocationRecord> result = Interpretation.from(source)
             .to(lr)
             .when(er -> !er.getCoreTerms().isEmpty())
-            .via(LocationInterpreter.interpretCountryAndCoordinates(geocodeKvStore, mdr))
-            .via(ALALocationInterpreter.interpretStateProvince(geocodeKvStore))
+            .via(LocationInterpreter.interpretCountryAndCoordinates(countryKvStore, mdr))
+            .via(ALALocationInterpreter.interpretStateProvince(stateProvinceKvStore))
             .via(LocationInterpreter::interpretContinent)
             .via(LocationInterpreter::interpretWaterBody)
             .via(LocationInterpreter::interpretMinimumElevationInMeters)

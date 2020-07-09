@@ -9,16 +9,16 @@ import org.gbif.rest.client.geocode.GeocodeService;
 
 import java.io.IOException;
 
-public class GeocodeCache2kKeyValueStore implements KeyValueStore<LatLng, GeocodeResponse> {
+public class CountryKeyValueStore implements KeyValueStore<LatLng, GeocodeResponse> {
 
-  private final GeocodeService service;
+  private final GeocodeShpIntersectService service;
 
-  private GeocodeCache2kKeyValueStore(GeocodeShpConfig config) {
+  private CountryKeyValueStore(GeocodeShpConfig config) {
     this.service = GeocodeShpIntersectService.getInstance(config);
   }
 
-  public static GeocodeCache2kKeyValueStore create(GeocodeShpConfig config) {
-    return new GeocodeCache2kKeyValueStore(config);
+  public static CountryKeyValueStore create(GeocodeShpConfig config) {
+    return new CountryKeyValueStore(config);
   }
 
   @Override
@@ -27,6 +27,6 @@ public class GeocodeCache2kKeyValueStore implements KeyValueStore<LatLng, Geocod
 
   @Override
   public GeocodeResponse get(LatLng latLng) {
-    return new GeocodeResponse(service.reverse(latLng.getLatitude(), latLng.getLongitude()));
+    return new GeocodeResponse(service.lookupCountry(latLng.getLatitude(), latLng.getLongitude()));
   }
 }

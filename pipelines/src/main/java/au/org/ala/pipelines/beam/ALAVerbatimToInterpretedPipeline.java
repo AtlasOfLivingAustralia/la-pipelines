@@ -110,9 +110,12 @@ public class ALAVerbatimToInterpretedPipeline {
     log.info("hdfsSiteConfig = " + hdfsSiteConfig);
     log.info("coreSiteConfig = " + coreSiteConfig);
 
-    FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, types);
+    FsUtils.deleteInterpretIfExist(hdfsSiteConfig, coreSiteConfig, targetPath, datasetId, attempt, types);
 
-    ALAPipelinesConfig config = ALAPipelinesConfigFactory.getInstance(options.getHdfsSiteConfig(), options.getProperties()).get();
+    ALAPipelinesConfig config = ALAPipelinesConfigFactory.getInstance(
+            options.getHdfsSiteConfig(),
+            options.getCoreSiteConfig(),
+            options.getProperties()).get();
 
     MDC.put("datasetId", datasetId);
     MDC.put("attempt", attempt.toString());
@@ -154,7 +157,8 @@ public class ALAVerbatimToInterpretedPipeline {
     LocationTransform locationTransform =
             LocationTransform.builder()
                   .alaConfig(config)
-                  .geocodeKvStoreSupplier(GeocodeKvStoreFactory.getInstanceSupplier(config))
+                  .countryKvStoreSupplier(GeocodeKvStoreFactory.createCountrySupplier(config))
+                  .stateProvinceKvStoreSupplier(GeocodeKvStoreFactory.createStateProvinceSupplier(config))
                   .create();
 
     // ALA specific - Default values
@@ -244,7 +248,7 @@ public class ALAVerbatimToInterpretedPipeline {
 
     log.info("Deleting beam temporal folders");
     String tempPath = String.join("/", targetPath, datasetId, attempt.toString());
-    FsUtils.deleteDirectoryByPrefix(hdfsSiteConfig, tempPath, ".temp-beam");
+    FsUtils.deleteDirectoryByPrefix(hdfsSiteConfig, coreSiteConfig, tempPath, ".temp-beam");
 
     log.info("Pipeline has been finished");
   }

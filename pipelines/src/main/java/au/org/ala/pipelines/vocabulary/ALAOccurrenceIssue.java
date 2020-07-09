@@ -7,8 +7,6 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.utils.AnnotationUtils;
-
-import java.util.Collections;
 import java.util.Set;
 
 public enum ALAOccurrenceIssue implements InterpretationRemark {
@@ -22,8 +20,7 @@ public enum ALAOccurrenceIssue implements InterpretationRemark {
   COORDINATE_PRECISION_INVALID(InterpretationRemarkSeverity.WARNING, TermsGroup.COORDINATES_TERMS),
   COORDINATE_PRECISION_MISMATCH(InterpretationRemarkSeverity.WARNING, TermsGroup.COORDINATES_TERMS),
 
-  STATE_COORDINATE_MISMATCH(InterpretationRemarkSeverity.WARNING,
-      TermsGroup.COORDINATES_COUNTRY_TERMS),
+  STATE_COORDINATE_MISMATCH(InterpretationRemarkSeverity.WARNING, TermsGroup.COORDINATES_COUNTRY_TERMS),
   UNKNOWN_COUNTRY_NAME(InterpretationRemarkSeverity.WARNING, TermsGroup.COORDINATES_COUNTRY_TERMS),
   COORDINATES_CENTRE_OF_COUNTRY(InterpretationRemarkSeverity.WARNING, TermsGroup.COORDINATES_COUNTRY_TERMS),
 
@@ -47,12 +44,6 @@ public enum ALAOccurrenceIssue implements InterpretationRemark {
   private final Set<Term> relatedTerms;
   private final InterpretationRemarkSeverity severity;
   private final boolean isDeprecated;
-
-  ALAOccurrenceIssue(InterpretationRemarkSeverity severity) {
-    this.severity = severity;
-    this.relatedTerms = Collections.emptySet();
-    this.isDeprecated = AnnotationUtils.isFieldDeprecated(org.gbif.api.vocabulary.OccurrenceIssue.class, this.name());
-  }
 
   ALAOccurrenceIssue(InterpretationRemarkSeverity severity, Term[] relatedTerms) {
     this.severity = severity;

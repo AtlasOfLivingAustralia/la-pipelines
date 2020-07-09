@@ -9,6 +9,6 @@ public class TestUtils {
 
     public static ALAPipelinesConfig getConfig(){
         String absolutePath = new File("src/test/resources/pipelines.yaml").getAbsolutePath();
-        return ALAPipelinesConfigFactory.getInstance(null, absolutePath).get();
+        return ALAPipelinesConfigFactory.getInstance(null, null, absolutePath).get();
     }
 }

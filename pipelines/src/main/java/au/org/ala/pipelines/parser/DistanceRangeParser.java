@@ -32,7 +32,7 @@ public class DistanceRangeParser {
   public static double parse(String value){
     String normalised =  value.replaceAll("\\[", "").replaceAll(",","").replaceAll("]","").toLowerCase().trim();
 
-    if(normalised.matches(singleNumber+"|"+decimalNumber)){
+    if (normalised.matches(singleNumber+"|"+decimalNumber)){
       return Double.valueOf(normalised);
     }
 
@@ -51,7 +51,6 @@ public class DistanceRangeParser {
       String uom = range_matcher.group(4);
       return convertUOM(Double.valueOf(numberStr), uom);
     }
-
 
     //single number metres
     Matcher sm_matcher = Pattern.compile(singleNumberMetres).matcher(normalised);
