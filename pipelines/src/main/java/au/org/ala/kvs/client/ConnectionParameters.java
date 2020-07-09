@@ -20,11 +20,13 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ConnectionParameters {
 
-    String protocol;
-    String url;
-    List<String> termsForUniqueKey;
+  String protocol;
+  String url;
+  List<String> termsForUniqueKey;
 
-    @JsonPOJOBuilder(withPrefix = "")
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class ConnectionParametersBuilder {}
+  @JsonPOJOBuilder(withPrefix = "")
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  public static class ConnectionParametersBuilder {
+
+  }
 }

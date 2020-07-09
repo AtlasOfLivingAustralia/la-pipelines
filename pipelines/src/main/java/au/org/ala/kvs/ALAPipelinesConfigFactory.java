@@ -5,16 +5,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import lombok.SneakyThrows;
-import org.apache.hadoop.fs.FileSystem;
-import org.gbif.pipelines.ingest.utils.FsUtils;
-import org.gbif.pipelines.parsers.config.model.PipelinesConfig;
-
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.nio.file.Path;
-import java.util.function.Function;
-
-import static org.gbif.pipelines.ingest.utils.FsUtils.getLocalFileSystem;
 
 public class ALAPipelinesConfigFactory {
 
@@ -32,15 +22,15 @@ public class ALAPipelinesConfigFactory {
     }
 
     @SneakyThrows
-    private ALAPipelinesConfigFactory(String hdfsSiteConfig, String propertiesPath) {
-        this.config = ALAFsUtils.readConfigFile(hdfsSiteConfig, propertiesPath);
+    private ALAPipelinesConfigFactory(String hdfsSiteConfig, String coreSiteConfig, String propertiesPath) {
+        this.config = ALAFsUtils.readConfigFile(hdfsSiteConfig, coreSiteConfig, propertiesPath);
     }
 
-    public static ALAPipelinesConfigFactory getInstance(String hdfsSiteConfig, String propertiesPath) {
+    public static ALAPipelinesConfigFactory getInstance(String hdfsSiteConfig,String coreSiteConfig, String propertiesPath) {
         if (instance == null) {
             synchronized (MUTEX) {
                 if (instance == null) {
-                    instance = new ALAPipelinesConfigFactory(hdfsSiteConfig, propertiesPath);
+                    instance = new ALAPipelinesConfigFactory(hdfsSiteConfig, coreSiteConfig, propertiesPath);
                 }
             }
         }
@@ -50,29 +40,4 @@ public class ALAPipelinesConfigFactory {
     public ALAPipelinesConfig get() {
         return config;
     }
-
-//    public static ALAPipelinesConfig read(Path path) {
-//        Function<Path, InputStream> absolute =
-//                p -> {
-//                    try {
-//                        return new FileInputStream(p.toFile());
-//                    } catch (Exception ex) {
-//                        String msg = "Properties with absolute p could not be read from " + path;
-//                        throw new IllegalArgumentException(msg, ex);
-//                    }
-//                };
-//
-//        Function<Path, InputStream> resource =
-//                p -> Thread.currentThread().getContextClassLoader().getResourceAsStream(p.toString());
-//
-//        Function<Path, InputStream> function = path.isAbsolute() ? absolute : resource;
-//
-//        try (InputStream in = function.apply(path)) {
-//            // read properties from input stream
-//            return MAPPER.readValue(in, ALAPipelinesConfig.class);
-//        } catch (Exception ex) {
-//            String msg = "Properties with absolute path could not be read from " + path;
-//            throw new IllegalArgumentException(msg, ex);
-//        }
-//    }
 }

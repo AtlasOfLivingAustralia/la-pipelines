@@ -14,7 +14,7 @@ import java.util.Collection;
  */
 interface ALANameUsageMatchRetrofitService {
 
-    @POST("/api/searchByClassification")
-    @Headers({"Content-Type: application/json"})
-    Call<ALANameUsageMatch> match(@Body ALASpeciesMatchRequest nameMatch);
+  @POST("/api/searchByClassification")
+  @Headers({"Content-Type: application/json"})
+  Call<ALANameUsageMatch> match(@Body ALASpeciesMatchRequest nameMatch);
 }

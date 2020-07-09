@@ -24,32 +24,32 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.TAXON_MATCH_NONE;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ALATaxonomyInterpreter {
 
-    /**
-     * Interprets a utils from the taxonomic fields specified in the {@link ExtendedRecord} received.
-     */
-    public static BiConsumer<ExtendedRecord, ALATaxonRecord> alaTaxonomyInterpreter(
-            KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch> kvStore) {
-        return (er, atr) -> {
+  /**
+   * Interprets a utils from the taxonomic fields specified in the {@link ExtendedRecord} received.
+   */
+  public static BiConsumer<ExtendedRecord, ALATaxonRecord> alaTaxonomyInterpreter(
+      KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch> kvStore) {
+    return (er, atr) -> {
 
-            if (kvStore != null){
+      if (kvStore != null) {
 
-                ALASpeciesMatchRequest matchRequest = ALASpeciesMatchRequest.builder()
-                        .kingdom(extractValue(er, DwcTerm.kingdom))
-                        .phylum(extractValue(er, DwcTerm.phylum))
-                        .clazz(extractValue(er, DwcTerm.class_))
-                        .order(extractValue(er, DwcTerm.order))
-                        .family(extractValue(er, DwcTerm.family))
-                        .genus(extractValue(er, DwcTerm.genus))
-                        .scientificName(extractValue(er, DwcTerm.scientificName))
-                        .rank(extractValue(er, DwcTerm.taxonRank))
-                        .verbatimTaxonRank(extractValue(er, DwcTerm.verbatimTaxonRank))
-                        .specificEpithet(extractValue(er, DwcTerm.specificEpithet))
-                        .infraspecificEpithet(extractValue(er, DwcTerm.infraspecificEpithet))
-                        .scientificNameAuthorship(extractValue(er, DwcTerm.scientificNameAuthorship))
-                        .genericName(extractValue(er, GbifTerm.genericName))
-                        .build();
+        ALASpeciesMatchRequest matchRequest = ALASpeciesMatchRequest.builder()
+            .kingdom(extractValue(er, DwcTerm.kingdom))
+            .phylum(extractValue(er, DwcTerm.phylum))
+            .clazz(extractValue(er, DwcTerm.class_))
+            .order(extractValue(er, DwcTerm.order))
+            .family(extractValue(er, DwcTerm.family))
+            .genus(extractValue(er, DwcTerm.genus))
+            .scientificName(extractValue(er, DwcTerm.scientificName))
+            .rank(extractValue(er, DwcTerm.taxonRank))
+            .verbatimTaxonRank(extractValue(er, DwcTerm.verbatimTaxonRank))
+            .specificEpithet(extractValue(er, DwcTerm.specificEpithet))
+            .infraspecificEpithet(extractValue(er, DwcTerm.infraspecificEpithet))
+            .scientificNameAuthorship(extractValue(er, DwcTerm.scientificNameAuthorship))
+            .genericName(extractValue(er, GbifTerm.genericName))
+            .build();
 
-                atr.setId(er.getId());
+        atr.setId(er.getId());
 
                 ALANameUsageMatch usageMatch = kvStore.get(matchRequest);
 
@@ -77,8 +77,6 @@ public class ALATaxonomyInterpreter {
                     }
 //                    }
 
-
-
 //                    String matchType = usageMatch.getMatchType();
 //
 //                    if (MatchType.NONE == matchType) {
@@ -101,14 +99,14 @@ public class ALATaxonomyInterpreter {
 //                            log.warn("Fail to parse backbone {} name for occurrence {}: {}", e.getType(), er.getId(), e.getName());
 //                        }
 //                    }
-                    // convert taxon record
+          // convert taxon record
 //                    TaxonRecordConverter.convert(usageMatch, tr);
-                }
+        }
 
-                atr.setId(er.getId());
-            }
-        };
-    }
+        atr.setId(er.getId());
+      }
+    };
+  }
 
     private static boolean isEmpty(ALANameUsageMatch response) {
         return response == ALANameUsageMatch.FAIL;

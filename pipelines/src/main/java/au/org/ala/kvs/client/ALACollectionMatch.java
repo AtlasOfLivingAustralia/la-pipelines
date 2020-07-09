@@ -19,14 +19,17 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ALACollectionMatch {
 
-    String collectionUid;
-    String collectionName;
-    String institutionUid;
-    String institutionName;
-    List<EntityReference> hubMembership;
+  String collectionUid;
+  String collectionName;
+  String institutionUid;
+  String institutionName;
+  List<EntityReference> hubMembership;
 
-    @JsonPOJOBuilder(withPrefix = "")
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class ALACollectionMatchBuilder {}
-    public static final ALACollectionMatch EMPTY = ALACollectionMatch.builder().build();
+  @JsonPOJOBuilder(withPrefix = "")
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  public static class ALACollectionMatchBuilder {
+
+  }
+
+  public static final ALACollectionMatch EMPTY = ALACollectionMatch.builder().build();
 }

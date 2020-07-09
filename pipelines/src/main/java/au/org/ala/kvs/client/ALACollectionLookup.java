@@ -17,10 +17,12 @@ import lombok.Value;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ALACollectionLookup {
 
-    String collectionCode;
-    String institutionCode;
+  String collectionCode;
+  String institutionCode;
 
-    @JsonPOJOBuilder(withPrefix = "")
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class ALACollectionLookupBuilder {}
+  @JsonPOJOBuilder(withPrefix = "")
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  public static class ALACollectionLookupBuilder {
+
+  }
 }

@@ -74,7 +74,7 @@ public class LayerCrawler {
 
         String baseDir = options.getInputPath();
 
-        FileSystem fs = FsUtils.getFileSystem(options.getHdfsSiteConfig(),  "/");
+        FileSystem fs = FsUtils.getFileSystem(options.getHdfsSiteConfig(),  options.getCoreSiteConfig(), "/");
 
         if (options.getDatasetId() != null) {
 
@@ -86,14 +86,14 @@ public class LayerCrawler {
             LayerCrawler lc = new LayerCrawler();
 
             //delete existing sampling output
-            String samplingDir = baseDir + "/" + dataSetID + "/1/sampling";
-            FsUtils.deleteIfExist(options.getHdfsSiteConfig(),  samplingDir);
+            String samplingDir = baseDir + "/" + dataSetID + "/" + options.getAttempt() + "/sampling";
+            FsUtils.deleteIfExist(options.getHdfsSiteConfig(),  options.getCoreSiteConfig(), samplingDir);
 
             //(re)create sampling output directories
-            String sampleDownloadPath = baseDir + "/" + dataSetID + "/1/sampling/downloads";
+            String sampleDownloadPath = baseDir + "/" + dataSetID + "/" + options.getAttempt() + "/sampling/downloads";
 
             //check the lat lng export directory has been created
-            String latLngExportPath = baseDir +  "/" + dataSetID + "/1/latlng";
+            String latLngExportPath = baseDir +  "/" + dataSetID + "/" + options.getAttempt() + "/latlng";
             if (!ALAFsUtils.exists(fs, latLngExportPath)){
                 log.error("LatLng export unavailable. Has LatLng export pipeline been ran ? Not available at path {}", latLngExportPath);
                 throw new RuntimeException("LatLng export unavailable. Has LatLng export pipeline been ran ? Not available:" + latLngExportPath);

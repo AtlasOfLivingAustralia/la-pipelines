@@ -9,16 +9,16 @@ if [ $# -eq 0 ]
     exit 1
 fi
 
-dwca_dir="/data/biocache-load/$1"
+dwca_dir="/data/biocache-load/$1/$1.zip"
 
-if [[ ! -d  $dwca_dir ]]
+if [[ ! -f  $dwca_dir ]]
 then
     echo "$dwca_dir does not exists on your filesystem."
     exit 1
 fi
 
 java -Dspark.local.dir=$SPARK_TMP \
--cp $PIPELINES_JAR au.org.ala.pipelines.beam.DwcaToVerbatimPipeline \
+-cp $PIPELINES_JAR org.gbif.pipelines.ingest.pipelines.DwcaToVerbatimPipeline \
   --datasetId=$1 \
   --attempt=1 \
   --runner=SparkRunner \

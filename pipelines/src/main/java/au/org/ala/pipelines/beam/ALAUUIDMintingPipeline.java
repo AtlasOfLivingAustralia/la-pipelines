@@ -28,7 +28,7 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.UnknownTerm;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.pipelines.ingest.java.utils.PipelinesConfigFactory;
+import org.gbif.pipelines.ingest.java.utils.ConfigFactory;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
@@ -83,7 +83,7 @@ public class ALAUUIDMintingPipeline {
 
         Pipeline p = Pipeline.create(options);
 
-        ALAPipelinesConfig config = ALAPipelinesConfigFactory.getInstance(options.getHdfsSiteConfig(), options.getProperties()).get();
+        ALAPipelinesConfig config = ALAPipelinesConfigFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getProperties()).get();
 
         //build the directory path for existing identifiers
         String alaRecordDirectoryPath = options.getTargetPath() + "/" + options.getDatasetId().trim() + "/1/identifiers/" + ALARecordTypes.ALA_UUID.name().toLowerCase();
@@ -136,7 +136,7 @@ public class ALAUUIDMintingPipeline {
         PCollection<KV<String, String>> alaUuids = null;
 
         log.info("Transform 2: ALAUUIDRecord ur ->  <uniqueKey, uuid> (assume incomplete)");
-        FileSystem fs = FsUtils.getFileSystem(options.getHdfsSiteConfig(), null);
+        FileSystem fs = FsUtils.getFileSystem(options.getHdfsSiteConfig(), options.getCoreSiteConfig(),null);
         Path path = new Path(alaRecordDirectoryPath);
 
         if (fs.exists(path)){

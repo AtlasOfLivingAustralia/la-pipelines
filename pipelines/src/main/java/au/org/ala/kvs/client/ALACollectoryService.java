@@ -9,20 +9,14 @@ import java.io.Closeable;
  */
 public interface ALACollectoryService extends Closeable {
 
-    /**
-     * Retrieve the details of a data resource.
-     *
-     * @param dataResourceUid
-     * @return
-     */
-    ALACollectoryMetadata lookupDataResource(@Path("dataResourceUid") String dataResourceUid);
+  /**
+   * Retrieve the details of a data resource.
+   */
+  ALACollectoryMetadata lookupDataResource(@Path("dataResourceUid") String dataResourceUid);
 
-    /**
-     * Lookup a Collection using institutionCode and collectionCode.
-     *
-     * @param institutionCode
-     * @param collectionCode
-     * @return
-     */
-    ALACollectionMatch lookupCodes(@Path("institutionCode") String institutionCode, @Path("collectionCode") String collectionCode);
+  /**
+   * Lookup a Collection using institutionCode and collectionCode.
+   */
+  ALACollectionMatch lookupCodes(@Path("institutionCode") String institutionCode,
+      @Path("collectionCode") String collectionCode);
 }

@@ -174,30 +174,8 @@ public class ALAFsUtils {
      * @param filePath properties file path
      */
     @SneakyThrows
-    public static Properties readPropertiesFile(String hdfsSiteConfig, String filePath) {
-        FileSystem fs = FsUtils.getLocalFileSystem(hdfsSiteConfig);
-        Path fPath = new Path(filePath);
-        if (fs.exists(fPath)) {
-            log.info("Reading properties path - {}", filePath);
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(fPath)))) {
-                Properties props = new Properties();
-                props.load(br);
-                log.info("Loaded properties - {}", props);
-                return props;
-            }
-        }
-        throw new FileNotFoundException("The properties file doesn't exist - " + filePath);
-    }
-
-    /**
-     * Read a properties file from HDFS/Local FS
-     *
-     * @param hdfsSiteConfig HDFS config file
-     * @param filePath properties file path
-     */
-    @SneakyThrows
-    public static ALAPipelinesConfig readConfigFile(String hdfsSiteConfig, String filePath) {
-        FileSystem fs = FsUtils.getLocalFileSystem(hdfsSiteConfig);
+    public static ALAPipelinesConfig readConfigFile(String hdfsSiteConfig, String coreSiteConfig, String filePath) {
+        FileSystem fs = FsUtils.getLocalFileSystem(hdfsSiteConfig, coreSiteConfig);
         Path fPath = new Path(filePath);
         if (fs.exists(fPath)) {
             log.info("Reading properties path - {}", filePath);
