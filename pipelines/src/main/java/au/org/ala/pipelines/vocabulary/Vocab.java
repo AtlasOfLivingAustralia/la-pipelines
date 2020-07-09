@@ -8,6 +8,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 
 import java.util.*;
 
@@ -24,9 +25,16 @@ public class Vocab {
   //stemmed variant -> canonical
   private HashMap<String, String> stemmedVariants = new HashMap<String, String>();
 
-  public static Vocab loadVocabFromFile(String filePath) throws FileNotFoundException {
-      File file = new File(filePath);
-      return loadVocabFromStream(new FileInputStream(file));
+  public static Vocab loadVocabFromFile(String externalFilePath, String classpathFile) throws FileNotFoundException {
+      if ( Strings.isNotEmpty(externalFilePath)) {
+          File file = new File(externalFilePath);
+          if (!file.exists()){
+              throw new RuntimeException("Unable to load vocab file:" + externalFilePath);
+          }
+          return loadVocabFromStream(new FileInputStream(file));
+      } else {
+          return loadVocabFromStream(Vocab.class.getResourceAsStream(classpathFile));
+      }
   }
 
   public static Vocab loadVocabFromStream(InputStream is) {
@@ -83,9 +91,5 @@ public class Vocab {
     }
 
     return Optional.empty();
-  }
-
-  public boolean matched(String string2Match) {
-    return matchTerm(string2Match).isPresent();
   }
 }

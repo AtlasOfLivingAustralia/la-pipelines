@@ -17,7 +17,3 @@ geocodeConfig:
     path: "/data/pipelines-shp/cw_state_poly"
     field: FEATURE
     source: "http://vliz.be/vmdcdata/marbound/"
-locationInfoConfig:
-    countryCentrePointsFile : /data/pipelines-data/resources/countryCentrePoints.txt
-    stateProvinceCentrePointsFile : /data/pipelines-data/resources/stateProvinceCentrePoints.txt
-    stateProvinceNamesFile : /data/pipelines-data/resources/stateProvinces.txt

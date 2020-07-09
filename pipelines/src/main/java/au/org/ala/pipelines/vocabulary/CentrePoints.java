@@ -4,6 +4,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.logging.log4j.util.Strings;
 import org.gbif.kvs.geocode.LatLng;
 
 import java.io.File;
@@ -17,8 +18,9 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
 /**
- * CentrePoints is used by coutryCentres and stateCentres, so it can be a singleton Singleton should
- * be implememend in a conconcrete class like, countryCentres / StateCentres <p> Simulate
+ * CentrePoints is used by countryCentres and stateProvinceCentres, so it can be a singleton.
+ *
+ * Singleton should be implemented in a conconcrete class like, countryCentres / StateCentres <p> Simulate
  * CentrePoints.scala Compare with predefined state centres in file Format: New South
  * Wales	-31.2532183	146.921099	-28.1561921	153.903718	-37.5052772	140.9992122 Rounded decimal of
  * predefined state centres based on precision of the given coordinates
@@ -34,15 +36,18 @@ public class CentrePoints {
   private static CentrePoints cp;
 
   private CentrePoints() {
-
   }
 
-  public static CentrePoints getInstance(String filePath) throws FileNotFoundException{
-      InputStream is = new FileInputStream(new File(filePath));
-      return getInstance(is);
+  public static CentrePoints getInstance(String filePath, String classpathFile) throws FileNotFoundException {
+      if (Strings.isNotEmpty(filePath)){
+        InputStream is = new FileInputStream(new File(filePath));
+        return getInstance(is);
+      } else {
+        return getInstance(CentrePoints.class.getResourceAsStream(classpathFile));
+      }
   }
 
-  public static CentrePoints getInstance(InputStream is) throws FileNotFoundException {
+  public static CentrePoints getInstance(InputStream is) {
     cp = new CentrePoints();
     new BufferedReader(new InputStreamReader(is)).lines()
         .map(s -> s.trim())
@@ -61,7 +66,7 @@ public class CentrePoints {
   }
 
   /**
-   * Precision of coordinate is determined by the given lat and lng for exmaple, given lat 14.39,
+   * Precision of coordinate is determined by the given lat and lng for example, given lat 14.39,
    * will only compare to the second decimal
    */
   public boolean coordinatesMatchCentre(String location, double decimalLatitude,
@@ -76,9 +81,10 @@ public class CentrePoints {
       double approximatedLat = round(supposedCentre.getLatitude(), latDecPlaces);
       double approximatedLong = round(supposedCentre.getLongitude(), longDecPlaces);
 
-      //compare approximated centre point with supplied coordinates
-      log.debug(decimalLatitude + " " + decimalLongitude + " VS " + approximatedLat + " "
-          + approximatedLong);
+      // compare approximated centre point with supplied coordinates
+      if (log.isDebugEnabled()) {
+        log.debug("{} {} VS {} {}", decimalLatitude, decimalLongitude, approximatedLat, approximatedLong);
+      }
       return approximatedLat == decimalLatitude && approximatedLong == decimalLongitude;
     } else {
       log.error("{} is not found in records", location);
@@ -114,28 +120,14 @@ public class CentrePoints {
       return numberString.substring(decimalPointLoc + 1).length();
     }
   }
-
 }
 
 class BBox {
 
-  private double xmin = Double.POSITIVE_INFINITY;
-  private double xmax = Double.NEGATIVE_INFINITY;
-  private double ymin = Double.POSITIVE_INFINITY;
-  private double ymax = Double.NEGATIVE_INFINITY;
-
-
-  public BBox(LatLng a, LatLng b) {
-    add(a);
-    add(b);
-  }
-
-  public BBox(BBox copy) {
-    this.xmin = copy.xmin;
-    this.xmax = copy.xmax;
-    this.ymin = copy.ymin;
-    this.ymax = copy.ymax;
-  }
+  private double xmin;
+  private double xmax;
+  private double ymin;
+  private double ymax;
 
   public BBox(double a_x, double a_y, double b_x, double b_y) {
     xmin = Math.min(a_x, b_x);
@@ -178,76 +170,6 @@ class BBox {
   public void add(BBox box) {
     add(box.getTopLeft());
     add(box.getBottomRight());
-  }
-
-  public double height() {
-    return ymax - ymin;
-  }
-
-  public double width() {
-    return xmax - xmin;
-  }
-
-  /**
-   * Tests, weather the bbox b lies completely inside this bbox.
-   */
-  public boolean bounds(BBox b) {
-    if (!(xmin <= b.xmin) ||
-        !(xmax >= b.xmax) ||
-        !(ymin <= b.ymin) ||
-        !(ymax >= b.ymax)) {
-      return false;
-    }
-    return true;
-  }
-
-  /**
-   * Tests, weather the Point c lies within the bbox.
-   */
-  public boolean bounds(LatLng c) {
-    if ((xmin <= c.getLongitude()) &&
-        (xmax >= c.getLongitude()) &&
-        (ymin <= c.getLatitude()) &&
-        (ymax >= c.getLatitude())) {
-      return true;
-    }
-    return false;
-  }
-
-  /**
-   * Tests, weather two BBoxes intersect as an area. I.e. weather there exists a point that lies in
-   * both of them.
-   */
-  public boolean intersects(BBox b) {
-    if (xmin > b.xmax) {
-      return false;
-    }
-    if (xmax < b.xmin) {
-      return false;
-    }
-    if (ymin > b.ymax) {
-      return false;
-    }
-    if (ymax < b.ymin) {
-      return false;
-    }
-    return true;
-  }
-
-  /**
-   * Returns a list of all 4 corners of the bbox rectangle.
-   */
-  public List<LatLng> points() {
-    LatLng p1 = new LatLng(ymin, xmin);
-    LatLng p2 = new LatLng(ymin, xmax);
-    LatLng p3 = new LatLng(ymax, xmin);
-    LatLng p4 = new LatLng(ymax, xmax);
-    List<LatLng> ret = new ArrayList<LatLng>(4);
-    ret.add(p1);
-    ret.add(p2);
-    ret.add(p3);
-    ret.add(p4);
-    return ret;
   }
 
   public LatLng getTopLeft() {

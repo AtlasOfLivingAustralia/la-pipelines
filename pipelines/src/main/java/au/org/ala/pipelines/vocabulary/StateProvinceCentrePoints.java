@@ -1,16 +1,14 @@
 package au.org.ala.pipelines.vocabulary;
 
 import java.io.FileNotFoundException;
-
 import au.org.ala.kvs.LocationInfoConfig;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.InputStream;
 /**
- * Load centres of countries from resources
+ * Load centres of stateProvince from resources
  */
 @Slf4j
-public class CountryCentrePoints {
+public class StateProvinceCentrePoints {
 
   private static CentrePoints cp;
 
@@ -20,8 +18,8 @@ public class CountryCentrePoints {
       if (config != null){
         externalFilePath = config.getCountryCentrePointsFile();
       }
-      cp = CentrePoints.getInstance(externalFilePath, "/countryCentrePoints.txt");
-      log.info("CountryCentrePoints contains {} country centres", cp.size());
+      cp = CentrePoints.getInstance(externalFilePath, "/stateProvinceCentrePoints.txt");
+      log.info("StateProvinceCentrePoints contains " + cp.size() + " stateProvince centres");
     }
     return cp;
   }

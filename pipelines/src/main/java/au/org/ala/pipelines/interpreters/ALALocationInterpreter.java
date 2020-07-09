@@ -112,7 +112,7 @@ public class ALALocationInterpreter {
       if (lr.getDecimalLongitude() != null && lr.getDecimalLatitude() != null){
         if (!Strings.isNullOrEmpty(lr.getCountry())){
           try {
-            if (CountryCentrePoints.getInstance(alaConfig.getLocationInfoConfig().getCountryCentrePointsFile())
+            if (CountryCentrePoints.getInstance(alaConfig.getLocationInfoConfig())
                 .coordinatesMatchCentre(lr.getCountry(), lr.getDecimalLatitude(),
                     lr.getDecimalLongitude())) {
               addIssue(lr, ALAOccurrenceIssue.COORDINATES_CENTRE_OF_COUNTRY.name());
@@ -136,7 +136,7 @@ public class ALALocationInterpreter {
 
         if (!Strings.isNullOrEmpty(lr.getStateProvince())){
           try {
-            if (StateCentrePoints.getInstance(alaConfig.getLocationInfoConfig().getStateProvinceCentrePointsFile())
+            if (StateProvinceCentrePoints.getInstance(alaConfig.getLocationInfoConfig())
                 .coordinatesMatchCentre(lr.getStateProvince(), lr.getDecimalLatitude(),
                     lr.getDecimalLongitude())) {
               addIssue(lr, ALAOccurrenceIssue.COORDINATES_CENTRE_OF_STATEPROVINCE.name());
