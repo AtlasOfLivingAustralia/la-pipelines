@@ -75,6 +75,7 @@ You can test it by checking this url: http://localhost:8983
 ### Setting up la-pipelines
   
 1. Download shape files from [here](https://pipelines-shp.s3-ap-southeast-2.amazonaws.com/pipelines-shapefiles.zip) and expand into `/data/pipelines-shp` directory
+1. Download SDS shape files from [here](https://biocache.ala.org.au/archives/layers/sds-layers.tgz) and expand into `/data/pipelines-shp` directory
 1. Download a test darwin core archive (e.g. https://archives.ala.org.au/archives/gbif/dr893/dr893.zip) and expand it into `/data/biocache-load` e.g. `/data/biocache-load/dr893`
 1. Create the following directory `/data/pipelines-data`
 1. Build with maven `mvn clean install`

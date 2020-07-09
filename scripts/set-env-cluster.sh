@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
+export FS_PATH="hdfs://aws-spark-quoll-1.ala:9000"
+
 export PIPELINES_JAR="/efs-mount-point/pipelines-hdfs.jar"
 
-export PIPELINES_CONF="$FS_PATH/pipelines.yaml"
+export PIPELINES_CONF="/efs-mount-point/pipelines.yaml"
 
 export HDFS_CONF="/efs-mount-point/hdfs-site.xml"
-
-export FS_PATH="hdfs://aws-spark-quoll-1.ala:9000"
 
 export SPARK_TMP="/data/spark-tmp"
 

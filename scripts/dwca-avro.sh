@@ -9,9 +9,9 @@ if [ $# -eq 0 ]
     exit 1
 fi
 
-dwca_dir="/data/biocache-load/$1"
+dwca_dir="/data/biocache-load/$1/$1.zip"
 
-if [[ ! -d  $dwca_dir ]]
+if [[ ! -f  $dwca_dir ]]
 then
     echo "$dwca_dir does not exists on your filesystem."
     exit 1
