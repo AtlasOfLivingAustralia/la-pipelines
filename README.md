@@ -76,7 +76,7 @@ You can test it by checking this url: http://localhost:8983
   
 1. Download shape files from [here](https://pipelines-shp.s3-ap-southeast-2.amazonaws.com/pipelines-shapefiles.zip) and expand into `/data/pipelines-shp` directory
 1. Download SDS shape files from [here](https://biocache.ala.org.au/archives/layers/sds-layers.tgz) and expand into `/data/pipelines-shp` directory
-1. Download a test darwin core archive (e.g. https://archives.ala.org.au/archives/gbif/dr893/dr893.zip) and expand it into `/data/biocache-load` e.g. `/data/biocache-load/dr893`
+1. Download a test darwin core archive (e.g. https://archives.ala.org.au/archives/gbif/dr893/dr893.zip)
 1. Create the following directory `/data/pipelines-data`
 1. Build with maven `mvn clean install`
 
@@ -91,12 +91,13 @@ You can test it by checking this url: http://localhost:8983
     1. `./sample.sh dr893`
     1. `./sample-avro-embedded.sh dr893`
 1. To setup SOLR:
-    1. Run `cd solr/scripts` and  then run ' `./update-solr-config.sh`
+    1. Run `cd ../solr/scripts` and  then run ' `./update-solr-config.sh`
+    1. Run `cd ../../scripts`
 1. To index, run `./index-spark-embedded.sh dr893`
 
 ## Integration Tests
 
-Integration testing is supported using docker containers.
+Integration testing is supported using docker containers for running the required services.
 To start the required containers, run the following:
 
 ```

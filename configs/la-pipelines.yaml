@@ -76,6 +76,7 @@ index:
   properties: ../scripts/pipelines.yaml
   solrCollection: biocache
   includeSampling: true
+  runner: SparkRunner
   zkHost: localhost:9983
   ## For spark-cluster:
   # appName: SOLR indexing for {datasetId}

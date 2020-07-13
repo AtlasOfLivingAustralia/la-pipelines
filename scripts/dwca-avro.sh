@@ -13,6 +13,12 @@ dwca_dir="/data/biocache-load/$1/$1.zip"
 
 if [[ ! -f  $dwca_dir ]]
 then
+    dwca_dir="/data/biocache-load/$1.zip"
+fi
+
+if [[ ! -f  $dwca_dir ]]
+then
+    dwca_dir="/data/biocache-load/$1.zip"
     echo "$dwca_dir does not exists on your filesystem."
     exit 1
 fi

@@ -1,17 +1,4 @@
-general:
-  targetPath: hdfs://aws-spark-quoll-1.ala:9000/pipelines-data
-  attempt: 1
-  hdfsSiteConfig: /efs-mount-point/hdfs-site.xml
-  coreSiteConfig: /efs-mount-point/hdfs-site.xml
-
-interpret:
-  appName: Interpretation for {datasetId}
-  inputPath: hdfs://aws-spark-quoll-1.ala:9000/pipelines-data/{datasetId}/1/verbatim.avro
-
-sample-avro:
-  appName: Add Sampling for {datasetId}
-  useExtendedRecordId: true
-
-index:
-  appName: SOLR indexing for {datasetId}
-  runner: SparkRunner
+# Here we can override some config from la-pipelines.yml instead of modifying it.
+# This configuration file is specifically for overrides for jobs ran on the cluster.
+#
+# This file is referenced in the *-spark-cluster.sh bash scripts.

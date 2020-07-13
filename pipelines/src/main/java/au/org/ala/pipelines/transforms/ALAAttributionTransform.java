@@ -1,11 +1,8 @@
 package au.org.ala.pipelines.transforms;
 
-import au.org.ala.kvs.cache.ALAAttributionKVStoreFactory;
-import au.org.ala.kvs.cache.ALACollectionKVStoreFactory;
 import au.org.ala.kvs.client.*;
 import au.org.ala.pipelines.interpreters.ALAAttributionInterpreter;
 import lombok.Builder;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -18,12 +15,7 @@ import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.SerializableSupplier;
 import org.gbif.pipelines.transforms.Transform;
-import org.gbif.rest.client.configuration.ClientConfiguration;
-
-import java.io.IOException;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.Properties;
 
 import static au.org.ala.pipelines.common.ALARecordTypes.ALA_ATTRIBUTION;
 
@@ -81,11 +73,9 @@ public class ALAAttributionTransform extends Transform<ExtendedRecord, ALAAttrib
     @Setup
     public void setup() {
         if (dataResourceKvStore == null && dataResourceKvStoreSupplier != null) {
-            log.info("Initialize NameUsageMatchKvStore");
             dataResourceKvStore = dataResourceKvStoreSupplier.get();
         }
         if (collectionKvStore == null && collectionKvStoreSupplier != null) {
-            log.info("Initialize NameUsageMatchKvStore");
             collectionKvStore = collectionKvStoreSupplier.get();
         }
     }
@@ -93,22 +83,6 @@ public class ALAAttributionTransform extends Transform<ExtendedRecord, ALAAttrib
     /** Beam @Teardown closes initialized resources */
     @Teardown
     public void tearDown() {
-//        if (Objects.nonNull(dataResourceKvStore)) {
-//            try {
-//                log.info("Close dataResourceKvStore");
-//                dataResourceKvStore.close();
-//            } catch (IOException ex) {
-//                log.error("Error closing KV Store", ex);
-//            }
-//        }
-//        if (Objects.nonNull(collectionKvStore)) {
-//            try {
-//                log.info("Close collectionKvStore");
-//                collectionKvStore.close();
-//            } catch (IOException ex) {
-//                log.error("Error closing KV Store", ex);
-//            }
-//        }
     }
 
     public ParDo.SingleOutput<ExtendedRecord, ALAAttributionRecord> interpret(PCollectionView<MetadataRecord> metadataView) {

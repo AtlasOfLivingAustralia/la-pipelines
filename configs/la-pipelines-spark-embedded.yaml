@@ -1,9 +1,4 @@
-interpret:
-  appName: Interpretation for {datasetId}
-
-sample-avro:
-  appName: SamplingToAvro indexing for {datasetId}
-
-index:
-  appName: SOLR indexing for {datasetId}
-  runner: SparkRunner
+# Here we can override some config from la-pipelines.yml instead of modifying it.
+# This configuration file is specifically for overrides for jobs ran with embedded spark.
+#
+# This file is referenced in the *-spark-embedded.sh bash scripts.

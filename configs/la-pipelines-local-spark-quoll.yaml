@@ -1,7 +1,9 @@
+# Deployment specific configuration for AWS spark quoll cluster.
+# This file should be copied over `la-pipelines-local.yaml` when deployed
+# so that it is used by the scripts.
 #
-# Deployment specific configuration for spark quoll cluster.
-# This file should be copied to `la-pipelines-local.yaml` when deployed
-# so that it is used by the scripts
+# Long term, this configuration should be moved out of the project and should be generated
+# by ansible scripts or as part of the debian package installation.
 #
 general:
     attempt: 1
