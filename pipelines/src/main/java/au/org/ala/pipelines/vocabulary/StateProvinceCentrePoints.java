@@ -16,7 +16,7 @@ public class StateProvinceCentrePoints {
     if (cp == null) {
       String externalFilePath = null;
       if (config != null){
-        externalFilePath = config.getCountryCentrePointsFile();
+        externalFilePath = config.getStateProvinceCentrePointsFile();
       }
       cp = CentrePoints.getInstance(externalFilePath, "/stateProvinceCentrePoints.txt");
       log.info("StateProvinceCentrePoints contains " + cp.size() + " stateProvince centres");

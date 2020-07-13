@@ -6,6 +6,7 @@ import au.org.ala.kvs.cache.ALAAttributionKVStoreFactory;
 import au.org.ala.kvs.client.ALACollectoryMetadata;
 import au.org.ala.pipelines.common.ALARecordTypes;
 import au.org.ala.utils.ALAFsUtils;
+import au.org.ala.utils.CombinedYamlConfiguration;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -75,7 +76,9 @@ public class ALAUUIDMintingPipeline {
     public static final String UNIQUE_COMPOSITE_KEY_JOIN_CHAR = "|";
 
     public static void main(String[] args) throws Exception {
-        InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
+        String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "uuid");
+        InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(combinedArgs);
+        PipelinesOptionsFactory.registerHdfs(options);
         run(options);
     }
 
@@ -86,14 +89,8 @@ public class ALAUUIDMintingPipeline {
         ALAPipelinesConfig config = ALAPipelinesConfigFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getProperties()).get();
 
         //build the directory path for existing identifiers
-        String alaRecordDirectoryPath = options.getTargetPath() + "/" + options.getDatasetId().trim() + "/1/identifiers/" + ALARecordTypes.ALA_UUID.name().toLowerCase();
+        String alaRecordDirectoryPath = options.getTargetPath() + "/" + options.getDatasetId().trim() + "/" + options.getAttempt() + "/identifiers/" + ALARecordTypes.ALA_UUID.name().toLowerCase();
         log.info("Output path {}", alaRecordDirectoryPath);
-
-        //create client configuration
-        ClientConfiguration clientConfiguration = ClientConfiguration.builder()
-                .withBaseApiUrl(config.getCollectory().getWsUrl()) //GBIF base API url
-                .withTimeOut(config.getCollectory().getTimeoutSec()) //Geocode service connection time-out
-                .build();
 
         //create key value store for data resource metadata
         KeyValueStore<String, ALACollectoryMetadata> dataResourceKvStore = ALAAttributionKVStoreFactory.create(config);
@@ -136,7 +133,7 @@ public class ALAUUIDMintingPipeline {
         PCollection<KV<String, String>> alaUuids = null;
 
         log.info("Transform 2: ALAUUIDRecord ur ->  <uniqueKey, uuid> (assume incomplete)");
-        FileSystem fs = FsUtils.getFileSystem(options.getHdfsSiteConfig(), options.getCoreSiteConfig(),null);
+        FileSystem fs = FsUtils.getFileSystem(options.getHdfsSiteConfig(), options.getCoreSiteConfig(),options.getInputPath());
         Path path = new Path(alaRecordDirectoryPath);
 
         if (fs.exists(path)){

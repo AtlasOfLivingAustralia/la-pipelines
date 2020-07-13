@@ -1,6 +1,7 @@
 package au.org.ala.sampling;
 
 import au.org.ala.utils.ALAFsUtils;
+import au.org.ala.utils.CombinedYamlConfiguration;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
@@ -66,7 +67,8 @@ public class LayerCrawler {
                     .build();
 
     public static void main(String[] args) throws Exception  {
-        InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
+        String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "sample");
+        InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(combinedArgs);
         run(options);
     }
 

@@ -21,19 +21,9 @@ SECONDS=0
 --master $SPARK_MASTER \
 --driver-java-options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
 $PIPELINES_JAR \
---appName="Add Sampling for $1" \
 --datasetId=$1 \
---attempt=1 \
---interpretationTypes=ALL \
---runner=SparkRunner \
---inputPath=$FS_PATH/$DATA_DIR \
---targetPath=$FS_PATH/$DATA_DIR \
---metaFileName=interpretation-metrics.yml \
---properties=$PIPELINES_CONF \
---useExtendedRecordId=true \
---coreSiteConfig=$HDFS_CONF \
---hdfsSiteConfig=$HDFS_CONF
+--config=../configs/la-pipelines.yaml,../configs/la-pipelines-spark-cluster.yaml,../configs/la-pipelines-local.yaml
 
 echo $(date)
 duration=$SECONDS
-echo "Adding sampling to $1 took $(($duration / 60)) minutes and $(($duration % 60)) seconds."
+echo "[SAMPLE-AVRO] Adding sampling to $1 took $(($duration / 60)) minutes and $(($duration % 60)) seconds."

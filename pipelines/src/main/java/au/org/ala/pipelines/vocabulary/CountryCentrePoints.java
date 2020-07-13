@@ -5,7 +5,6 @@ import java.io.FileNotFoundException;
 import au.org.ala.kvs.LocationInfoConfig;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.InputStream;
 /**
  * Load centres of countries from resources
  */

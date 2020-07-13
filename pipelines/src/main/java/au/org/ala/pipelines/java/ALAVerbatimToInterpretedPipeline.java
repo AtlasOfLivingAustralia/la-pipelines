@@ -11,6 +11,7 @@ import au.org.ala.pipelines.transforms.ALADefaultValuesTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import au.org.ala.pipelines.transforms.LocationTransform;
 import au.org.ala.utils.ALAFsUtils;
+import au.org.ala.utils.CombinedYamlConfiguration;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
@@ -45,6 +46,7 @@ import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.slf4j.MDC;
 
+import java.io.FileNotFoundException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
@@ -102,8 +104,9 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ALAVerbatimToInterpretedPipeline {
 
-    public static void main(String[] args) {
-        run(args);
+    public static void main(String[] args) throws FileNotFoundException {
+        String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "interpret");
+        run(combinedArgs);
     }
 
     public static void run(String[] args) {

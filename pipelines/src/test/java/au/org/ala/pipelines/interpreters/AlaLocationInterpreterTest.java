@@ -34,10 +34,7 @@ public class AlaLocationInterpreterTest {
   @Before
   public void set(){
     alaConfig = new ALAPipelinesConfig();
-    alaConfig.setLocationInfoConfig(new LocationInfoConfig(
-    "/data/pipelines-data/resources/countryCentrePoints.txt",
-    "/data/pipelines-data/resources/stateProvinceCentrePoints.txt",
-    "/data/pipelines-data/resources/stateProvinces.txt"));
+    alaConfig.setLocationInfoConfig(new LocationInfoConfig(null,null, null));
   }
 
   @Test

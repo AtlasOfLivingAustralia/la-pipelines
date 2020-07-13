@@ -2,6 +2,7 @@ package au.org.ala.pipelines.beam;
 
 import au.com.bytecode.opencsv.CSVReader;
 import au.org.ala.utils.ALAFsUtils;
+import au.org.ala.utils.CombinedYamlConfiguration;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,8 +42,10 @@ import java.util.Map;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ALASamplingToAvroPipeline {
 
-    public static void main(String[] args) {
-        InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
+    public static void main(String[] args) throws FileNotFoundException {
+        String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "sample-avro");
+        InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(combinedArgs);
+        PipelinesOptionsFactory.registerHdfs(options);
         run(options);
     }
 
@@ -59,7 +62,7 @@ public class ALASamplingToAvroPipeline {
         String outputPath = ALAFsUtils.buildPathSamplingOutputUsingTargetPath(options);
         log.info("Outputting results to " + outputPath);
 
-        FileSystem fs = FsUtils.getFileSystem(options.getHdfsSiteConfig(),  options.getCoreSiteConfig(),"/");
+        FileSystem fs = FsUtils.getFileSystem(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getInputPath());
 
         // Read column headers
         final String[] columnHeaders = getColumnHeaders(fs, samplingPath);
@@ -122,7 +125,6 @@ public class ALASamplingToAvroPipeline {
                 KeyedPCollectionTuple.of(latLngIDTag, latLngID)
                         .and(alaSamplingTag, alaSampling)
                         .apply(CoGroupByKey.create());
-
 
         // Create AustraliaSpatialRecord
         PCollection<LocationFeatureRecord> locationFeatureRecordPCollection =

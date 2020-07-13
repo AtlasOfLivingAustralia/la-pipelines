@@ -31,11 +31,13 @@ public class DumpDatasetSize {
 
     public static void main(String[] args) throws Exception {
 
+        String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "dataset-count-dump");
+
         DumpDatasetSize m = new DumpDatasetSize();
         JCommander jCommander = JCommander.newBuilder()
                 .addObject(m)
                 .build();
-        jCommander.parse(args);
+        jCommander.parse(combinedArgs);
 
         if (m.inputPath == null || m.targetPath == null) {
             jCommander.usage();

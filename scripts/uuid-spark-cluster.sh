@@ -21,19 +21,8 @@ SECONDS=0
 --master $SPARK_MASTER \
 --driver-java-options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
 $PIPELINES_JAR \
---appName="UUID minting for $1" \
 --datasetId=$1 \
---attempt=1 \
---interpretationTypes=ALL \
---runner=SparkRunner \
---inputPath=$FS_PATH/$DATA_DIR \
---targetPath=$FS_PATH/$DATA_DIR \
---coreSiteConfig=$HDFS_CONF \
---hdfsSiteConfig=$HDFS_CONF \
---metaFileName=uuid-metrics.yml \
---properties=$PIPELINES_CONF \
---useExtendedRecordId=true \
---skipRegisrtyCalls=true
+--config=../configs/la-pipelines.yaml,../configs/la-pipelines-spark-cluster.yaml,../configs/la-pipelines-local.yaml
 
 echo $(date)
 duration=$SECONDS

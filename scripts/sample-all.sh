@@ -2,9 +2,7 @@
 source set-env.sh
 
 java -cp $PIPELINES_JAR au.org.ala.utils.DumpDatasetSize \
---hdfsSiteConfig=$HDFS_CONF \
---inputPath=/$DATA_DIR/ \
---targetPath=/tmp/dataset-counts.csv
+--config=../configs/la-pipelines.yaml,../configs/la-pipelines-local.yaml
 
 ################################################################
 # Step 1: Export lat lngs

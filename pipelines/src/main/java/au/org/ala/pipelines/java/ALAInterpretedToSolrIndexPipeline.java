@@ -1,5 +1,6 @@
 package au.org.ala.pipelines.java;
 
+import java.io.FileNotFoundException;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -14,6 +15,7 @@ import au.org.ala.pipelines.transforms.ALAAttributionTransform;
 import au.org.ala.pipelines.transforms.ALASolrDocumentTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import au.org.ala.utils.ALAFsUtils;
+import au.org.ala.utils.CombinedYamlConfiguration;
 import org.apache.solr.common.SolrInputDocument;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.core.converters.MultimediaConverter;
@@ -89,8 +91,9 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSI
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ALAInterpretedToSolrIndexPipeline {
 
-    public static void main(String[] args) {
-        run(args);
+    public static void main(String[] args) throws FileNotFoundException {
+        String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "index");
+        run(combinedArgs);
     }
 
     public static void run(String[] args) {

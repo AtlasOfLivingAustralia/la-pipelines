@@ -6,6 +6,7 @@ import au.org.ala.pipelines.transforms.ALASolrDocumentTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import au.org.ala.pipelines.transforms.ALAUUIDTransform;
 import au.org.ala.utils.ALAFsUtils;
+import au.org.ala.utils.CombinedYamlConfiguration;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +36,7 @@ import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.gbif.pipelines.transforms.specific.LocationFeatureTransform;
 import org.slf4j.MDC;
 
+import java.io.FileNotFoundException;
 import java.util.function.UnaryOperator;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
@@ -47,8 +49,9 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSI
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ALAInterpretedToSolrIndexPipeline {
 
-    public static void main(String[] args) {
-        ALASolrPipelineOptions options = PipelinesOptionsFactory.create(ALASolrPipelineOptions.class, args);
+    public static void main(String[] args) throws FileNotFoundException  {
+        String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "index");
+        ALASolrPipelineOptions options = PipelinesOptionsFactory.create(ALASolrPipelineOptions.class, combinedArgs);
         PipelinesOptionsFactory.registerHdfs(options);
         run(options);
     }

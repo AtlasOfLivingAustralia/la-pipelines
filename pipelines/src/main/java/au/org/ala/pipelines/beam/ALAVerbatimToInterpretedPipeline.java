@@ -1,5 +1,6 @@
 package au.org.ala.pipelines.beam;
 
+import java.io.FileNotFoundException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Properties;
@@ -13,6 +14,7 @@ import au.org.ala.kvs.cache.ALACollectionKVStoreFactory;
 import au.org.ala.kvs.cache.ALANameMatchKVStoreFactory;
 import au.org.ala.kvs.cache.GeocodeKvStoreFactory;
 import au.org.ala.pipelines.transforms.ALADefaultValuesTransform;
+import au.org.ala.utils.CombinedYamlConfiguration;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
@@ -87,8 +89,9 @@ import lombok.extern.slf4j.Slf4j;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ALAVerbatimToInterpretedPipeline {
 
-  public static void main(String[] args) {
-    InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
+  public static void main(String[] args) throws FileNotFoundException {
+    String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "interpret");
+    InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(combinedArgs);
     run(options);
   }
 
